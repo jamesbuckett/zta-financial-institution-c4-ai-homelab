@@ -372,30 +372,30 @@
 <p>The source document, <em>ZTA-2026-001</em>, is a C4 × NIST SP 800-207 architecture prepared by a global bank's Security Solutions Architecture team. It proposes a distributed Policy Engine (OPA/Cedar), a policy-as-code Policy Administrator (Styra DAS + GitOps), and a heterogeneous fleet of Policy Enforcement Points (Kong FAPI, Istio, Zscaler ZPA, CyberArk, Broadcom AAM, Netskope, an in-house AI Gateway). Workload identity is SPIFFE/SPIRE; workforce identity is Microsoft Entra ID federated with Okta; customers sit on ForgeRock CIAM with FAPI 2.0 and DPoP-bound tokens. Signals flow from CDM (Wiz, Tanium), threat intel, SIEM (Splunk + Snowflake), UEBA, fraud/AML (Featurespace) and data-access policy (Immuta) into a Trust Algorithm that emits a continuous <code>trust_score</code>. This tutorial reconstructs the essential shape of that architecture on a laptop — using only open-source projects — so that each 800-207 tenet becomes a thing the reader can deploy, break, observe, and repair.</p>
 
 <h3>Mapping: Source Sections → NIST SP 800-207</h3>
-<p>Every major section of the source document maps to at least one tenet of 800-207 §2.1, a logical component of §3.1, and a deployment variant of §3.2. The table below is the index; the full per-paragraph matrix is in the <a href="#appendix">Mapping Appendix</a>.</p>
+<p>Every major section of the source document maps to at least one tenet of 800-207 2.1, a logical component of 3.1, and a deployment variant of 3.2. The table below is the index; the full per-paragraph matrix is in the <a href="#appendix">Mapping Appendix</a>.</p>
 
 <div class="table-wrap">
 <table>
   <thead>
-    <tr><th style="width:26%">Source Section</th><th>800-207 Tenet(s)</th><th>Logical Component(s) §3.1</th><th>Deployment Variant §3.2</th></tr>
+    <tr><th style="width:26%">Source Section</th><th>800-207 Tenet(s)</th><th>Logical Component(s) 3.1</th><th>Deployment Variant 3.2</th></tr>
   </thead>
   <tbody>
-    <tr><td>§1 Executive summary</td><td>T1–T7 (all)</td><td>PE, PA, PEP, Trust Algorithm (§3.3)</td><td>Hybrid (enclave + resource-portal + device-agent/gateway)</td></tr>
-    <tr><td>§2 Assumptions &amp; scope</td><td>T1, T2</td><td>Resources, data-source taxonomy</td><td>Resource-portal (§3.2.3) for mainframe facade</td></tr>
-    <tr><td>§3 Context (C4 L1)</td><td>T2, T4</td><td>Subject / Enterprise Resource boundary</td><td>Device-agent/gateway (§3.2.1) for workforce</td></tr>
-    <tr><td>§4 Container (C4 L2)</td><td>T3, T4, T6</td><td>PE fleet, PA, PEPs, Data Sources, Trust Algorithm</td><td>Hybrid — multi-PEP class</td></tr>
-    <tr><td>§5 Component (C4 L3, flows)</td><td>T3, T4, T6, T7</td><td>PE↔PEP decision loop, Identity DS, CDM, risk DS</td><td>Resource-portal (API PEP), Enclave (SWIFT)</td></tr>
-    <tr><td>§6 Code (Rego sample)</td><td>T4, T6</td><td>PE decision logic; fail-closed default</td><td>All variants — same PE contract</td></tr>
-    <tr><td>§7 Component catalogue</td><td>T1–T7</td><td>Every §3.1 component by name</td><td>All four §3.2 variants</td></tr>
-    <tr><td>§8 Cross-cutting concerns</td><td>T2, T3, T5, T7</td><td>PKI, secrets, SIEM, observability</td><td>Enclave (§3.2.2) for payments; sandboxing (§3.2.4) for AI</td></tr>
-    <tr><td>§9 AI / ML use-case catalogue</td><td>T4, T5, T7</td><td>Trust Algorithm signals; AI Gateway PEP</td><td>Application sandboxing (§3.2.4)</td></tr>
-    <tr><td>§10 Summary table</td><td>T1–T7</td><td>Component-to-role mapping</td><td>All variants</td></tr>
-    <tr><td>§11 Open questions / PoCs</td><td>T6, T7</td><td>PE/PA failure modes, policy-plane hardening</td><td>All variants (resilience concern)</td></tr>
+    <tr><td>1 Executive summary</td><td>T1–T7 (all)</td><td>PE, PA, PEP, Trust Algorithm (3.3)</td><td>Hybrid (enclave + resource-portal + device-agent/gateway)</td></tr>
+    <tr><td>2 Assumptions &amp; scope</td><td>T1, T2</td><td>Resources, data-source taxonomy</td><td>Resource-portal (3.2.3) for mainframe facade</td></tr>
+    <tr><td>3 Context (C4 L1)</td><td>T2, T4</td><td>Subject / Enterprise Resource boundary</td><td>Device-agent/gateway (3.2.1) for workforce</td></tr>
+    <tr><td>4 Container (C4 L2)</td><td>T3, T4, T6</td><td>PE fleet, PA, PEPs, Data Sources, Trust Algorithm</td><td>Hybrid — multi-PEP class</td></tr>
+    <tr><td>5 Component (C4 L3, flows)</td><td>T3, T4, T6, T7</td><td>PE↔PEP decision loop, Identity DS, CDM, risk DS</td><td>Resource-portal (API PEP), Enclave (SWIFT)</td></tr>
+    <tr><td>6 Code (Rego sample)</td><td>T4, T6</td><td>PE decision logic; fail-closed default</td><td>All variants — same PE contract</td></tr>
+    <tr><td>7 Component catalogue</td><td>T1–T7</td><td>Every 3.1 component by name</td><td>All four 3.2 variants</td></tr>
+    <tr><td>8 Cross-cutting concerns</td><td>T2, T3, T5, T7</td><td>PKI, secrets, SIEM, observability</td><td>Enclave (3.2.2) for payments; sandboxing (3.2.4) for AI</td></tr>
+    <tr><td>9 AI / ML use-case catalogue</td><td>T4, T5, T7</td><td>Trust Algorithm signals; AI Gateway PEP</td><td>Application sandboxing (3.2.4)</td></tr>
+    <tr><td>10 Summary table</td><td>T1–T7</td><td>Component-to-role mapping</td><td>All variants</td></tr>
+    <tr><td>11 Open questions / PoCs</td><td>T6, T7</td><td>PE/PA failure modes, policy-plane hardening</td><td>All variants (resilience concern)</td></tr>
   </tbody>
 </table>
 </div>
 
-<p class="footnote">Tenet abbreviations throughout: <span class="badge tenet">T1</span> resources, <span class="badge tenet">T2</span> secured comms, <span class="badge tenet">T3</span> per-session, <span class="badge tenet">T4</span> dynamic policy, <span class="badge tenet">T5</span> posture monitoring, <span class="badge tenet">T6</span> strict enforcement, <span class="badge tenet">T7</span> telemetry. See 800-207 §2.1.</p>
+<p class="footnote">Tenet abbreviations throughout: <span class="badge tenet">T1</span> resources, <span class="badge tenet">T2</span> secured comms, <span class="badge tenet">T3</span> per-session, <span class="badge tenet">T4</span> dynamic policy, <span class="badge tenet">T5</span> posture monitoring, <span class="badge tenet">T6</span> strict enforcement, <span class="badge tenet">T7</span> telemetry. See 800-207 2.1.</p>
 </section>
 
 <!-- ============================================================== -->
@@ -534,7 +534,7 @@ metadata:
 </div>
 
 <h3>2.4 Bootstrap — cert-manager, Istio, SPIRE</h3>
-<p>cert-manager provides a cluster-wide CA for non-SPIFFE TLS (Keycloak ingress, Grafana). Istio is the east-west PEP and sidecar mTLS enforcer. SPIRE issues short-lived X.509 and JWT SVIDs for workload identity — the 800-207 §3.1.3 <em>ID Management</em> component in this lab.</p>
+<p>cert-manager provides a cluster-wide CA for non-SPIFFE TLS (Keycloak ingress, Grafana). Istio is the east-west PEP and sidecar mTLS enforcer. SPIRE issues short-lived X.509 and JWT SVIDs for workload identity — the 800-207 3.1.3 <em>ID Management</em> component in this lab.</p>
 
 <div class="code-block terminal">
   <div class="code-head"><span class="lang">Bash</span><span class="path">bootstrap/01-cert-manager.sh</span><button class="copy-btn">Copy</button></div>
@@ -1031,27 +1031,27 @@ curl -s -H 'Host: bookstore.local' http://localhost/api/headers | jq '.headers |
   <div class="lab-header">
     <span class="eyebrow">Lab 01 · 45 min</span>
     <h2 class="lab-title">All data sources and computing services are resources</h2>
-    <p class="lab-tenet">NIST SP 800-207 §2.1 Tenet 1 — "An enterprise considers all of its data sources and computing services as resources."</p>
+    <p class="lab-tenet">NIST SP 800-207 2.1 Tenet 1 — "An enterprise considers all of its data sources and computing services as resources."</p>
   </div>
 
   <dl class="nist-map">
-    <dt>Tenet</dt><dd><span class="badge tenet">T1</span> Resources (§2.1)</dd>
-    <dt>Components</dt><dd>Enterprise Resource (§3.1); CDM Data Source (§3.2) seeded</dd>
+    <dt>Tenet</dt><dd><span class="badge tenet">T1</span> Resources (2.1)</dd>
+    <dt>Components</dt><dd>Enterprise Resource (3.1); CDM Data Source (3.2) seeded</dd>
     <dt>Variant</dt><dd>All four deployment variants begin here — you cannot protect what you have not enumerated</dd>
-    <dt>Source §</dt><dd>§4 (C4 L2 — Enterprise Resources), §7 (Component catalogue), §8.8 (data classification)</dd>
+    <dt>Source </dt><dd>4 (C4 L2 — Enterprise Resources), 7 (Component catalogue), 8.8 (data classification)</dd>
   </dl>
 
   <h4>Learning objectives</h4>
   <ul>
-    <li>Enumerate every pod, service, and persistent volume in the cluster as a discrete <em>resource</em> per 800-207 §3.1.</li>
+    <li>Enumerate every pod, service, and persistent volume in the cluster as a discrete <em>resource</em> per 800-207 3.1.</li>
     <li>Apply a consistent label schema (<code>zta.resource</code>, <code>zta.data-class</code>, <code>zta.tier-role</code>, <code>zta.owner</code>) that later labs will key off.</li>
-    <li>Produce a resource inventory usable as a CDM stand-in, mirroring the source §7.14 (Wiz + Tanium).</li>
-    <li>Recognise the source document's five-tier data classification (§8.8) and encode it as Kubernetes labels.</li>
-    <li>Distinguish <em>subjects</em>, <em>resources</em>, and <em>assets</em> — the three entities 800-207 §2 separates.</li>
+    <li>Produce a resource inventory usable as a CDM stand-in, mirroring the source 7.14 (Wiz + Tanium).</li>
+    <li>Recognise the source document's five-tier data classification (8.8) and encode it as Kubernetes labels.</li>
+    <li>Distinguish <em>subjects</em>, <em>resources</em>, and <em>assets</em> — the three entities 800-207 2 separates.</li>
   </ul>
 
   <h4>Concept primer</h4>
-  <p>The source document catalogues ~20 named components (§7) and places them inside four logical layers (Data Sources, Control Plane, PEPs, Enterprise Resources) at C4 L2 (§4). NIST 800-207 calls <em>all</em> of these — databases, APIs, services, even agents — <strong>resources</strong>, and Tenet 1 begins by insisting that the enterprise inventory them all and treat them as equally worthy of protection irrespective of whether they run on <code>z/OS</code>, EKS, or a laptop. In this lab the cluster plays the role of the bank's estate at miniature scale: the bookstore's <code>frontend</code>, <code>api</code>, and <code>db</code> are the "Subjects · Assets · Resources" box in the source diagram; the Istio sidecars are not resources, they are PEPs; OPA is the PE. The label schema you apply below becomes the primary key for <em>every</em> later lab's policy — policies will select resources by label, not by name, so that adding a new workload automatically inherits the correct enforcement without policy edits. This is the 800-207 §3.4.1 <em>Trust Algorithm</em> input schema, rendered in Kubernetes-native form.</p>
+  <p>The source document catalogues ~20 named components (7) and places them inside four logical layers (Data Sources, Control Plane, PEPs, Enterprise Resources) at C4 L2 (4). NIST 800-207 calls <em>all</em> of these — databases, APIs, services, even agents — <strong>resources</strong>, and Tenet 1 begins by insisting that the enterprise inventory them all and treat them as equally worthy of protection irrespective of whether they run on <code>z/OS</code>, EKS, or a laptop. In this lab the cluster plays the role of the bank's estate at miniature scale: the bookstore's <code>frontend</code>, <code>api</code>, and <code>db</code> are the "Subjects · Assets · Resources" box in the source diagram; the Istio sidecars are not resources, they are PEPs; OPA is the PE. The label schema you apply below becomes the primary key for <em>every</em> later lab's policy — policies will select resources by label, not by name, so that adding a new workload automatically inherits the correct enforcement without policy edits. This is the 800-207 3.4.1 <em>Trust Algorithm</em> input schema, rendered in Kubernetes-native form.</p>
 
   <h4>Step-by-step</h4>
 
@@ -1066,7 +1066,7 @@ metadata:
   labels: { zta.resource: "true", zta.data-class: "internal" }
 data:
   schema.yaml: |
-    # ZTA resource label schema v1 — aligns with 800-207 §3.1 & §3.4.1
+    # ZTA resource label schema v1 — aligns with 800-207 3.1 & 3.4.1
     labels:
       zta.resource:      { values: ["true"],                 required: true }
       zta.data-class:    { values: ["public","internal","confidential","restricted","secret"], required: true }
@@ -1143,7 +1143,7 @@ spec:
         provided := input.review.object.metadata.labels
         missing := [k | k := required[_]; not provided[k]]
         count(missing) &gt; 0
-        msg := sprintf("ZTA labels missing: %v (per 800-207 §2.1 T1)", [missing])
+        msg := sprintf("ZTA labels missing: %v (per 800-207 2.1 T1)", [missing])
       }
 ---
 apiVersion: constraints.gatekeeper.sh/v1beta1
@@ -1160,7 +1160,7 @@ spec:
 </code></pre>
   </div>
 
-  <p><span class="step-num">04</span>Produce the resource inventory — the CDM stand-in. A single <code>kubectl</code> invocation reports every labelled resource across the cluster, mimicking the Wiz/Tanium CDM feed in §7.14.</p>
+  <p><span class="step-num">04</span>Produce the resource inventory — the CDM stand-in. A single <code>kubectl</code> invocation reports every labelled resource across the cluster, mimicking the Wiz/Tanium CDM feed in 7.14.</p>
 
   <div class="code-block terminal">
     <div class="code-head"><span class="lang">Bash</span><span class="path">labs/01-resources/inventory.sh</span><button class="copy-btn">Copy</button></div>
@@ -1223,7 +1223,7 @@ EOF
 # Error from server (Forbidden): error when creating "STDIN":
 # admission webhook "validation.gatekeeper.sh" denied the request:
 # [bookstore-resources-labelled] ZTA labels missing:
-#   ["zta.resource","zta.data-class","zta.owner"] (per 800-207 §2.1 T1)
+#   ["zta.resource","zta.data-class","zta.owner"] (per 800-207 2.1 T1)
 </code></pre>
   </div>
 
@@ -1231,9 +1231,9 @@ EOF
 
   <h4>Reflection questions</h4>
   <ol>
-    <li>The source document lists an <em>AI Gateway PEP</em> (§4, §9.7) that protects LLM traffic. Is the LLM itself a resource, a PEP, or both? Justify against 800-207 §2.1 T1 and §3.2.</li>
+    <li>The source document lists an <em>AI Gateway PEP</em> (4, 9.7) that protects LLM traffic. Is the LLM itself a resource, a PEP, or both? Justify against 800-207 2.1 T1 and 3.2.</li>
     <li>Gatekeeper ran admission-time. Why is that not sufficient, and which later tenets (name them) close the remaining gap at request-time and run-time?</li>
-    <li>If you added a <code>zta.jurisdiction</code> label (EU, UK, US, SG), which paragraph of the source document (§2 or §8) does it support, and which tenets would make use of it?</li>
+    <li>If you added a <code>zta.jurisdiction</code> label (EU, UK, US, SG), which paragraph of the source document (2 or 8) does it support, and which tenets would make use of it?</li>
   </ol>
 </section>
 
@@ -1244,14 +1244,14 @@ EOF
   <div class="lab-header">
     <span class="eyebrow">Lab 02 · 60 min</span>
     <h2 class="lab-title">All communication is secured regardless of network location</h2>
-    <p class="lab-tenet">NIST SP 800-207 §2.1 Tenet 2 — "All communication is secured regardless of network location."</p>
+    <p class="lab-tenet">NIST SP 800-207 2.1 Tenet 2 — "All communication is secured regardless of network location."</p>
   </div>
 
   <dl class="nist-map">
-    <dt>Tenet</dt><dd><span class="badge tenet">T2</span> Secured communications (§2.1)</dd>
-    <dt>Components</dt><dd>PEP (Envoy sidecar, §3.1.2), PKI Data Source (Istio CA; source §7.15 analogue)</dd>
-    <dt>Variant</dt><dd>Device-agent/gateway (§3.2.1) — each workload's sidecar is the on-resource gateway that terminates mTLS</dd>
-    <dt>Source §</dt><dd>§4 (Istio mesh + SPIFFE), §7.8 (Istio), §8.5 (telemetry), §8.7 (API security)</dd>
+    <dt>Tenet</dt><dd><span class="badge tenet">T2</span> Secured communications (2.1)</dd>
+    <dt>Components</dt><dd>PEP (Envoy sidecar, 3.1.2), PKI Data Source (Istio CA; source 7.15 analogue)</dd>
+    <dt>Variant</dt><dd>Device-agent/gateway (3.2.1) — each workload's sidecar is the on-resource gateway that terminates mTLS</dd>
+    <dt>Source </dt><dd>4 (Istio mesh + SPIFFE), 7.8 (Istio), 8.5 (telemetry), 8.7 (API security)</dd>
   </dl>
 
   <h4>Learning objectives</h4>
@@ -1259,11 +1259,11 @@ EOF
     <li>Flip mesh-wide <code>PeerAuthentication</code> from the Istio default (PERMISSIVE) to STRICT mTLS.</li>
     <li>Prove east-west encryption empirically with <code>tcpdump</code> inside a debug pod — not by trusting the control plane's word.</li>
     <li>Observe that "inside the cluster" carries no trust — an in-cluster plaintext client is rejected.</li>
-    <li>Map the observed behaviour to source §4 and §8.7 and to 800-207 §2.1 T2 and §3.4.2 (implicit trust zone minimisation).</li>
+    <li>Map the observed behaviour to source 4 and 8.7 and to 800-207 2.1 T2 and 3.4.2 (implicit trust zone minimisation).</li>
   </ul>
 
   <h4>Concept primer</h4>
-  <p>The source document's §3 Context warns that <em>no network segment, including the corporate LAN, is trusted by default</em>, and §4 places Istio at every east-west hop with SPIFFE SVIDs rotated every 60 minutes. NIST 800-207 §2.1 T2 is categorical: it does not matter whether traffic is "internal" or "external"; the same authentication and encryption obligations apply. The subtle point is that T2 does not by itself demand mTLS — it demands the <em>strongest possible</em> method — but in practice a modern mesh delivers mTLS cheaply enough that it is the default. What T2 rules out is the older defence-in-depth fallacy that perimeter firewalls can justify plaintext inside. The proof in this lab is deliberately adversarial: rather than reading the Istio control plane's claim that mTLS is on, you sniff a live packet from an untrusted-looking pod in an unrelated namespace. The bytes are opaque or not; there is no middle ground.</p>
+  <p>The source document's 3 Context warns that <em>no network segment, including the corporate LAN, is trusted by default</em>, and 4 places Istio at every east-west hop with SPIFFE SVIDs rotated every 60 minutes. NIST 800-207 2.1 T2 is categorical: it does not matter whether traffic is "internal" or "external"; the same authentication and encryption obligations apply. The subtle point is that T2 does not by itself demand mTLS — it demands the <em>strongest possible</em> method — but in practice a modern mesh delivers mTLS cheaply enough that it is the default. What T2 rules out is the older defence-in-depth fallacy that perimeter firewalls can justify plaintext inside. The proof in this lab is deliberately adversarial: rather than reading the Istio control plane's claim that mTLS is on, you sniff a live packet from an untrusted-looking pod in an unrelated namespace. The bytes are opaque or not; there is no middle ground.</p>
 
   <h4>Step-by-step</h4>
 
@@ -1282,7 +1282,7 @@ spec:
 </code></pre>
   </div>
 
-  <p><span class="step-num">02</span>Apply a default-deny <code>AuthorizationPolicy</code> to each bookstore namespace. T2 is about encryption; combining it with a default-deny is how 800-207 §3.3.1 intends enforcement to look.</p>
+  <p><span class="step-num">02</span>Apply a default-deny <code>AuthorizationPolicy</code> to each bookstore namespace. T2 is about encryption; combining it with a default-deny is how 800-207 3.3.1 intends enforcement to look.</p>
 
   <div class="code-block">
     <div class="code-head"><span class="lang">YAML</span><span class="path">labs/02-secured-comms/default-deny.yaml</span><button class="copy-btn">Copy</button></div>
@@ -1444,8 +1444,8 @@ kubectl --context docker-desktop -n bookstore-api delete peerauthentication down
 
   <h4>Reflection questions</h4>
   <ol>
-    <li>The source §5 Flow A step 8 references SPIFFE IDs <code>spiffe://bank/retail/payments-api</code> and <code>spiffe://bank/retail/payments-service</code>. In your cluster, which header embedded these identities and which sidecar produced it?</li>
-    <li>Istio's <code>PeerAuthentication</code> and <code>AuthorizationPolicy</code> ran at different OSI layers. Which 800-207 logical components (§3.1) did each instantiate?</li>
+    <li>The source 5 Flow A step 8 references SPIFFE IDs <code>spiffe://bank/retail/payments-api</code> and <code>spiffe://bank/retail/payments-service</code>. In your cluster, which header embedded these identities and which sidecar produced it?</li>
+    <li>Istio's <code>PeerAuthentication</code> and <code>AuthorizationPolicy</code> ran at different OSI layers. Which 800-207 logical components (3.1) did each instantiate?</li>
     <li>T2 demands security <em>regardless of location</em>. What evidence in your capture file distinguishes a T2-compliant mesh from a network whose perimeter firewall merely hid plaintext?</li>
   </ol>
 </section>
@@ -1457,14 +1457,14 @@ kubectl --context docker-desktop -n bookstore-api delete peerauthentication down
   <div class="lab-header">
     <span class="eyebrow">Lab 03 · 75 min</span>
     <h2 class="lab-title">Access to individual enterprise resources is granted on a per-session basis</h2>
-    <p class="lab-tenet">NIST SP 800-207 §2.1 Tenet 3 — "Access to individual enterprise resources is granted on a per-session basis."</p>
+    <p class="lab-tenet">NIST SP 800-207 2.1 Tenet 3 — "Access to individual enterprise resources is granted on a per-session basis."</p>
   </div>
 
   <dl class="nist-map">
-    <dt>Tenet</dt><dd><span class="badge tenet">T3</span> Per-session access (§2.1)</dd>
-    <dt>Components</dt><dd>ID Management (§3.1, Keycloak analogue of ForgeRock CIAM / Entra ID), PKI (§3.1, SPIRE analogue of Venafi + AWS PCA)</dd>
-    <dt>Variant</dt><dd>Resource-portal (§3.2.3) for human→API; device-agent/gateway (§3.2.1) for workload→workload</dd>
-    <dt>Source §</dt><dd>§1 (DPoP-bound tokens, 60-min SVIDs), §5 Flow A (5-min token), §7.1, §7.4, §8.2</dd>
+    <dt>Tenet</dt><dd><span class="badge tenet">T3</span> Per-session access (2.1)</dd>
+    <dt>Components</dt><dd>ID Management (3.1, Keycloak analogue of ForgeRock CIAM / Entra ID), PKI (3.1, SPIRE analogue of Venafi + AWS PCA)</dd>
+    <dt>Variant</dt><dd>Resource-portal (3.2.3) for human→API; device-agent/gateway (3.2.1) for workload→workload</dd>
+    <dt>Source </dt><dd>1 (DPoP-bound tokens, 60-min SVIDs), 5 Flow A (5-min token), 7.1, 7.4, 8.2</dd>
   </dl>
 
   <h4>Learning objectives</h4>
@@ -1476,7 +1476,7 @@ kubectl --context docker-desktop -n bookstore-api delete peerauthentication down
   </ul>
 
   <h4>Concept primer</h4>
-  <p>800-207 §2.1 T3 specifies that access is <em>session-bound</em>, not granted as an open-ended grant that can be replayed forever. Two session artefacts dominate practice: the human-session OAuth2/OIDC access token, bound to a subject (and optionally a key via DPoP or mTLS per the source §1 and §8.7), and the workload-session SPIFFE SVID, bound to a workload identity. The source document picks five-minute Keycloak/ForgeRock tokens and fifteen-minute SPIFFE SVIDs — short enough that theft is time-boxed, long enough that re-authentication cost is bearable. In this lab you set both to five minutes and watch them roll. T3 does not, by itself, guarantee that any given request inside a session is authorised (that is T4 and T6); it guarantees only that the session cannot outlive its intended lifetime, and that resumption requires a fresh proof. Crucially, "session" here is per-resource — a token good for the frontend is not good for the API unless its audience claim matches. That per-resource scoping is what the phrase "individual enterprise resources" in the tenet text insists on.</p>
+  <p>800-207 2.1 T3 specifies that access is <em>session-bound</em>, not granted as an open-ended grant that can be replayed forever. Two session artefacts dominate practice: the human-session OAuth2/OIDC access token, bound to a subject (and optionally a key via DPoP or mTLS per the source 1 and 8.7), and the workload-session SPIFFE SVID, bound to a workload identity. The source document picks five-minute Keycloak/ForgeRock tokens and fifteen-minute SPIFFE SVIDs — short enough that theft is time-boxed, long enough that re-authentication cost is bearable. In this lab you set both to five minutes and watch them roll. T3 does not, by itself, guarantee that any given request inside a session is authorised (that is T4 and T6); it guarantees only that the session cannot outlive its intended lifetime, and that resumption requires a fresh proof. Crucially, "session" here is per-resource — a token good for the frontend is not good for the API unless its audience claim matches. That per-resource scoping is what the phrase "individual enterprise resources" in the tenet text insists on.</p>
 
   <h4>Step-by-step</h4>
 
@@ -1703,9 +1703,9 @@ curl -s -o /dev/null -w '%{http_code}\n' \
 
   <h4>Reflection questions</h4>
   <ol>
-    <li>The source §1 says CIAM tokens are DPoP-bound and workforce tokens are Entra-issued. Which property of DPoP makes the difference between "valid token" and "valid session for this client"? Which 800-207 tenet does that strengthen — T3, T6, or both?</li>
-    <li>SPIRE SVIDs rotate silently every ~TTL/2 without the workload being aware. In what circumstances would you accept a longer TTL, and how does that decision trade against 800-207 §2.1 T3 and the §3.4 Trust Algorithm?</li>
-    <li>Per-session does not mean per-request. Name one attack — present in the source §8.10 threat model — that per-session access alone does not mitigate, and indicate the tenet that does.</li>
+    <li>The source 1 says CIAM tokens are DPoP-bound and workforce tokens are Entra-issued. Which property of DPoP makes the difference between "valid token" and "valid session for this client"? Which 800-207 tenet does that strengthen — T3, T6, or both?</li>
+    <li>SPIRE SVIDs rotate silently every ~TTL/2 without the workload being aware. In what circumstances would you accept a longer TTL, and how does that decision trade against 800-207 2.1 T3 and the 3.4 Trust Algorithm?</li>
+    <li>Per-session does not mean per-request. Name one attack — present in the source 8.10 threat model — that per-session access alone does not mitigate, and indicate the tenet that does.</li>
   </ol>
 </section>
 
@@ -1716,14 +1716,14 @@ curl -s -o /dev/null -w '%{http_code}\n' \
   <div class="lab-header">
     <span class="eyebrow">Lab 04 · 90 min</span>
     <h2 class="lab-title">Access is determined by dynamic policy</h2>
-    <p class="lab-tenet">NIST SP 800-207 §2.1 Tenet 4 — "Access to resources is determined by dynamic policy including the observable state of client identity, application/service, and the requesting asset — and may include other behavioural and environmental attributes."</p>
+    <p class="lab-tenet">NIST SP 800-207 2.1 Tenet 4 — "Access to resources is determined by dynamic policy including the observable state of client identity, application/service, and the requesting asset — and may include other behavioural and environmental attributes."</p>
   </div>
 
   <dl class="nist-map">
-    <dt>Tenet</dt><dd><span class="badge tenet">T4</span> Dynamic policy (§2.1)</dd>
-    <dt>Components</dt><dd>Policy Engine (§3.1.1 — OPA), PEP (§3.1.2 — Envoy ext-authz), Trust Algorithm (§3.4.1), Data Source signals (CDM, identity)</dd>
-    <dt>Variant</dt><dd>Device-agent/gateway (§3.2.1) — posture travels with the request</dd>
-    <dt>Source §</dt><dd>§4 (OPA + AuthZEN), §5 Flow A (Rego evaluation with risk signal), §6 (Rego code), §8.5 (decision log)</dd>
+    <dt>Tenet</dt><dd><span class="badge tenet">T4</span> Dynamic policy (2.1)</dd>
+    <dt>Components</dt><dd>Policy Engine (3.1.1 — OPA), PEP (3.1.2 — Envoy ext-authz), Trust Algorithm (3.4.1), Data Source signals (CDM, identity)</dd>
+    <dt>Variant</dt><dd>Device-agent/gateway (3.2.1) — posture travels with the request</dd>
+    <dt>Source </dt><dd>4 (OPA + AuthZEN), 5 Flow A (Rego evaluation with risk signal), 6 (Rego code), 8.5 (decision log)</dd>
   </dl>
 
   <h4>Learning objectives</h4>
@@ -1731,11 +1731,11 @@ curl -s -o /dev/null -w '%{http_code}\n' \
     <li>Author a Rego policy that reads subject identity (Keycloak JWT), workload identity (SPIFFE ID), request attributes (path, method), and a <em>device posture</em> signal injected as a header.</li>
     <li>Wire OPA to Envoy via the <code>envoy.ext_authz</code> gRPC filter so that every API request is evaluated.</li>
     <li>Observe identical requests succeed or fail based on a posture value that has nothing to do with the token itself.</li>
-    <li>Read the OPA decision log and recognise the evidence artefact that the source §8.5 calls the <code>decision_id</code>.</li>
+    <li>Read the OPA decision log and recognise the evidence artefact that the source 8.5 calls the <code>decision_id</code>.</li>
   </ul>
 
   <h4>Concept primer</h4>
-  <p>The source §6 shows a Rego policy that evaluates four inputs — <code>subject</code>, <code>resource</code>, <code>action</code>, <code>context</code> — plus an <code>env</code> carrying the signed policy-bundle hash. 800-207 §2.1 T4 says exactly this: a request is not permitted solely because its credentials are valid; the authorisation calculus must reach into the <em>observable state</em> of client, app, and asset, and may use behavioural attributes (UEBA, fraud/AML scores in the source §9). In this lab we implement a trimmed-down version: JWT claims stand in for CIAM identity, the SPIFFE peer identity on the sidecar stands in for workload identity, and a <code>x-device-posture</code> header stands in for the Tanium/Wiz CDM signal. The posture values <code>trusted | suspect | tampered</code> change outcomes per method — a <code>GET</code> from a <code>suspect</code> device is permitted, but any <code>POST</code> requires <code>trusted</code>. The policy is <strong>fail-closed</strong> (default deny) and <strong>self-auditing</strong> (every evaluation emits a decision log) — two properties the source §6 calls out explicitly.</p>
+  <p>The source 6 shows a Rego policy that evaluates four inputs — <code>subject</code>, <code>resource</code>, <code>action</code>, <code>context</code> — plus an <code>env</code> carrying the signed policy-bundle hash. 800-207 2.1 T4 says exactly this: a request is not permitted solely because its credentials are valid; the authorisation calculus must reach into the <em>observable state</em> of client, app, and asset, and may use behavioural attributes (UEBA, fraud/AML scores in the source 9). In this lab we implement a trimmed-down version: JWT claims stand in for CIAM identity, the SPIFFE peer identity on the sidecar stands in for workload identity, and a <code>x-device-posture</code> header stands in for the Tanium/Wiz CDM signal. The posture values <code>trusted | suspect | tampered</code> change outcomes per method — a <code>GET</code> from a <code>suspect</code> device is permitted, but any <code>POST</code> requires <code>trusted</code>. The policy is <strong>fail-closed</strong> (default deny) and <strong>self-auditing</strong> (every evaluation emits a decision log) — two properties the source 6 calls out explicitly.</p>
 
   <h4>Step-by-step</h4>
 
@@ -1828,7 +1828,7 @@ decision_id := crypto.sha256(sprintf("%v|%v|%v|%v|%v",
 </code></pre>
   </div>
 
-  <p><span class="step-num">02</span>Load the policy into the running OPA. We re-use the OPA from bootstrap (§2.5). The ConfigMap is mounted as a bundle-free policy file.</p>
+  <p><span class="step-num">02</span>Load the policy into the running OPA. We re-use the OPA from bootstrap (2.5). The ConfigMap is mounted as a bundle-free policy file.</p>
 
   <div class="code-block">
     <div class="code-head"><span class="lang">YAML</span><span class="path">labs/04-dynamic-policy/opa-policy.yaml</span><button class="copy-btn">Copy</button></div>
@@ -1958,7 +1958,7 @@ done
 </code></pre>
   </div>
 
-  <p><span class="step-num">05</span>Inspect the OPA decision log for the <code>decision_id</code>. Source §8.5 names this the canonical audit artefact.</p>
+  <p><span class="step-num">05</span>Inspect the OPA decision log for the <code>decision_id</code>. Source 8.5 names this the canonical audit artefact.</p>
 
   <div class="code-block terminal">
     <div class="code-head"><span class="lang">Bash</span><span class="path">decision log</span><button class="copy-btn">Copy</button></div>
@@ -2017,9 +2017,9 @@ curl -s -o /dev/null -w '%{http_code}\n' -X POST \
 
   <h4>Reflection questions</h4>
   <ol>
-    <li>The source §6 policy is <em>fail-closed</em> by default. Write the one line of your Rego that enforces this, and explain the STRIDE risk (§8.10) it mitigates.</li>
-    <li>The posture header in this lab is trivially spoofable from outside the mesh. In a real deployment, what source §4 component would sign the posture claim, and where in the request flow would the PEP verify the signature?</li>
-    <li>800-207 §2.1 T4 cites "behavioural and environmental attributes." Which source §9 AI use case most closely feeds such attributes into the PE, and what false-positive tolerance applies (source §9)?</li>
+    <li>The source 6 policy is <em>fail-closed</em> by default. Write the one line of your Rego that enforces this, and explain the STRIDE risk (8.10) it mitigates.</li>
+    <li>The posture header in this lab is trivially spoofable from outside the mesh. In a real deployment, what source 4 component would sign the posture claim, and where in the request flow would the PEP verify the signature?</li>
+    <li>800-207 2.1 T4 cites "behavioural and environmental attributes." Which source 9 AI use case most closely feeds such attributes into the PE, and what false-positive tolerance applies (source 9)?</li>
   </ol>
 </section>
 
@@ -2030,14 +2030,14 @@ curl -s -o /dev/null -w '%{http_code}\n' -X POST \
   <div class="lab-header">
     <span class="eyebrow">Lab 05 · 75 min</span>
     <h2 class="lab-title">The enterprise monitors and measures the integrity and security posture of all owned and associated assets</h2>
-    <p class="lab-tenet">NIST SP 800-207 §2.1 Tenet 5 — "The enterprise monitors and measures the integrity and security posture of all owned and associated assets."</p>
+    <p class="lab-tenet">NIST SP 800-207 2.1 Tenet 5 — "The enterprise monitors and measures the integrity and security posture of all owned and associated assets."</p>
   </div>
 
   <dl class="nist-map">
-    <dt>Tenet</dt><dd><span class="badge tenet">T5</span> Integrity &amp; posture monitoring (§2.1)</dd>
-    <dt>Components</dt><dd>CDM Data Source (§3.1), Threat Intel / SIEM feed (§3.1), Trust Algorithm input (§3.4.1)</dd>
-    <dt>Variant</dt><dd>Device-agent/gateway (§3.2.1) — posture signal becomes a policy input</dd>
-    <dt>Source §</dt><dd>§4 (CDM box), §7.14 (Wiz + Tanium), §8.10 (threat model)</dd>
+    <dt>Tenet</dt><dd><span class="badge tenet">T5</span> Integrity &amp; posture monitoring (2.1)</dd>
+    <dt>Components</dt><dd>CDM Data Source (3.1), Threat Intel / SIEM feed (3.1), Trust Algorithm input (3.4.1)</dd>
+    <dt>Variant</dt><dd>Device-agent/gateway (3.2.1) — posture signal becomes a policy input</dd>
+    <dt>Source </dt><dd>4 (CDM box), 7.14 (Wiz + Tanium), 8.10 (threat model)</dd>
   </dl>
 
   <h4>Learning objectives</h4>
@@ -2049,7 +2049,7 @@ curl -s -o /dev/null -w '%{http_code}\n' -X POST \
   </ul>
 
   <h4>Concept primer</h4>
-  <p>The source §4 diagram places CDM (Tanium for endpoints, Wiz for cloud) as a Data Source feeding the Policy Engine; §7.14 insists this is not a reporting dashboard but a real-time <em>signal</em>. NIST 800-207 §2.1 T5 says the enterprise measures integrity of <em>all</em> owned assets — pods included. In a real bank, Wiz surfaces CVEs and drift; Tanium surfaces endpoint tampering. In this lab Falco plays the runtime-integrity role: eBPF-kernel syscall inspection detects "a shell ran in a container" and emits a structured event. A small Go/Python webhook — running in <code>zta-runtime-security</code> — receives the event, looks up the owning pod, and patches its ServiceAccount's annotation <code>zta.posture</code>. Your Envoy sidecar can then project that annotation onto outbound requests via a header (the simplest plumbing), or — in more mature deployments — the CDM signal flows over a signed Kafka channel into the PE directly. Either way, the <em>Trust Algorithm</em> (§3.4.1) is no longer static.</p>
+  <p>The source 4 diagram places CDM (Tanium for endpoints, Wiz for cloud) as a Data Source feeding the Policy Engine; 7.14 insists this is not a reporting dashboard but a real-time <em>signal</em>. NIST 800-207 2.1 T5 says the enterprise measures integrity of <em>all</em> owned assets — pods included. In a real bank, Wiz surfaces CVEs and drift; Tanium surfaces endpoint tampering. In this lab Falco plays the runtime-integrity role: eBPF-kernel syscall inspection detects "a shell ran in a container" and emits a structured event. A small Go/Python webhook — running in <code>zta-runtime-security</code> — receives the event, looks up the owning pod, and patches its ServiceAccount's annotation <code>zta.posture</code>. Your Envoy sidecar can then project that annotation onto outbound requests via a header (the simplest plumbing), or — in more mature deployments — the CDM signal flows over a signed Kafka channel into the PE directly. Either way, the <em>Trust Algorithm</em> (3.4.1) is no longer static.</p>
 
   <h4>Step-by-step</h4>
 
@@ -2298,7 +2298,7 @@ kubectl --context docker-desktop -n zta-policy logs deploy/opa --tail=5 \
   </div>
 
   <h4>Break-it exercise</h4>
-  <p>Disable the webhook subscriber in Falcosidekick and repeat the shell-in-container event. The annotation no longer changes; the policy stays at <code>trusted</code>. This is what a CDM outage looks like — and why source §8.5 mandates WORM retention: detection that never reaches the PE is invisible forever unless it is also logged.</p>
+  <p>Disable the webhook subscriber in Falcosidekick and repeat the shell-in-container event. The annotation no longer changes; the policy stays at <code>trusted</code>. This is what a CDM outage looks like — and why source 8.5 mandates WORM retention: detection that never reaches the PE is invisible forever unless it is also logged.</p>
 
   <div class="code-block terminal">
     <div class="code-head"><span class="lang">Bash</span><span class="path">break-it</span><button class="copy-btn">Copy</button></div>
@@ -2315,9 +2315,9 @@ helm --kube-context docker-desktop upgrade falco falcosecurity/falco -n zta-runt
 
   <h4>Reflection questions</h4>
   <ol>
-    <li>Source §7.14 names Wiz and Tanium as CDM sources. Which classes of event can Falco detect that Wiz typically cannot, and which detections belong to Wiz rather than Falco?</li>
-    <li>The reconciler introduces seconds of latency between detection and enforcement. Against the source §8.10 STRIDE list, which adversary technique becomes easier during that window?</li>
-    <li>Tenet 5 says "owned <em>and associated</em> assets." In the bank, which non-owned assets still count — and what ZTA control surface exists to measure their posture (hint: source §7.17 and §9.2)?</li>
+    <li>Source 7.14 names Wiz and Tanium as CDM sources. Which classes of event can Falco detect that Wiz typically cannot, and which detections belong to Wiz rather than Falco?</li>
+    <li>The reconciler introduces seconds of latency between detection and enforcement. Against the source 8.10 STRIDE list, which adversary technique becomes easier during that window?</li>
+    <li>Tenet 5 says "owned <em>and associated</em> assets." In the bank, which non-owned assets still count — and what ZTA control surface exists to measure their posture (hint: source 7.17 and 9.2)?</li>
   </ol>
 </section>
 
@@ -2328,26 +2328,26 @@ helm --kube-context docker-desktop upgrade falco falcosecurity/falco -n zta-runt
   <div class="lab-header">
     <span class="eyebrow">Lab 06 · 90 min</span>
     <h2 class="lab-title">All resource authentication and authorization are dynamic and strictly enforced before access is allowed</h2>
-    <p class="lab-tenet">NIST SP 800-207 §2.1 Tenet 6 — "All resource authentication and authorization are dynamic and strictly enforced before access is allowed."</p>
+    <p class="lab-tenet">NIST SP 800-207 2.1 Tenet 6 — "All resource authentication and authorization are dynamic and strictly enforced before access is allowed."</p>
   </div>
 
   <dl class="nist-map">
-    <dt>Tenet</dt><dd><span class="badge tenet">T6</span> Strict enforcement (§2.1)</dd>
-    <dt>Components</dt><dd>Policy Engine (§3.1.1), Policy Administrator (§3.1.1 — signed bundle publisher), PEP (§3.1.2)</dd>
-    <dt>Variant</dt><dd>All four §3.2 variants collapse onto the same PE↔PA↔PEP loop; this lab is the <em>canonical</em> NIST picture</dd>
-    <dt>Source §</dt><dd>§4 (control-plane placement), §5 Flow A end-to-end, §7.5–§7.6, §8.10 (policy-plane threat model)</dd>
+    <dt>Tenet</dt><dd><span class="badge tenet">T6</span> Strict enforcement (2.1)</dd>
+    <dt>Components</dt><dd>Policy Engine (3.1.1), Policy Administrator (3.1.1 — signed bundle publisher), PEP (3.1.2)</dd>
+    <dt>Variant</dt><dd>All four 3.2 variants collapse onto the same PE↔PA↔PEP loop; this lab is the <em>canonical</em> NIST picture</dd>
+    <dt>Source </dt><dd>4 (control-plane placement), 5 Flow A end-to-end, 7.5–7.6, 8.10 (policy-plane threat model)</dd>
   </dl>
 
   <h4>Learning objectives</h4>
   <ul>
     <li>Stand up a minimal Policy Administrator: a signed-bundle HTTP server that publishes OPA bundles over HTTPS.</li>
-    <li>Configure OPA PEs to verify bundle signatures and reject unsigned or unknown-signer bundles — the <code>trusted_bundles</code> pattern from source §6.</li>
+    <li>Configure OPA PEs to verify bundle signatures and reject unsigned or unknown-signer bundles — the <code>trusted_bundles</code> pattern from source 6.</li>
     <li>Exercise the full loop: a denied request → operator changes posture through the Lab 5 webhook → PA re-publishes → PE re-evaluates → PEP now permits.</li>
-    <li>Read the sequence diagram and locate every 800-207 §3.1 component participating.</li>
+    <li>Read the sequence diagram and locate every 800-207 3.1 component participating.</li>
   </ul>
 
   <h4>Concept primer</h4>
-  <p>Tenets 1–5 describe what is watched and how; Tenet 6 is the thesis statement — <em>no request succeeds without a fresh, dynamic, authoritative authorisation</em>, and that authorisation is enforced at the resource, not merely requested. The source §4 makes the policy plane Tier-0 for exactly this reason. In production the PA compiles Rego, runs <code>opa test</code>, signs the bundle with cosign, publishes it to an immutable bucket, and signs a manifest of <em>trusted bundles</em> the PE uses to reject anything else. In a home lab we shrink this to: a Deployment that runs <code>opa build --signing-alg RS256 --signing-key key.pem</code>, an HTTPS service that serves the resulting tarball, and an OPA configuration that includes the public key under <code>keys</code> and the bundle name under <code>signing.keyid</code>. The PEP side is already in place from Lab 4. The lab's value is seeing the loop close at request time: the <em>same</em> request, run twice, gets two different decisions because the posture input — signal, bundle, or policy — changed between calls.</p>
+  <p>Tenets 1–5 describe what is watched and how; Tenet 6 is the thesis statement — <em>no request succeeds without a fresh, dynamic, authoritative authorisation</em>, and that authorisation is enforced at the resource, not merely requested. The source 4 makes the policy plane Tier-0 for exactly this reason. In production the PA compiles Rego, runs <code>opa test</code>, signs the bundle with cosign, publishes it to an immutable bucket, and signs a manifest of <em>trusted bundles</em> the PE uses to reject anything else. In a home lab we shrink this to: a Deployment that runs <code>opa build --signing-alg RS256 --signing-key key.pem</code>, an HTTPS service that serves the resulting tarball, and an OPA configuration that includes the public key under <code>keys</code> and the bundle name under <code>signing.keyid</code>. The PEP side is already in place from Lab 4. The lab's value is seeing the loop close at request time: the <em>same</em> request, run twice, gets two different decisions because the posture input — signal, bundle, or policy — changed between calls.</p>
 
   <h4>Sequence diagram</h4>
   <figure class="diagram" aria-label="PE–PA–PEP sequence diagram">
@@ -2637,7 +2637,7 @@ kubectl --context docker-desktop -n zta-policy logs deploy/opa --tail=30 \
   </div>
 
   <h4>Break-it exercise</h4>
-  <p>Ship an <em>unsigned</em> bundle and verify the PE refuses it. This is the <code>untrusted-bundle</code> defence from source §6 made concrete.</p>
+  <p>Ship an <em>unsigned</em> bundle and verify the PE refuses it. This is the <code>untrusted-bundle</code> defence from source 6 made concrete.</p>
 
   <div class="code-block terminal">
     <div class="code-head"><span class="lang">Bash</span><span class="path">break-it — unsigned bundle</span><button class="copy-btn">Copy</button></div>
@@ -2664,8 +2664,8 @@ curl -s http://$(kubectl --context docker-desktop -n zta-policy get svc opa -o j
 
   <h4>Reflection questions</h4>
   <ol>
-    <li>The source §8.10 "Elevation via policy regression" mitigation names <em>signed CI</em>, <em>staged rollout</em>, and <em>automated rollback on allow-rate anomaly</em>. Which of these did this lab implement, and which would you add next?</li>
-    <li>If the PA itself is compromised, signed bundles still protect the PE — but only up to a point. What source §8.10 control covers the residual risk?</li>
+    <li>The source 8.10 "Elevation via policy regression" mitigation names <em>signed CI</em>, <em>staged rollout</em>, and <em>automated rollback on allow-rate anomaly</em>. Which of these did this lab implement, and which would you add next?</li>
+    <li>If the PA itself is compromised, signed bundles still protect the PE — but only up to a point. What source 8.10 control covers the residual risk?</li>
     <li>Tenet 6 says enforcement is "strict <em>before</em> access is allowed." Identify the exact Envoy filter chain position at which the PEP consults the PE — is it inbound or outbound to the api pod, and why does that matter?</li>
   </ol>
 </section>
@@ -2677,25 +2677,25 @@ curl -s http://$(kubectl --context docker-desktop -n zta-policy get svc opa -o j
   <div class="lab-header">
     <span class="eyebrow">Lab 07 · 90 min</span>
     <h2 class="lab-title">Collect as much information as possible and use it to improve posture</h2>
-    <p class="lab-tenet">NIST SP 800-207 §2.1 Tenet 7 — "The enterprise collects as much information as possible about the current state of assets, network infrastructure, and communications and uses it to improve its security posture."</p>
+    <p class="lab-tenet">NIST SP 800-207 2.1 Tenet 7 — "The enterprise collects as much information as possible about the current state of assets, network infrastructure, and communications and uses it to improve its security posture."</p>
   </div>
 
   <dl class="nist-map">
-    <dt>Tenet</dt><dd><span class="badge tenet">T7</span> Telemetry loop (§2.1)</dd>
-    <dt>Components</dt><dd>Activity Log / SIEM Data Source (§3.1), Observability (§3.1), Trust Algorithm feedback (§3.4.1)</dd>
+    <dt>Tenet</dt><dd><span class="badge tenet">T7</span> Telemetry loop (2.1)</dd>
+    <dt>Components</dt><dd>Activity Log / SIEM Data Source (3.1), Observability (3.1), Trust Algorithm feedback (3.4.1)</dd>
     <dt>Variant</dt><dd>All variants — telemetry is the shared substrate</dd>
-    <dt>Source §</dt><dd>§7.12 (Splunk + Snowflake), §7.13 (OTel + Grafana), §8.5 (logging), §8.6 (observability SLOs)</dd>
+    <dt>Source </dt><dd>7.12 (Splunk + Snowflake), 7.13 (OTel + Grafana), 8.5 (logging), 8.6 (observability SLOs)</dd>
   </dl>
 
   <h4>Learning objectives</h4>
   <ul>
     <li>Wire Prometheus metrics, Loki logs (OPA decision log), and Tempo traces (Istio) into a single Grafana workspace.</li>
-    <li>Build one dashboard showing allow/deny/step-up rates, decision latency P50/P99, and deny reasons broken down by cause — the telemetry SLOs from source §8.6.</li>
+    <li>Build one dashboard showing allow/deny/step-up rates, decision latency P50/P99, and deny reasons broken down by cause — the telemetry SLOs from source 8.6.</li>
     <li>Use the dashboard to detect an unusual pattern and refine the Lab 4 policy in response — the closing step in 800-207 T7's "use it to improve its security posture."</li>
   </ul>
 
   <h4>Concept primer</h4>
-  <p>T7 is often read as "collect lots of logs." The source §8.6 is more exact: SLOs are <em>quantitative</em>, telemetry feeds the Trust Algorithm, and observed allow-rate regressions are themselves an input to policy release gates. In this lab you hold up a magnifying glass to the cluster: Prometheus scrapes OPA's metrics endpoint for decision counters and latency histograms; the Loki Grafana Agent tails OPA pod logs, parses each line as JSON, and indexes on <code>decision_id</code>, <code>reason</code>, <code>allow</code>; Tempo receives OpenTelemetry traces from the Istio sidecars via the Zipkin endpoint. One Grafana dashboard stitches them together — a classic golden-signals view but with the decision itself as the first-class object. The <em>improvement</em> step is the point: you will notice that too many denies with reason <code>no-matching-allow</code> come from one API path, and you will tighten the Rego to give the operator a clearer error.</p>
+  <p>T7 is often read as "collect lots of logs." The source 8.6 is more exact: SLOs are <em>quantitative</em>, telemetry feeds the Trust Algorithm, and observed allow-rate regressions are themselves an input to policy release gates. In this lab you hold up a magnifying glass to the cluster: Prometheus scrapes OPA's metrics endpoint for decision counters and latency histograms; the Loki Grafana Agent tails OPA pod logs, parses each line as JSON, and indexes on <code>decision_id</code>, <code>reason</code>, <code>allow</code>; Tempo receives OpenTelemetry traces from the Istio sidecars via the Zipkin endpoint. One Grafana dashboard stitches them together — a classic golden-signals view but with the decision itself as the first-class object. The <em>improvement</em> step is the point: you will notice that too many denies with reason <code>no-matching-allow</code> come from one API path, and you will tighten the Rego to give the operator a clearer error.</p>
 
   <h4>Step-by-step</h4>
 
@@ -2836,7 +2836,7 @@ metadata:
 data:
   zta.json: |
     {
-      "title": "ZTA — Decisions, Latency, Drift (800-207 §8.6 SLOs)",
+      "title": "ZTA — Decisions, Latency, Drift (800-207 8.6 SLOs)",
       "uid": "zta-main",
       "schemaVersion": 38,
       "timezone": "browser",
@@ -2871,7 +2871,7 @@ data:
 </code></pre>
   </div>
 
-  <p><span class="step-num">05</span>Drive a small load mix and watch the dashboard update. This synthesises the source §5 flow traffic: mostly trusted GETs, a trickle of suspect POSTs, and an occasional tampered device.</p>
+  <p><span class="step-num">05</span>Drive a small load mix and watch the dashboard update. This synthesises the source 5 flow traffic: mostly trusted GETs, a trickle of suspect POSTs, and an occasional tampered device.</p>
 
   <div class="code-block terminal">
     <div class="code-head"><span class="lang">Bash</span><span class="path">load mix</span><button class="copy-btn">Copy</button></div>
@@ -2949,7 +2949,7 @@ curl -s 'http://localhost:3200/api/search?tags=service.name=istio-ingressgateway
   </div>
 
   <h4>Break-it exercise</h4>
-  <p>Drop OPA's decision-log console sink. Repeat the load. Observe the dashboard goes silent on reasons while latency and counters continue — the policy decisions are still enforced but no longer <em>auditable</em>, which the source §8.5 calls a SOX §404 violation. Restore.</p>
+  <p>Drop OPA's decision-log console sink. Repeat the load. Observe the dashboard goes silent on reasons while latency and counters continue — the policy decisions are still enforced but no longer <em>auditable</em>, which the source 8.5 calls a SOX 404 violation. Restore.</p>
 
   <div class="code-block terminal">
     <div class="code-head"><span class="lang">Bash</span><span class="path">break-it</span><button class="copy-btn">Copy</button></div>
@@ -2972,9 +2972,9 @@ kubectl --context docker-desktop -n zta-policy rollout restart deploy/opa
 
   <h4>Reflection questions</h4>
   <ol>
-    <li>Source §8.6 sets PE availability at 99.995% and decision latency P99 &lt; 10 ms. Which of those SLOs is your dashboard showing, and which would you add a burn-rate alert for first?</li>
+    <li>Source 8.6 sets PE availability at 99.995% and decision latency P99 &lt; 10 ms. Which of those SLOs is your dashboard showing, and which would you add a burn-rate alert for first?</li>
     <li>The refined policy produced a new deny reason, <code>missing-token</code>. Which tenet does the <em>act of refinement</em> satisfy — T4, T7, or both — and why?</li>
-    <li>T7 says "<em>as much information as possible</em>." Identify one source §9 AI use case whose quality depends on this telemetry, and one regulatory obligation (source §8.5) that could not be met without it.</li>
+    <li>T7 says "<em>as much information as possible</em>." Identify one source 9 AI use case whose quality depends on this telemetry, and one regulatory obligation (source 8.5) that could not be met without it.</li>
   </ol>
 </section>
 
@@ -2988,9 +2988,9 @@ kubectl --context docker-desktop -n zta-policy rollout restart deploy/opa
     <p class="lab-tenet">All seven tenets exercised in a single request trace.</p>
   </div>
 
-  <p>The capstone scenario composes everything from Labs 1–7. An external user <strong>Alice</strong> authenticates at Keycloak, requests a write against the bookstore API, is denied because her (simulated) device is in <code>suspect</code> posture for a POST, remediates, retries, and succeeds — with every step visible in the dashboard you built in Lab 7 and bound to a <code>decision_id</code> that can be traced from the ingress gateway through the PE to the data tier. Every 800-207 §3.1 logical component is present.</p>
+  <p>The capstone scenario composes everything from Labs 1–7. An external user <strong>Alice</strong> authenticates at Keycloak, requests a write against the bookstore API, is denied because her (simulated) device is in <code>suspect</code> posture for a POST, remediates, retries, and succeeds — with every step visible in the dashboard you built in Lab 7 and bound to a <code>decision_id</code> that can be traced from the ingress gateway through the PE to the data tier. Every 800-207 3.1 logical component is present.</p>
 
-  <h3>Architecture — every §3.1 component labelled</h3>
+  <h3>Architecture — every 3.1 component labelled</h3>
   <figure class="diagram" aria-label="Capstone architecture diagram">
 <svg viewBox="0 0 900 440" xmlns="http://www.w3.org/2000/svg" role="img">
   <style>
@@ -3018,13 +3018,13 @@ kubectl --context docker-desktop -n zta-policy rollout restart deploy/opa
   <!-- Subject -->
   <rect x="20" y="180" width="110" height="60" class="box"/>
   <text x="75" y="208" class="box-title">Alice</text>
-  <text x="75" y="224" class="box-sub">Subject (§2.2)</text>
+  <text x="75" y="224" class="box-sub">Subject (2.2)</text>
 
   <!-- Ingress PEP -->
   <rect x="170" y="180" width="130" height="60" class="box-pep"/>
   <text x="235" y="200" class="box-title">Istio Ingress</text>
-  <text x="235" y="216" class="box-sub">PEP (§3.1.2)</text>
-  <text x="235" y="232" class="comp-tag">device-agent/gateway §3.2.1</text>
+  <text x="235" y="216" class="box-sub">PEP (3.1.2)</text>
+  <text x="235" y="232" class="comp-tag">device-agent/gateway 3.2.1</text>
 
   <!-- Control plane zone -->
   <rect x="330" y="20" width="400" height="220" class="zone"/>
@@ -3033,53 +3033,53 @@ kubectl --context docker-desktop -n zta-policy rollout restart deploy/opa
   <!-- Identity DS -->
   <rect x="345" y="60" width="110" height="48" class="box-ctrl"/>
   <text x="400" y="80" class="box-title">Keycloak</text>
-  <text x="400" y="94" class="box-sub">Identity DS (§3.1)</text>
-  <text x="400" y="106" class="comp-tag">source §7.1 / §7.2</text>
+  <text x="400" y="94" class="box-sub">Identity DS (3.1)</text>
+  <text x="400" y="106" class="comp-tag">source 7.1 / 7.2</text>
 
   <!-- SPIRE -->
   <rect x="480" y="60" width="110" height="48" class="box-ctrl"/>
   <text x="535" y="80" class="box-title">SPIRE</text>
   <text x="535" y="94" class="box-sub">Workload ID / PKI</text>
-  <text x="535" y="106" class="comp-tag">source §7.4 / §7.15</text>
+  <text x="535" y="106" class="comp-tag">source 7.4 / 7.15</text>
 
   <!-- CDM -->
   <rect x="615" y="60" width="105" height="48" class="box-ctrl"/>
   <text x="667" y="80" class="box-title">Falco + CDM</text>
-  <text x="667" y="94" class="box-sub">CDM DS (§3.1)</text>
-  <text x="667" y="106" class="comp-tag">source §7.14</text>
+  <text x="667" y="94" class="box-sub">CDM DS (3.1)</text>
+  <text x="667" y="106" class="comp-tag">source 7.14</text>
 
   <!-- PE -->
   <rect x="345" y="130" width="165" height="48" class="box-ctrl"/>
   <text x="427" y="150" class="box-title">OPA</text>
-  <text x="427" y="164" class="box-sub">Policy Engine (§3.1.1)</text>
-  <text x="427" y="176" class="comp-tag">source §7.5</text>
+  <text x="427" y="164" class="box-sub">Policy Engine (3.1.1)</text>
+  <text x="427" y="176" class="comp-tag">source 7.5</text>
 
   <!-- PA -->
   <rect x="525" y="130" width="110" height="48" class="box-ctrl"/>
   <text x="580" y="150" class="box-title">PA (signed)</text>
   <text x="580" y="164" class="box-sub">Policy Admin</text>
-  <text x="580" y="176" class="comp-tag">source §7.6</text>
+  <text x="580" y="176" class="comp-tag">source 7.6</text>
 
   <!-- SIEM/Obs -->
   <rect x="650" y="130" width="75" height="48" class="box-ctrl"/>
   <text x="687" y="150" class="box-title">SIEM/Obs</text>
   <text x="687" y="164" class="box-sub">Log/Trace DS</text>
-  <text x="687" y="176" class="comp-tag">§7.12 / §7.13</text>
+  <text x="687" y="176" class="comp-tag">7.12 / 7.13</text>
 
   <!-- Trust Algo -->
   <rect x="345" y="196" width="390" height="30" class="box-ctrl"/>
-  <text x="540" y="215" class="box-title">Trust Algorithm — criteria-based (§3.3.1)</text>
+  <text x="540" y="215" class="box-title">Trust Algorithm — criteria-based (3.3.1)</text>
 
   <!-- Api PEP -->
   <rect x="170" y="290" width="130" height="60" class="box-pep"/>
   <text x="235" y="312" class="box-title">API Sidecar</text>
   <text x="235" y="328" class="box-sub">PEP · ext_authz</text>
-  <text x="235" y="344" class="comp-tag">§3.1.2</text>
+  <text x="235" y="344" class="comp-tag">3.1.2</text>
 
   <!-- Resource -->
   <rect x="330" y="290" width="120" height="60" class="box"/>
   <text x="390" y="312" class="box-title">bookstore-api</text>
-  <text x="390" y="328" class="box-sub">Resource (§2.2)</text>
+  <text x="390" y="328" class="box-sub">Resource (2.2)</text>
 
   <!-- Data PEP + DB -->
   <rect x="480" y="290" width="110" height="60" class="box-pep"/>
@@ -3088,7 +3088,7 @@ kubectl --context docker-desktop -n zta-policy rollout restart deploy/opa
 
   <rect x="610" y="290" width="100" height="60" class="box"/>
   <text x="660" y="312" class="box-title">postgres</text>
-  <text x="660" y="328" class="box-sub">Resource (§2.2)</text>
+  <text x="660" y="328" class="box-sub">Resource (2.2)</text>
 
   <!-- Flows -->
   <!-- 1 Alice -> Ingress -->
@@ -3125,7 +3125,7 @@ kubectl --context docker-desktop -n zta-policy rollout restart deploy/opa
   <line x1="235" y1="290" x2="687" y2="180" class="sig" marker-end="url(#arr3)"/>
   <text x="450" y="260" class="flow-txt" style="fill:#B45309">8 decision_id, trace_id → SIEM/Obs</text>
 </svg>
-<figcaption>Capstone: every NIST 800-207 §3.1 logical component is rendered in the cluster. Solid arrows = request path; dashed amber = signals and bundles.</figcaption>
+<figcaption>Capstone: every NIST 800-207 3.1 logical component is rendered in the cluster. Solid arrows = request path; dashed amber = signals and bundles.</figcaption>
 </figure>
 
   <h3>Run the capstone</h3>
@@ -3173,201 +3173,201 @@ kubectl --context docker-desktop -n zta-policy logs deploy/opa --tail=6 \
 </code></pre>
   </div>
 
-  <p>Open Grafana; the <em>ZTA — Decisions, Latency, Drift</em> dashboard should now show the denied-then-allowed transition for Alice and a corresponding latency envelope — the source §8.6 SLO surface in miniature. Every tenet has had a measurable effect on the request's journey.</p>
+  <p>Open Grafana; the <em>ZTA — Decisions, Latency, Drift</em> dashboard should now show the denied-then-allowed transition for Alice and a corresponding latency envelope — the source 8.6 SLO surface in miniature. Every tenet has had a measurable effect on the request's journey.</p>
 </section>
 
 <!-- ============================================================== -->
 <!-- MAPPING APPENDIX                                                -->
 <!-- ============================================================== -->
 <section id="appendix">
-<h2>Mapping Appendix · Source § × NIST 800-207</h2>
+<h2>Mapping Appendix · Source  × NIST 800-207</h2>
 
-<p>Each row is a paragraph-level section of the source document. Cells under T1–T7 use: <span class="badge primary">P</span> primary (the section substantively implements the tenet), <span class="badge secondary">S</span> secondary (the section touches the tenet in passing), <span class="badge na">—</span> n/a. Logical components name the §3.1 component(s) instantiated; deployment variants cite §3.2. One-sentence justifications for every <em>Primary</em> follow each row group.</p>
+<p>Each row is a paragraph-level section of the source document. Cells under T1–T7 use: <span class="badge primary">P</span> primary (the section substantively implements the tenet), <span class="badge secondary">S</span> secondary (the section touches the tenet in passing), <span class="badge na">—</span> n/a. Logical components name the 3.1 component(s) instantiated; deployment variants cite 3.2. One-sentence justifications for every <em>Primary</em> follow each row group.</p>
 
 <div class="table-wrap">
 <table>
   <thead>
     <tr>
-      <th style="width:22%">Source §</th>
+      <th style="width:22%">Source </th>
       <th style="width:3%">T1</th><th style="width:3%">T2</th><th style="width:3%">T3</th><th style="width:3%">T4</th><th style="width:3%">T5</th><th style="width:3%">T6</th><th style="width:3%">T7</th>
-      <th>§3.1 Components</th>
-      <th>§3.2 Variant</th>
+      <th>3.1 Components</th>
+      <th>3.2 Variant</th>
     </tr>
   </thead>
   <tbody>
-    <tr><td>§1 Executive summary</td>
+    <tr><td>1 Executive summary</td>
       <td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td>
       <td>PE, PA, PEP (all), Identity/CDM/SIEM DS, Trust Algo</td>
-      <td>Hybrid · §3.2.1 + §3.2.2 + §3.2.3 + §3.2.4</td></tr>
-    <tr><td>§2 Assumptions &amp; scope</td>
+      <td>Hybrid · 3.2.1 + 3.2.2 + 3.2.3 + 3.2.4</td></tr>
+    <tr><td>2 Assumptions &amp; scope</td>
       <td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge na">—</span></td>
       <td>Resources enumerated; data-residency PEP hint</td>
-      <td>Resource-portal §3.2.3 (mainframe facade)</td></tr>
-    <tr><td>§3 C4 L1 — Context</td>
+      <td>Resource-portal 3.2.3 (mainframe facade)</td></tr>
+    <tr><td>3 C4 L1 — Context</td>
       <td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge na">—</span></td>
       <td>Subject / Resource boundary; adversary model</td>
-      <td>Device-agent/gateway §3.2.1 for workforce</td></tr>
-    <tr><td>§4 C4 L2 — Container</td>
+      <td>Device-agent/gateway 3.2.1 for workforce</td></tr>
+    <tr><td>4 C4 L2 — Container</td>
       <td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td>
       <td>PE fleet, PA, PEPs (all classes), 8 Data Sources, Trust Algo</td>
       <td>Hybrid (all four variants)</td></tr>
-    <tr><td>§5 C4 L3 — Flow A (retail)</td>
+    <tr><td>5 C4 L3 — Flow A (retail)</td>
       <td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td>
       <td>CIAM, API PEP, PE, Risk DS, Mesh PEP, Mainframe PEP</td>
-      <td>Resource-portal §3.2.3 (API) + §3.2.1 (device-agent)</td></tr>
-    <tr><td>§5 C4 L3 — Flow B (SWIFT)</td>
+      <td>Resource-portal 3.2.3 (API) + 3.2.1 (device-agent)</td></tr>
+    <tr><td>5 C4 L3 — Flow B (SWIFT)</td>
       <td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td>
       <td>SPIRE, Mesh PEP, Secure-Zone PEP, PAM PEP, PE, SIEM</td>
-      <td>Enclave §3.2.2 (SWIFT Secure Zone)</td></tr>
-    <tr><td>§6 C4 L4 — Rego sample</td>
+      <td>Enclave 3.2.2 (SWIFT Secure Zone)</td></tr>
+    <tr><td>6 C4 L4 — Rego sample</td>
       <td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td>
       <td>PE decision logic; fail-closed default; signed-bundle gate</td>
       <td>Variant-agnostic PE contract</td></tr>
-    <tr><td>§7.1–§7.3 Identity DS</td>
+    <tr><td>7.1–7.3 Identity DS</td>
       <td><span class="badge secondary">S</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td>
       <td>ForgeRock CIAM, Entra ID, Okta</td>
-      <td>Resource-portal §3.2.3</td></tr>
-    <tr><td>§7.4 SPIFFE/SPIRE</td>
+      <td>Resource-portal 3.2.3</td></tr>
+    <tr><td>7.4 SPIFFE/SPIRE</td>
       <td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td>
-      <td>Workload Identity DS (§3.1.3)</td>
-      <td>Device-agent/gateway §3.2.1</td></tr>
-    <tr><td>§7.5 OPA</td>
+      <td>Workload Identity DS (3.1.3)</td>
+      <td>Device-agent/gateway 3.2.1</td></tr>
+    <tr><td>7.5 OPA</td>
       <td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td>
-      <td>Policy Engine (§3.1.1)</td>
+      <td>Policy Engine (3.1.1)</td>
       <td>Variant-agnostic</td></tr>
-    <tr><td>§7.6 Policy Administrator</td>
+    <tr><td>7.6 Policy Administrator</td>
       <td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td>
-      <td>Policy Administrator (§3.1.1 — control plane)</td>
+      <td>Policy Administrator (3.1.1 — control plane)</td>
       <td>Variant-agnostic</td></tr>
-    <tr><td>§7.7 Kong + Authlete</td>
+    <tr><td>7.7 Kong + Authlete</td>
       <td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td>
-      <td>API PEP (§3.1.2)</td>
-      <td>Resource-portal §3.2.3</td></tr>
-    <tr><td>§7.8 Istio mesh</td>
+      <td>API PEP (3.1.2)</td>
+      <td>Resource-portal 3.2.3</td></tr>
+    <tr><td>7.8 Istio mesh</td>
       <td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td>
       <td>East-west PEP</td>
-      <td>Device-agent/gateway §3.2.1</td></tr>
-    <tr><td>§7.9 Zscaler ZPA</td>
+      <td>Device-agent/gateway 3.2.1</td></tr>
+    <tr><td>7.9 Zscaler ZPA</td>
       <td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td>
       <td>User-to-app PEP</td>
-      <td>Resource-portal §3.2.3</td></tr>
-    <tr><td>§7.10 CyberArk PAM</td>
+      <td>Resource-portal 3.2.3</td></tr>
+    <tr><td>7.10 CyberArk PAM</td>
       <td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td>
       <td>Privileged-session PEP; identity DS for priv events</td>
-      <td>Enclave §3.2.2 (break-glass into Secure Zone)</td></tr>
-    <tr><td>§7.11 Vault + HSM</td>
+      <td>Enclave 3.2.2 (break-glass into Secure Zone)</td></tr>
+    <tr><td>7.11 Vault + HSM</td>
       <td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge secondary">S</span></td><td><span class="badge na">—</span></td>
       <td>Supporting PKI DS</td>
       <td>Variant-agnostic</td></tr>
-    <tr><td>§7.12 Splunk + Snowflake</td>
+    <tr><td>7.12 Splunk + Snowflake</td>
       <td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td>
       <td>Activity Log / SIEM DS</td>
       <td>Variant-agnostic</td></tr>
-    <tr><td>§7.13 OpenTelemetry</td>
+    <tr><td>7.13 OpenTelemetry</td>
       <td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td>
       <td>Activity Log DS; PE/PA health</td>
       <td>Variant-agnostic</td></tr>
-    <tr><td>§7.14 Wiz + Tanium</td>
+    <tr><td>7.14 Wiz + Tanium</td>
       <td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td>
       <td>CDM DS</td>
-      <td>Device-agent/gateway §3.2.1</td></tr>
-    <tr><td>§7.15 Venafi + AWS PCA</td>
+      <td>Device-agent/gateway 3.2.1</td></tr>
+    <tr><td>7.15 Venafi + AWS PCA</td>
       <td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge secondary">S</span></td><td><span class="badge na">—</span></td>
       <td>PKI DS</td>
       <td>Variant-agnostic</td></tr>
-    <tr><td>§7.16 Immuta</td>
+    <tr><td>7.16 Immuta</td>
       <td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td>
       <td>Data-plane PEP + Data-Access Policy DS</td>
-      <td>Application sandboxing §3.2.4 (data plane)</td></tr>
-    <tr><td>§7.17 Netskope SSE</td>
+      <td>Application sandboxing 3.2.4 (data plane)</td></tr>
+    <tr><td>7.17 Netskope SSE</td>
       <td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td>
       <td>SaaS/egress PEP; DLP DS</td>
-      <td>Resource-portal §3.2.3 (SaaS)</td></tr>
-    <tr><td>§7.18 Authlete</td>
+      <td>Resource-portal 3.2.3 (SaaS)</td></tr>
+    <tr><td>7.18 Authlete</td>
       <td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge na">—</span></td>
       <td>FAPI engine under API PEP</td>
-      <td>Resource-portal §3.2.3</td></tr>
-    <tr><td>§7.19 Broadcom AAM</td>
+      <td>Resource-portal 3.2.3</td></tr>
+    <tr><td>7.19 Broadcom AAM</td>
       <td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td>
       <td>Mainframe PEP; identity gateway</td>
-      <td>Resource-portal §3.2.3</td></tr>
-    <tr><td>§7.20 Featurespace</td>
+      <td>Resource-portal 3.2.3</td></tr>
+    <tr><td>7.20 Featurespace</td>
       <td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td>
       <td>Continuous-signal Data Source for PE</td>
       <td>Variant-agnostic</td></tr>
-    <tr><td>§8.1 Human identity</td>
+    <tr><td>8.1 Human identity</td>
       <td><span class="badge secondary">S</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td>
       <td>Workforce / CIAM / B2B planes; AuthZEN normalisation</td>
-      <td>Device-agent/gateway §3.2.1 + resource-portal §3.2.3</td></tr>
-    <tr><td>§8.2 Machine identity</td>
+      <td>Device-agent/gateway 3.2.1 + resource-portal 3.2.3</td></tr>
+    <tr><td>8.2 Machine identity</td>
       <td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td>
       <td>SPIFFE IDs across K8s/VM/Lambda/mainframe</td>
-      <td>Device-agent/gateway §3.2.1</td></tr>
-    <tr><td>§8.3 Secrets management</td>
+      <td>Device-agent/gateway 3.2.1</td></tr>
+    <tr><td>8.3 Secrets management</td>
       <td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge na">—</span></td>
       <td>Vault + HSM — supporting infrastructure</td>
       <td>Variant-agnostic</td></tr>
-    <tr><td>§8.4 PAM</td>
+    <tr><td>8.4 PAM</td>
       <td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td>
       <td>PAM as PEP; session broker</td>
-      <td>Enclave §3.2.2</td></tr>
-    <tr><td>§8.5 Logging / SIEM</td>
+      <td>Enclave 3.2.2</td></tr>
+    <tr><td>8.5 Logging / SIEM</td>
       <td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td>
       <td>Activity Log DS; WORM audit chain</td>
       <td>Variant-agnostic</td></tr>
-    <tr><td>§8.6 Observability / SLOs</td>
+    <tr><td>8.6 Observability / SLOs</td>
       <td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td>
       <td>OTel; Prom/Tempo/Loki equivalents</td>
       <td>Variant-agnostic</td></tr>
-    <tr><td>§8.7 API security (FAPI 2.0)</td>
+    <tr><td>8.7 API security (FAPI 2.0)</td>
       <td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td>
       <td>API PEP with PAR / DPoP / mTLS-bound / JARM</td>
-      <td>Resource-portal §3.2.3</td></tr>
-    <tr><td>§8.8 Data protection</td>
+      <td>Resource-portal 3.2.3</td></tr>
+    <tr><td>8.8 Data protection</td>
       <td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td>
       <td>Data-plane PEPs; tokenisation; classification</td>
-      <td>Application sandboxing §3.2.4</td></tr>
-    <tr><td>§8.9 Third-party / supply chain</td>
+      <td>Application sandboxing 3.2.4</td></tr>
+    <tr><td>8.9 Third-party / supply chain</td>
       <td><span class="badge secondary">S</span></td><td><span class="badge secondary">S</span></td><td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td>
       <td>sigstore, in-toto; signed PA bundles</td>
       <td>Variant-agnostic</td></tr>
-    <tr><td>§8.10 Threat model of ZTA</td>
+    <tr><td>8.10 Threat model of ZTA</td>
       <td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge secondary">S</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td>
       <td>Policy plane as Tier-0; STRIDE mitigations</td>
       <td>Variant-agnostic</td></tr>
-    <tr><td>§9.1 UEBA</td>
+    <tr><td>9.1 UEBA</td>
       <td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td>
       <td>Trust Algorithm signal input</td>
-      <td>Application sandboxing §3.2.4 (model)</td></tr>
-    <tr><td>§9.2 Adaptive auth</td>
+      <td>Application sandboxing 3.2.4 (model)</td></tr>
+    <tr><td>9.2 Adaptive auth</td>
       <td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td>
       <td>Identity DS feature; PE input</td>
-      <td>Device-agent/gateway §3.2.1</td></tr>
-    <tr><td>§9.3 Fraud / AML</td>
+      <td>Device-agent/gateway 3.2.1</td></tr>
+    <tr><td>9.3 Fraud / AML</td>
       <td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td>
       <td>Risk DS; API PEP enforces</td>
-      <td>Resource-portal §3.2.3</td></tr>
-    <tr><td>§9.4 SOC copilot</td>
+      <td>Resource-portal 3.2.3</td></tr>
+    <tr><td>9.4 SOC copilot</td>
       <td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td>
       <td>Analytics layer over SIEM DS</td>
-      <td>Application sandboxing §3.2.4</td></tr>
-    <tr><td>§9.5 Policy-as-code AI</td>
+      <td>Application sandboxing 3.2.4</td></tr>
+    <tr><td>9.5 Policy-as-code AI</td>
       <td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td>
       <td>Augments Policy Administrator authoring</td>
-      <td>Application sandboxing §3.2.4</td></tr>
-    <tr><td>§9.6 AI vuln discovery</td>
+      <td>Application sandboxing 3.2.4</td></tr>
+    <tr><td>9.6 AI vuln discovery</td>
       <td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td>
       <td>Supports ZTA threat model &amp; CDM</td>
-      <td>Application sandboxing §3.2.4</td></tr>
-    <tr><td>§9.7 AI governance</td>
+      <td>Application sandboxing 3.2.4</td></tr>
+    <tr><td>9.7 AI governance</td>
       <td><span class="badge secondary">S</span></td><td><span class="badge secondary">S</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td>
       <td>AI Gateway PEP; agent SPIFFE identity</td>
-      <td>Application sandboxing §3.2.4</td></tr>
-    <tr><td>§10 Summary table</td>
+      <td>Application sandboxing 3.2.4</td></tr>
+    <tr><td>10 Summary table</td>
       <td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td>
-      <td>Every §3.1 component by name</td>
-      <td>All four §3.2 variants</td></tr>
-    <tr><td>§11 Open questions / PoCs</td>
+      <td>Every 3.1 component by name</td>
+      <td>All four 3.2 variants</td></tr>
+    <tr><td>11 Open questions / PoCs</td>
       <td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge secondary">S</span></td><td><span class="badge secondary">S</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td>
       <td>PE/PA resilience; TLPT; PQ; AuthZEN interop</td>
       <td>Variant-agnostic</td></tr>
@@ -3378,48 +3378,48 @@ kubectl --context docker-desktop -n zta-policy logs deploy/opa --tail=6 \
 <h3>Primary-cell justifications (one sentence each)</h3>
 
 <ul>
-  <li><strong>§1 all tenets P:</strong> the executive summary explicitly names identity-centric controls, FAPI tokens, mesh mTLS, signed policy bundles, continuous signals, and evidence pipelines — mapping one-to-one to T1 through T7.</li>
-  <li><strong>§2 T1 P:</strong> assumptions define the <em>scope</em> of enterprise resources (AWS 60%, z/OS authoritative, ~1,200 SaaS), which is Tenet 1 in practice.</li>
-  <li><strong>§3 T2, T4 P:</strong> the L1 diagram declares no network segment is trusted by default and every arrow is a dynamic-policy evaluation crossing a trust boundary.</li>
-  <li><strong>§4 all tenets P:</strong> C4 L2 instantiates every §3.1 component in technology and is therefore the clearest tenet-to-component map in the source.</li>
-  <li><strong>§5 Flow A T2/T3/T4/T6/T7 P:</strong> the 10 numbered steps each cite the tenet they satisfy (step 1 = T6; steps 2-4 mTLS + token = T2/T3; step 6 = T4 policy evaluation; step 10 = T7 evidence).</li>
-  <li><strong>§5 Flow B T2/T3/T4/T6/T7 P:</strong> the SWIFT enclave illustrates machine-identity mTLS (T2/T3), dual-control policy (T4/T6), and UETR-indexed evidence (T7).</li>
-  <li><strong>§6 T4, T6 P:</strong> the Rego source code is the PE policy contract — dynamic (T4) and fail-closed-strict (T6).</li>
-  <li><strong>§7.1–§7.3 T3/T4/T6 P:</strong> identity-source components emit the session (T3) and claims (T4) the PE strictly consumes (T6).</li>
-  <li><strong>§7.4 T2/T3/T6 P:</strong> SPIRE SVIDs are the mTLS (T2), per-session (T3), strict-identity (T6) substrate for workloads.</li>
-  <li><strong>§7.5 T4/T6/T7 P:</strong> OPA <em>is</em> the PE — its Rego policies are dynamic (T4), strictly evaluated (T6), and their logs are telemetry (T7).</li>
-  <li><strong>§7.6 T6/T7 P:</strong> the PA signs and publishes bundles (T6) and its release telemetry drives SLO-based gating (T7).</li>
-  <li><strong>§7.7 / §7.8 / §7.9 T2/T3/T4/T6 P:</strong> every PEP class terminates identity (T3), enforces crypto (T2), consults the PE (T4), and blocks before allow (T6).</li>
-  <li><strong>§7.10 T3/T4/T5/T6/T7 P:</strong> CyberArk PAM is a PEP <em>and</em> a signal source — JIT elevation (T3), risk policy (T4), session recording (T5/T7) with strict gating (T6).</li>
-  <li><strong>§7.11 T2/T3 P:</strong> Vault + HSM underwrites the keys that make T2 and T3 cryptographically credible.</li>
-  <li><strong>§7.12 T5/T7 P:</strong> Splunk + Snowflake are the SIEM and long-retention stores that hold the evidence T5 and T7 require.</li>
-  <li><strong>§7.13 T5/T7 P:</strong> OpenTelemetry is the unified instrumentation that the T7 feedback loop and T5 posture tracking share.</li>
-  <li><strong>§7.14 T1/T4/T5/T7 P:</strong> Wiz + Tanium enumerate resources (T1), feed CDM signals into the PE (T4), measure posture (T5), and stream telemetry (T7).</li>
-  <li><strong>§7.15 T2/T3 P:</strong> Venafi + AWS PCA are the enterprise PKI enabling durable T2 and T3.</li>
-  <li><strong>§7.16 T1/T4/T6 P:</strong> Immuta classifies data (T1), evaluates dynamic ABAC (T4), and enforces strictly at the row/column level (T6).</li>
-  <li><strong>§7.17 T2/T3/T4/T5/T6/T7 P:</strong> Netskope SSE carries all six because SaaS/egress is the most tenet-dense PEP surface in the source.</li>
-  <li><strong>§7.18 T2/T3 P:</strong> Authlete's FAPI engine makes T2 (mTLS-bound tokens) and T3 (DPoP sessions) concrete.</li>
-  <li><strong>§7.19 T3/T4/T6 P:</strong> Broadcom AAM maps modern identities onto RACF (T3), evaluates mainframe-specific scope (T4), and gates CICS at the transaction boundary (T6).</li>
-  <li><strong>§7.20 T4/T5/T7 P:</strong> Featurespace is the canonical §9-style signal: dynamic (T4), measures behaviour (T5), and continuously streams (T7).</li>
-  <li><strong>§8.1 T3/T4/T6 P:</strong> separate planes for workforce/customer/partner require per-population session logic (T3), policy (T4), and enforcement (T6).</li>
-  <li><strong>§8.2 T2/T3/T4/T6 P:</strong> SPIFFE propagation across K8s/VM/Lambda/mainframe implements T2/T3/T6 with attestation feeding T4.</li>
-  <li><strong>§8.3 T2/T3 P:</strong> dynamic secrets + HSM-rooted signing are the keystone that T2 and T3 rely on.</li>
-  <li><strong>§8.4 T3/T4/T5/T6/T7 P:</strong> PAM sessions are dynamically authorised, integrity-recorded, strictly brokered, and fully telemetered.</li>
-  <li><strong>§8.5 T5/T7 P:</strong> logging is the T5 integrity-evidence channel and the T7 information stream.</li>
-  <li><strong>§8.6 T5/T6/T7 P:</strong> SLOs and error budgets translate T5/T7 signals into T6 release gates.</li>
-  <li><strong>§8.7 T2/T3/T4/T6 P:</strong> FAPI 2.0 is the API expression of T2–T6 in a single profile.</li>
-  <li><strong>§8.8 T1/T2/T4/T6 P:</strong> classification (T1), crypto (T2), ABAC (T4), and data-plane PEPs (T6) together are the data-protection story.</li>
-  <li><strong>§8.9 T5/T6/T7 P:</strong> supply-chain provenance and policy-bundle signing sit squarely at T5/T6/T7.</li>
-  <li><strong>§8.10 T5/T6/T7 P:</strong> the ZTA self-threat-model is almost entirely about keeping strict enforcement (T6), integrity monitoring (T5), and telemetry (T7) honest.</li>
-  <li><strong>§9.1 T4/T5/T7 P:</strong> UEBA is a dynamic-policy input, a posture signal, and a telemetry product in one component.</li>
-  <li><strong>§9.2 T3/T4/T6 P:</strong> adaptive auth re-shapes sessions (T3) via dynamic scoring (T4) with strict gating (T6).</li>
-  <li><strong>§9.3 T4/T5/T7 P:</strong> fraud/AML scores are dynamic signals (T4), measure behavioural posture (T5), and are telemetered end-to-end (T7).</li>
-  <li><strong>§9.4 T5/T7 P:</strong> SOC copiloting operates on the measurement and telemetry surfaces.</li>
-  <li><strong>§9.5 T4/T6 P:</strong> AI-drafted policies must still compose dynamically (T4) and pass strict PA gating (T6).</li>
-  <li><strong>§9.6 T5/T7 P:</strong> AI-assisted vuln discovery feeds CDM (T5) and the telemetry loop (T7).</li>
-  <li><strong>§9.7 T4/T5/T6 P:</strong> AI Gateway PEP + agent identity = dynamic, posture-aware, strictly-enforced AI traffic.</li>
-  <li><strong>§10 all tenets P:</strong> the summary table itself is a tenet-by-component cross-reference.</li>
-  <li><strong>§11 T6/T7 P:</strong> every open question touches strict-enforcement resilience or telemetry quality.</li>
+  <li><strong>1 all tenets P:</strong> the executive summary explicitly names identity-centric controls, FAPI tokens, mesh mTLS, signed policy bundles, continuous signals, and evidence pipelines — mapping one-to-one to T1 through T7.</li>
+  <li><strong>2 T1 P:</strong> assumptions define the <em>scope</em> of enterprise resources (AWS 60%, z/OS authoritative, ~1,200 SaaS), which is Tenet 1 in practice.</li>
+  <li><strong>3 T2, T4 P:</strong> the L1 diagram declares no network segment is trusted by default and every arrow is a dynamic-policy evaluation crossing a trust boundary.</li>
+  <li><strong>4 all tenets P:</strong> C4 L2 instantiates every 3.1 component in technology and is therefore the clearest tenet-to-component map in the source.</li>
+  <li><strong>5 Flow A T2/T3/T4/T6/T7 P:</strong> the 10 numbered steps each cite the tenet they satisfy (step 1 = T6; steps 2-4 mTLS + token = T2/T3; step 6 = T4 policy evaluation; step 10 = T7 evidence).</li>
+  <li><strong>5 Flow B T2/T3/T4/T6/T7 P:</strong> the SWIFT enclave illustrates machine-identity mTLS (T2/T3), dual-control policy (T4/T6), and UETR-indexed evidence (T7).</li>
+  <li><strong>6 T4, T6 P:</strong> the Rego source code is the PE policy contract — dynamic (T4) and fail-closed-strict (T6).</li>
+  <li><strong>7.1–7.3 T3/T4/T6 P:</strong> identity-source components emit the session (T3) and claims (T4) the PE strictly consumes (T6).</li>
+  <li><strong>7.4 T2/T3/T6 P:</strong> SPIRE SVIDs are the mTLS (T2), per-session (T3), strict-identity (T6) substrate for workloads.</li>
+  <li><strong>7.5 T4/T6/T7 P:</strong> OPA <em>is</em> the PE — its Rego policies are dynamic (T4), strictly evaluated (T6), and their logs are telemetry (T7).</li>
+  <li><strong>7.6 T6/T7 P:</strong> the PA signs and publishes bundles (T6) and its release telemetry drives SLO-based gating (T7).</li>
+  <li><strong>7.7 / 7.8 / 7.9 T2/T3/T4/T6 P:</strong> every PEP class terminates identity (T3), enforces crypto (T2), consults the PE (T4), and blocks before allow (T6).</li>
+  <li><strong>7.10 T3/T4/T5/T6/T7 P:</strong> CyberArk PAM is a PEP <em>and</em> a signal source — JIT elevation (T3), risk policy (T4), session recording (T5/T7) with strict gating (T6).</li>
+  <li><strong>7.11 T2/T3 P:</strong> Vault + HSM underwrites the keys that make T2 and T3 cryptographically credible.</li>
+  <li><strong>7.12 T5/T7 P:</strong> Splunk + Snowflake are the SIEM and long-retention stores that hold the evidence T5 and T7 require.</li>
+  <li><strong>7.13 T5/T7 P:</strong> OpenTelemetry is the unified instrumentation that the T7 feedback loop and T5 posture tracking share.</li>
+  <li><strong>7.14 T1/T4/T5/T7 P:</strong> Wiz + Tanium enumerate resources (T1), feed CDM signals into the PE (T4), measure posture (T5), and stream telemetry (T7).</li>
+  <li><strong>7.15 T2/T3 P:</strong> Venafi + AWS PCA are the enterprise PKI enabling durable T2 and T3.</li>
+  <li><strong>7.16 T1/T4/T6 P:</strong> Immuta classifies data (T1), evaluates dynamic ABAC (T4), and enforces strictly at the row/column level (T6).</li>
+  <li><strong>7.17 T2/T3/T4/T5/T6/T7 P:</strong> Netskope SSE carries all six because SaaS/egress is the most tenet-dense PEP surface in the source.</li>
+  <li><strong>7.18 T2/T3 P:</strong> Authlete's FAPI engine makes T2 (mTLS-bound tokens) and T3 (DPoP sessions) concrete.</li>
+  <li><strong>7.19 T3/T4/T6 P:</strong> Broadcom AAM maps modern identities onto RACF (T3), evaluates mainframe-specific scope (T4), and gates CICS at the transaction boundary (T6).</li>
+  <li><strong>7.20 T4/T5/T7 P:</strong> Featurespace is the canonical 9-style signal: dynamic (T4), measures behaviour (T5), and continuously streams (T7).</li>
+  <li><strong>8.1 T3/T4/T6 P:</strong> separate planes for workforce/customer/partner require per-population session logic (T3), policy (T4), and enforcement (T6).</li>
+  <li><strong>8.2 T2/T3/T4/T6 P:</strong> SPIFFE propagation across K8s/VM/Lambda/mainframe implements T2/T3/T6 with attestation feeding T4.</li>
+  <li><strong>8.3 T2/T3 P:</strong> dynamic secrets + HSM-rooted signing are the keystone that T2 and T3 rely on.</li>
+  <li><strong>8.4 T3/T4/T5/T6/T7 P:</strong> PAM sessions are dynamically authorised, integrity-recorded, strictly brokered, and fully telemetered.</li>
+  <li><strong>8.5 T5/T7 P:</strong> logging is the T5 integrity-evidence channel and the T7 information stream.</li>
+  <li><strong>8.6 T5/T6/T7 P:</strong> SLOs and error budgets translate T5/T7 signals into T6 release gates.</li>
+  <li><strong>8.7 T2/T3/T4/T6 P:</strong> FAPI 2.0 is the API expression of T2–T6 in a single profile.</li>
+  <li><strong>8.8 T1/T2/T4/T6 P:</strong> classification (T1), crypto (T2), ABAC (T4), and data-plane PEPs (T6) together are the data-protection story.</li>
+  <li><strong>8.9 T5/T6/T7 P:</strong> supply-chain provenance and policy-bundle signing sit squarely at T5/T6/T7.</li>
+  <li><strong>8.10 T5/T6/T7 P:</strong> the ZTA self-threat-model is almost entirely about keeping strict enforcement (T6), integrity monitoring (T5), and telemetry (T7) honest.</li>
+  <li><strong>9.1 T4/T5/T7 P:</strong> UEBA is a dynamic-policy input, a posture signal, and a telemetry product in one component.</li>
+  <li><strong>9.2 T3/T4/T6 P:</strong> adaptive auth re-shapes sessions (T3) via dynamic scoring (T4) with strict gating (T6).</li>
+  <li><strong>9.3 T4/T5/T7 P:</strong> fraud/AML scores are dynamic signals (T4), measure behavioural posture (T5), and are telemetered end-to-end (T7).</li>
+  <li><strong>9.4 T5/T7 P:</strong> SOC copiloting operates on the measurement and telemetry surfaces.</li>
+  <li><strong>9.5 T4/T6 P:</strong> AI-drafted policies must still compose dynamically (T4) and pass strict PA gating (T6).</li>
+  <li><strong>9.6 T5/T7 P:</strong> AI-assisted vuln discovery feeds CDM (T5) and the telemetry loop (T7).</li>
+  <li><strong>9.7 T4/T5/T6 P:</strong> AI Gateway PEP + agent identity = dynamic, posture-aware, strictly-enforced AI traffic.</li>
+  <li><strong>10 all tenets P:</strong> the summary table itself is a tenet-by-component cross-reference.</li>
+  <li><strong>11 T6/T7 P:</strong> every open question touches strict-enforcement resilience or telemetry quality.</li>
 </ul>
 </section>
 
@@ -3477,22 +3477,22 @@ echo "Hard teardown requested; background namespace finalisation may take a minu
 
 <h3>Suggested extensions</h3>
 <ul>
-  <li><strong>Swap Keycloak for Dex</strong> — smaller footprint and pure-OIDC; loses admin UI but gains a tighter audit surface. Exercises the same source §7.1 role at lower complexity.</li>
-  <li><strong>Add Cilium for L7 network policy</strong> (where kernel support allows). On Docker Desktop kernel feature support is limited; prefer running Cilium on a separate kind cluster with <code>cluster-pool</code> IPAM and enabling its Hubble UI. Adds a second §3.1.2 PEP below the mesh.</li>
-  <li><strong>Second cluster for enclave simulation</strong> — stand up a kind cluster labelled <code>swift-secure-zone</code>, install a second Istio mesh with a mesh-federation trust bundle to the main cluster. Map directly to 800-207 §3.2.2 (enclave-based deployment) and source §5 Flow B.</li>
-  <li><strong>Replace the Lua posture header with signed CDM events to Redis</strong> — removes the pod-bounce reconciler, shortens the T5→T6 loop to sub-second, and demonstrates a real-world upgrade path for source §7.14.</li>
-  <li><strong>Cosign-signed OPA bundles with keyless Fulcio + Rekor</strong> — extends Lab 6 from RS256 private-key signing to sigstore's keyless flow (source §8.9). Requires network egress to the public Sigstore log; skip in air-gapped environments.</li>
-  <li><strong>Add an AI Gateway PEP</strong> — a small egress proxy in front of an LLM endpoint that enforces prompt-injection filters and PAN/IBAN DLP, matching source §9.7. Uses the same OPA ext-authz pattern as Lab 4.</li>
-  <li><strong>Turn <code>zta.jurisdiction</code> into a Gatekeeper mutation</strong> and have the Lab 4 Rego deny cross-jurisdiction writes — one clean demonstration of source §2 data-residency mediation.</li>
-  <li><strong>Burn-rate alerts on SLOs</strong> — add Prometheus <code>PrometheusRule</code>s for the §8.6 SLOs (decision latency P99 &lt; 10 ms, availability 99.995%). Route to Alertmanager → stdout webhook for local development.</li>
+  <li><strong>Swap Keycloak for Dex</strong> — smaller footprint and pure-OIDC; loses admin UI but gains a tighter audit surface. Exercises the same source 7.1 role at lower complexity.</li>
+  <li><strong>Add Cilium for L7 network policy</strong> (where kernel support allows). On Docker Desktop kernel feature support is limited; prefer running Cilium on a separate kind cluster with <code>cluster-pool</code> IPAM and enabling its Hubble UI. Adds a second 3.1.2 PEP below the mesh.</li>
+  <li><strong>Second cluster for enclave simulation</strong> — stand up a kind cluster labelled <code>swift-secure-zone</code>, install a second Istio mesh with a mesh-federation trust bundle to the main cluster. Map directly to 800-207 3.2.2 (enclave-based deployment) and source 5 Flow B.</li>
+  <li><strong>Replace the Lua posture header with signed CDM events to Redis</strong> — removes the pod-bounce reconciler, shortens the T5→T6 loop to sub-second, and demonstrates a real-world upgrade path for source 7.14.</li>
+  <li><strong>Cosign-signed OPA bundles with keyless Fulcio + Rekor</strong> — extends Lab 6 from RS256 private-key signing to sigstore's keyless flow (source 8.9). Requires network egress to the public Sigstore log; skip in air-gapped environments.</li>
+  <li><strong>Add an AI Gateway PEP</strong> — a small egress proxy in front of an LLM endpoint that enforces prompt-injection filters and PAN/IBAN DLP, matching source 9.7. Uses the same OPA ext-authz pattern as Lab 4.</li>
+  <li><strong>Turn <code>zta.jurisdiction</code> into a Gatekeeper mutation</strong> and have the Lab 4 Rego deny cross-jurisdiction writes — one clean demonstration of source 2 data-residency mediation.</li>
+  <li><strong>Burn-rate alerts on SLOs</strong> — add Prometheus <code>PrometheusRule</code>s for the 8.6 SLOs (decision latency P99 &lt; 10 ms, availability 99.995%). Route to Alertmanager → stdout webhook for local development.</li>
 </ul>
 
 <h3>Further reading — anchored in the source</h3>
 <ul>
-  <li>NIST SP 800-207 (August 2020) — read §2.1, §3.1, §3.2, §3.3, and §3.4 in that order; every tenet in this lab cites paragraph-level anchors from these sections.</li>
-  <li>CNCF SPIFFE specification — the Workload API, Node/Workload Attestation, and SVID rotation semantics map one-to-one to source §7.4 and §8.2.</li>
-  <li>OpenID Foundation FAPI 2.0 Security Profile — the hardened OAuth profile referenced throughout source §8.7 and §7.18.</li>
-  <li>CISA Zero Trust Maturity Model v2.0 — complementary to 800-207; source §7.2 and §7.6 cite CISA's pillar and governance cross-cut.</li>
+  <li>NIST SP 800-207 (August 2020) — read 2.1, 3.1, 3.2, 3.3, and 3.4 in that order; every tenet in this lab cites paragraph-level anchors from these sections.</li>
+  <li>CNCF SPIFFE specification — the Workload API, Node/Workload Attestation, and SVID rotation semantics map one-to-one to source 7.4 and 8.2.</li>
+  <li>OpenID Foundation FAPI 2.0 Security Profile — the hardened OAuth profile referenced throughout source 8.7 and 7.18.</li>
+  <li>CISA Zero Trust Maturity Model v2.0 — complementary to 800-207; source 7.2 and 7.6 cite CISA's pillar and governance cross-cut.</li>
 </ul>
 </section>
 
