@@ -1,0 +1,3555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zero Trust Architecture — Kubernetes Home Lab</title>
+<style>
+  :root {
+    --bg: #FAFAFA;
+    --surface: #FFFFFF;
+    --surface-2: #F7F7F5;
+    --ink: #0A0A0A;
+    --ink-2: #1F2937;
+    --muted: #6B7280;
+    --muted-2: #9CA3AF;
+    --border: #E5E7EB;
+    --border-2: #EFEEEA;
+    --accent: #B45309;
+    --accent-ink: #78350F;
+    --accent-tint: #FEF3C7;
+    --accent-wash: #FFFBEB;
+    --code-bg: #F7F7F5;
+    --code-border: #E7E5E0;
+    --code-ink: #111111;
+    --ok: #047857;
+    --warn: #B45309;
+    --bad: #B91C1C;
+    --sans: -apple-system, BlinkMacSystemFont, "Inter", "Geist", "Segoe UI", Roboto, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 24px;
+    --space-6: 32px;
+    --space-7: 48px;
+    --space-8: 64px;
+    --radius: 4px;
+    --radius-lg: 8px;
+    --shadow-sm: 0 1px 0 rgba(10, 10, 10, 0.04);
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 24px; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+  }
+  body {
+    margin: 0;
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--ink-2);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 180ms ease; }
+  a:hover { border-bottom-color: var(--accent); }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+
+  /* Layout */
+  .layout { display: grid; grid-template-columns: 280px minmax(0, 1fr); max-width: 1400px; margin: 0 auto; }
+  aside.toc {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    height: 100vh;
+    overflow-y: auto;
+    padding: var(--space-6) var(--space-5) var(--space-6) var(--space-6);
+    border-right: 1px solid var(--border);
+    background: var(--bg);
+  }
+  main {
+    padding: var(--space-7) var(--space-7) var(--space-8);
+    max-width: 980px;
+  }
+  @media (max-width: 960px) {
+    .layout { grid-template-columns: 1fr; }
+    aside.toc { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--border); padding: var(--space-5); }
+    main { padding: var(--space-5); }
+  }
+
+  /* TOC */
+  .brand { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-6); }
+  .brand-mark {
+    width: 28px; height: 28px;
+    display: grid; place-items: center;
+    border: 1px solid var(--ink);
+    color: var(--ink);
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+  }
+  .brand-name { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink); font-weight: 600; }
+  .toc-title { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin: var(--space-5) 0 var(--space-2); font-weight: 600; }
+  .toc-list { list-style: none; padding: 0; margin: 0; }
+  .toc-list li { margin: 0; }
+  .toc-list a {
+    display: block;
+    padding: 6px 0 6px 12px;
+    border-left: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 13px;
+    border-bottom: 0;
+    transition: color 180ms ease, border-color 180ms ease;
+  }
+  .toc-list a:hover { color: var(--ink); border-left-color: var(--ink); }
+  .toc-list a.active { color: var(--accent-ink); border-left-color: var(--accent); font-weight: 500; }
+  .toc-list .tenet-num { display: inline-block; width: 18px; color: var(--muted-2); font-variant-numeric: tabular-nums; }
+  .toc-list a.active .tenet-num { color: var(--accent); }
+
+  /* Typography */
+  h1, h2, h3, h4 { color: var(--ink); font-weight: 600; letter-spacing: -0.01em; }
+  h1 { font-size: clamp(28px, 3.2vw, 40px); line-height: 1.15; margin: 0 0 var(--space-3); letter-spacing: -0.02em; }
+  h2 { font-size: clamp(22px, 2.2vw, 28px); line-height: 1.25; margin: var(--space-8) 0 var(--space-4); padding-bottom: var(--space-3); border-bottom: 1px solid var(--border); }
+  h2:first-of-type { margin-top: var(--space-6); }
+  h3 { font-size: clamp(17px, 1.4vw, 20px); line-height: 1.3; margin: var(--space-6) 0 var(--space-3); }
+  h4 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: var(--space-5) 0 var(--space-2); font-weight: 600; }
+  p { margin: 0 0 var(--space-4); }
+  p + p { margin-top: var(--space-3); }
+  ul, ol { padding-left: 22px; margin: 0 0 var(--space-4); }
+  li { margin-bottom: var(--space-2); }
+  li::marker { color: var(--muted-2); }
+  strong { color: var(--ink); font-weight: 600; }
+  em { color: var(--ink-2); }
+
+  /* Lede */
+  .lede {
+    font-size: 17px;
+    line-height: 1.55;
+    color: var(--ink-2);
+    margin: var(--space-4) 0 var(--space-6);
+    max-width: 68ch;
+  }
+  .doc-meta {
+    display: flex; flex-wrap: wrap; gap: var(--space-5);
+    padding: var(--space-4) 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: var(--space-6);
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+  }
+  .doc-meta > div > span { display: block; text-transform: uppercase; letter-spacing: 0.12em; font-size: 10px; color: var(--muted-2); margin-bottom: 2px; }
+  .doc-meta > div > strong { color: var(--ink); font-weight: 500; letter-spacing: 0; font-size: 13px; text-transform: none; }
+
+  /* Eyebrow */
+  .eyebrow {
+    display: inline-block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--accent-ink);
+    background: var(--accent-tint);
+    padding: 3px 8px;
+    border-radius: 2px;
+    font-weight: 600;
+  }
+
+  /* Code */
+  code {
+    font-family: var(--mono);
+    font-size: 0.88em;
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: var(--code-ink);
+  }
+  .code-block {
+    position: relative;
+    margin: var(--space-4) 0;
+    border: 1px solid var(--code-border);
+    border-radius: var(--radius);
+    background: var(--code-bg);
+    overflow: hidden;
+  }
+  .code-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--code-border);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    background: #FBFAF7;
+  }
+  .code-head .lang { text-transform: uppercase; font-weight: 600; color: var(--ink); letter-spacing: 0.08em; }
+  .code-head .path { color: var(--muted); }
+  .copy-btn {
+    appearance: none;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: var(--sans);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: color 180ms ease, border-color 180ms ease, background 180ms ease;
+  }
+  .copy-btn:hover { color: var(--ink); border-color: var(--ink); }
+  .copy-btn.copied { color: var(--ok); border-color: var(--ok); }
+  .code-block pre { margin: 0; padding: 14px 16px; overflow-x: auto; font-family: var(--mono); font-size: 12.5px; line-height: 1.6; color: var(--code-ink); background: transparent; }
+  .code-block pre code { background: transparent; border: 0; padding: 0; font-size: inherit; color: inherit; }
+  .code-block.terminal .code-head { background: #FAFAF7; }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; margin: var(--space-4) 0; border: 1px solid var(--border); border-radius: var(--radius); }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border-2); vertical-align: top; }
+  th { background: #FBFAF7; font-weight: 600; color: var(--ink); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid var(--border); }
+  tr:last-child td { border-bottom: 0; }
+  tr:hover td { background: #FBFAF7; }
+  td.num { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 12px; }
+
+  /* Callouts */
+  .callout {
+    margin: var(--space-4) 0;
+    padding: var(--space-4) var(--space-5);
+    border-left: 2px solid var(--accent);
+    background: var(--accent-wash);
+    border-radius: 0 var(--radius) var(--radius) 0;
+  }
+  .callout .callout-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--accent-ink); font-weight: 600; margin-bottom: 4px; }
+  .callout.caveat { border-left-color: var(--muted); background: #F7F7F5; }
+  .callout.caveat .callout-title { color: var(--ink); }
+  .callout.danger { border-left-color: var(--bad); background: #FEF2F2; }
+  .callout.danger .callout-title { color: var(--bad); }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* NIST mapping block */
+  .nist-map {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 10px 16px;
+    margin: var(--space-4) 0 var(--space-5);
+    padding: var(--space-4) var(--space-5);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .nist-map dt { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; padding-top: 2px; }
+  .nist-map dd { margin: 0; color: var(--ink-2); font-size: 14px; }
+
+  /* Badges */
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 2px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--ink-2);
+    margin-right: 4px;
+  }
+  .badge.tenet { border-color: var(--accent); background: var(--accent-tint); color: var(--accent-ink); font-weight: 600; }
+  .badge.primary { background: var(--accent-tint); color: var(--accent-ink); border-color: var(--accent-tint); font-weight: 600; }
+  .badge.secondary { background: #F3F4F6; color: var(--ink-2); border-color: #F3F4F6; }
+  .badge.na { color: var(--muted-2); background: transparent; border-color: transparent; }
+
+  /* Lab module shell */
+  .lab {
+    margin-top: var(--space-8);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--border);
+  }
+  .lab-header { margin-bottom: var(--space-4); }
+  .lab-header .eyebrow { margin-bottom: var(--space-3); }
+  .lab-title { font-size: clamp(22px, 2.2vw, 28px); margin: 0 0 var(--space-2); color: var(--ink); letter-spacing: -0.01em; }
+  .lab-tenet { font-size: 14px; color: var(--muted); font-style: italic; }
+  .step-num { color: var(--muted-2); font-variant-numeric: tabular-nums; font-family: var(--mono); font-size: 12px; margin-right: 8px; }
+
+  /* Diagram */
+  figure.diagram { margin: var(--space-5) 0; padding: var(--space-5); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+  figure.diagram svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+  figure.diagram figcaption { text-align: center; font-size: 12px; color: var(--muted); margin-top: var(--space-3); font-style: italic; }
+
+  /* ASCII block */
+  pre.ascii {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    line-height: 1.45;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: var(--space-4);
+    overflow-x: auto;
+    color: var(--ink-2);
+    margin: var(--space-4) 0;
+  }
+
+  /* Footer */
+  footer.site-foot {
+    margin-top: var(--space-8);
+    padding: var(--space-5) 0 var(--space-4);
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+  }
+
+  /* Utility */
+  .hr-sparse { border: 0; border-top: 1px solid var(--border); margin: var(--space-6) 0; }
+  .footnote { font-size: 12px; color: var(--muted); border-left: 2px solid var(--border); padding-left: var(--space-3); margin: var(--space-3) 0; }
+  .kbd { font-family: var(--mono); font-size: 11px; background: var(--surface); border: 1px solid var(--border); border-bottom-width: 2px; padding: 1px 5px; border-radius: 3px; color: var(--ink); }
+
+  /* Icons */
+  .ico { width: 14px; height: 14px; display: inline-block; vertical-align: -2px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<aside class="toc" aria-label="Table of contents">
+  <div class="brand">
+    <div class="brand-mark">ZT</div>
+    <div class="brand-name">ZTA · Home Lab</div>
+  </div>
+
+  <div class="toc-title">Sections</div>
+  <ul class="toc-list">
+    <li><a href="#overview">Executive Overview</a></li>
+    <li><a href="#setup">Lab Environment Setup</a></li>
+  </ul>
+
+  <div class="toc-title">Lab Modules</div>
+  <ul class="toc-list">
+    <li><a href="#lab-1"><span class="tenet-num">01</span>Resources</a></li>
+    <li><a href="#lab-2"><span class="tenet-num">02</span>Secured Comms</a></li>
+    <li><a href="#lab-3"><span class="tenet-num">03</span>Per-Session</a></li>
+    <li><a href="#lab-4"><span class="tenet-num">04</span>Dynamic Policy</a></li>
+    <li><a href="#lab-5"><span class="tenet-num">05</span>Posture Monitoring</a></li>
+    <li><a href="#lab-6"><span class="tenet-num">06</span>Strict Enforcement</a></li>
+    <li><a href="#lab-7"><span class="tenet-num">07</span>Telemetry Loop</a></li>
+  </ul>
+
+  <div class="toc-title">Close-out</div>
+  <ul class="toc-list">
+    <li><a href="#capstone">Capstone Lab</a></li>
+    <li><a href="#appendix">Mapping Appendix</a></li>
+    <li><a href="#cleanup">Cleanup &amp; Next Steps</a></li>
+  </ul>
+</aside>
+
+<main>
+
+<header>
+  <span class="eyebrow">ZTA-2026-001 · Practitioner Handbook</span>
+  <h1>Zero Trust Architecture on a Kubernetes Home Lab</h1>
+  <p class="lede">A progressive, hands-on tutorial that walks the <em>ZTA-2026-001</em> ARB submission — a NIST SP 800-207-aligned architecture for a global bank — into a single-node Docker Desktop Kubernetes cluster. Seven labs, one per 800-207 tenet, each with runnable manifests, validation commands, and a break-it exercise.</p>
+  <div class="doc-meta">
+    <div><span>Environment</span><strong>Docker Desktop · Kubernetes 1.29+</strong></div>
+    <div><span>Audience</span><strong>Intermediate K8s practitioners, ZTA-new</strong></div>
+    <div><span>Runtime</span><strong>45–90 min per lab</strong></div>
+    <div><span>Framework</span><strong>NIST SP 800-207 (Aug 2020)</strong></div>
+  </div>
+</header>
+
+<!-- ============================================================== -->
+<!-- 1. EXECUTIVE OVERVIEW                                           -->
+<!-- ============================================================== -->
+<section id="overview">
+<h2>1 · Executive Overview</h2>
+
+<p>The source document, <em>ZTA-2026-001</em>, is a C4 × NIST SP 800-207 architecture prepared by a global bank's Security Solutions Architecture team. It proposes a distributed Policy Engine (OPA/Cedar), a policy-as-code Policy Administrator (Styra DAS + GitOps), and a heterogeneous fleet of Policy Enforcement Points (Kong FAPI, Istio, Zscaler ZPA, CyberArk, Broadcom AAM, Netskope, an in-house AI Gateway). Workload identity is SPIFFE/SPIRE; workforce identity is Microsoft Entra ID federated with Okta; customers sit on ForgeRock CIAM with FAPI 2.0 and DPoP-bound tokens. Signals flow from CDM (Wiz, Tanium), threat intel, SIEM (Splunk + Snowflake), UEBA, fraud/AML (Featurespace) and data-access policy (Immuta) into a Trust Algorithm that emits a continuous <code>trust_score</code>. This tutorial reconstructs the essential shape of that architecture on a laptop — using only open-source projects — so that each 800-207 tenet becomes a thing the reader can deploy, break, observe, and repair.</p>
+
+<h3>Mapping: Source Sections → NIST SP 800-207</h3>
+<p>Every major section of the source document maps to at least one tenet of 800-207 §2.1, a logical component of §3.1, and a deployment variant of §3.2. The table below is the index; the full per-paragraph matrix is in the <a href="#appendix">Mapping Appendix</a>.</p>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th style="width:26%">Source Section</th><th>800-207 Tenet(s)</th><th>Logical Component(s) §3.1</th><th>Deployment Variant §3.2</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>§1 Executive summary</td><td>T1–T7 (all)</td><td>PE, PA, PEP, Trust Algorithm (§3.3)</td><td>Hybrid (enclave + resource-portal + device-agent/gateway)</td></tr>
+    <tr><td>§2 Assumptions &amp; scope</td><td>T1, T2</td><td>Resources, data-source taxonomy</td><td>Resource-portal (§3.2.3) for mainframe facade</td></tr>
+    <tr><td>§3 Context (C4 L1)</td><td>T2, T4</td><td>Subject / Enterprise Resource boundary</td><td>Device-agent/gateway (§3.2.1) for workforce</td></tr>
+    <tr><td>§4 Container (C4 L2)</td><td>T3, T4, T6</td><td>PE fleet, PA, PEPs, Data Sources, Trust Algorithm</td><td>Hybrid — multi-PEP class</td></tr>
+    <tr><td>§5 Component (C4 L3, flows)</td><td>T3, T4, T6, T7</td><td>PE↔PEP decision loop, Identity DS, CDM, risk DS</td><td>Resource-portal (API PEP), Enclave (SWIFT)</td></tr>
+    <tr><td>§6 Code (Rego sample)</td><td>T4, T6</td><td>PE decision logic; fail-closed default</td><td>All variants — same PE contract</td></tr>
+    <tr><td>§7 Component catalogue</td><td>T1–T7</td><td>Every §3.1 component by name</td><td>All four §3.2 variants</td></tr>
+    <tr><td>§8 Cross-cutting concerns</td><td>T2, T3, T5, T7</td><td>PKI, secrets, SIEM, observability</td><td>Enclave (§3.2.2) for payments; sandboxing (§3.2.4) for AI</td></tr>
+    <tr><td>§9 AI / ML use-case catalogue</td><td>T4, T5, T7</td><td>Trust Algorithm signals; AI Gateway PEP</td><td>Application sandboxing (§3.2.4)</td></tr>
+    <tr><td>§10 Summary table</td><td>T1–T7</td><td>Component-to-role mapping</td><td>All variants</td></tr>
+    <tr><td>§11 Open questions / PoCs</td><td>T6, T7</td><td>PE/PA failure modes, policy-plane hardening</td><td>All variants (resilience concern)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p class="footnote">Tenet abbreviations throughout: <span class="badge tenet">T1</span> resources, <span class="badge tenet">T2</span> secured comms, <span class="badge tenet">T3</span> per-session, <span class="badge tenet">T4</span> dynamic policy, <span class="badge tenet">T5</span> posture monitoring, <span class="badge tenet">T6</span> strict enforcement, <span class="badge tenet">T7</span> telemetry. See 800-207 §2.1.</p>
+</section>
+
+<!-- ============================================================== -->
+<!-- 2. LAB ENVIRONMENT SETUP                                        -->
+<!-- ============================================================== -->
+<section id="setup">
+<h2>2 · Lab Environment Setup</h2>
+
+<h3>2.1 Prerequisites checklist</h3>
+<ul>
+  <li><strong>Docker Desktop 4.30+</strong> (macOS, Windows with WSL2, or Linux) with built-in Kubernetes enabled. <em>Settings → Kubernetes → Enable Kubernetes.</em></li>
+  <li><strong>Resources:</strong> at minimum <strong>6 CPU / 8 GB RAM / 60 GB disk</strong>. Istio + SPIRE + Falco + Keycloak + Grafana stack is chatty. 10 GB is more comfortable.</li>
+  <li><strong>CLI tools:</strong> <code>kubectl</code> ≥ 1.29, <code>helm</code> ≥ 3.14, <code>kustomize</code> ≥ 5.0, <code>istioctl</code> ≥ 1.22, <code>jq</code>, <code>yq</code>, <code>openssl</code>.</li>
+  <li><strong>Kubernetes context:</strong> <code>docker-desktop</code>. Every command in this tutorial is prefixed with <code>--context docker-desktop</code> or assumes you have set it as the current context.</li>
+  <li><strong>Host entries</strong> for ingress: add <code>127.0.0.1 bookstore.local keycloak.local grafana.local</code> to <code>/etc/hosts</code> (macOS/Linux) or <code>C:\Windows\System32\drivers\etc\hosts</code> (Windows).</li>
+</ul>
+
+<div class="callout caveat">
+  <div class="callout-title">Docker Desktop caveats</div>
+  <p><strong>LoadBalancer:</strong> Docker Desktop's built-in Kubernetes assigns <code>localhost</code> as the external IP for <code>Service</code> type <code>LoadBalancer</code> — this is usable, but ports must be free. <strong>Cilium:</strong> kernel-level features (eBPF bandwidth manager, L7 policies) are limited under Docker Desktop's Linux-in-VM kernel; we therefore use Istio as the primary mesh and mention Cilium only in the extensions. <strong>Falco:</strong> we use the <em>modern_ebpf</em> driver, which works on Docker Desktop 4.30+ without kernel module compilation.</p>
+</div>
+
+<h3>2.2 Suggested repository layout</h3>
+<p>Every manifest in this tutorial belongs in a repo that mirrors the lab structure. Create it before you begin — subsequent commands assume this layout.</p>
+
+<div class="code-block">
+  <div class="code-head"><span class="lang">Tree</span><span class="path">~/zta-homelab/</span><button class="copy-btn">Copy</button></div>
+<pre><code>zta-homelab/
+├── bootstrap/
+│   ├── 00-namespaces.yaml
+│   ├── 01-cert-manager.sh
+│   ├── 02-istio.sh
+│   ├── 03-spire.yaml
+│   ├── 04-keycloak.yaml
+│   ├── 05-opa.yaml
+│   ├── 06-gatekeeper.sh
+│   ├── 07-falco.sh
+│   ├── 08-observability.sh
+│   └── 09-bookstore.yaml
+├── labs/
+│   ├── 01-resources/
+│   ├── 02-secured-comms/
+│   ├── 03-per-session/
+│   ├── 04-dynamic-policy/
+│   ├── 05-posture-monitoring/
+│   ├── 06-strict-enforcement/
+│   └── 07-telemetry-loop/
+├── capstone/
+└── teardown.sh
+</code></pre>
+</div>
+
+<h3>2.3 Bootstrap — namespaces</h3>
+<p>Ten namespaces isolate the lab's control plane, data plane, observability, and workloads. Labels are declared now so later labs can reference them.</p>
+
+<div class="code-block">
+  <div class="code-head"><span class="lang">YAML</span><span class="path">bootstrap/00-namespaces.yaml</span><button class="copy-btn">Copy</button></div>
+<pre><code>apiVersion: v1
+kind: Namespace
+metadata:
+  name: zta-system
+  labels: { zta.tier: "control-plane", istio-injection: "enabled" }
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: zta-identity
+  labels: { zta.tier: "control-plane", istio-injection: "enabled" }
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: zta-policy
+  labels: { zta.tier: "control-plane", istio-injection: "enabled" }
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: spire
+  labels: { zta.tier: "control-plane" }
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: zta-observability
+  labels: { zta.tier: "observability", istio-injection: "enabled" }
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: zta-runtime-security
+  labels: { zta.tier: "detect" }
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: bookstore-frontend
+  labels: { zta.tier: "workload", zta.tier-role: "presentation", istio-injection: "enabled" }
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: bookstore-api
+  labels: { zta.tier: "workload", zta.tier-role: "api", istio-injection: "enabled" }
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: bookstore-data
+  labels: { zta.tier: "workload", zta.tier-role: "data", istio-injection: "enabled" }
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cert-manager
+  labels: { zta.tier: "control-plane" }
+</code></pre>
+</div>
+
+<div class="code-block terminal">
+  <div class="code-head"><span class="lang">Bash</span><span class="path">apply namespaces</span><button class="copy-btn">Copy</button></div>
+<pre><code>kubectl --context docker-desktop apply -f bootstrap/00-namespaces.yaml
+
+# Expected:
+# namespace/zta-system created
+# namespace/zta-identity created
+# namespace/zta-policy created
+# namespace/spire created
+# namespace/zta-observability created
+# namespace/zta-runtime-security created
+# namespace/bookstore-frontend created
+# namespace/bookstore-api created
+# namespace/bookstore-data created
+# namespace/cert-manager created
+</code></pre>
+</div>
+
+<h3>2.4 Bootstrap — cert-manager, Istio, SPIRE</h3>
+<p>cert-manager provides a cluster-wide CA for non-SPIFFE TLS (Keycloak ingress, Grafana). Istio is the east-west PEP and sidecar mTLS enforcer. SPIRE issues short-lived X.509 and JWT SVIDs for workload identity — the 800-207 §3.1.3 <em>ID Management</em> component in this lab.</p>
+
+<div class="code-block terminal">
+  <div class="code-head"><span class="lang">Bash</span><span class="path">bootstrap/01-cert-manager.sh</span><button class="copy-btn">Copy</button></div>
+<pre><code>#!/usr/bin/env bash
+set -euo pipefail
+CTX=docker-desktop
+
+helm repo add jetstack https://charts.jetstack.io
+helm repo update
+
+helm --kube-context $CTX upgrade --install cert-manager jetstack/cert-manager \
+  --namespace cert-manager \
+  --version v1.15.3 \
+  --set crds.enabled=true \
+  --set global.leaderElection.namespace=cert-manager \
+  --wait --timeout 5m
+
+kubectl --context $CTX -n cert-manager wait --for=condition=Available \
+  deploy/cert-manager deploy/cert-manager-webhook deploy/cert-manager-cainjector \
+  --timeout=180s
+
+# Cluster-wide self-signed issuer (non-SPIFFE paths only)
+cat &lt;&lt;'EOF' | kubectl --context $CTX apply -f -
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: zta-selfsigned
+spec:
+  selfSigned: {}
+EOF
+echo "cert-manager ready."
+</code></pre>
+</div>
+
+<div class="code-block terminal">
+  <div class="code-head"><span class="lang">Bash</span><span class="path">bootstrap/02-istio.sh</span><button class="copy-btn">Copy</button></div>
+<pre><code>#!/usr/bin/env bash
+set -euo pipefail
+CTX=docker-desktop
+ISTIO_VERSION=1.22.3
+
+# Install via istioctl with the 'default' profile — adequate for the lab.
+# Sidecar mode (not ambient) for clearest pedagogical mapping to PEP.
+istioctl --context=$CTX install -y \
+  --set profile=default \
+  --set values.global.proxy.resources.requests.cpu=10m \
+  --set values.global.proxy.resources.requests.memory=64Mi \
+  --set meshConfig.accessLogFile=/dev/stdout \
+  --set meshConfig.enableTracing=true \
+  --set values.pilot.env.PILOT_ENABLE_AMBIENT=false
+
+kubectl --context $CTX -n istio-system wait --for=condition=Available \
+  deploy/istiod deploy/istio-ingressgateway --timeout=240s
+
+# Mesh-wide mTLS defaults to PERMISSIVE out-of-box; Lab 2 flips to STRICT.
+echo "Istio ${ISTIO_VERSION} installed; sidecar injection enabled on zta-* and bookstore-* namespaces."
+</code></pre>
+</div>
+
+<p>SPIRE is deployed as a server <code>StatefulSet</code> plus an agent <code>DaemonSet</code>. The CSI driver makes the Workload API available to pods without mounting host paths.</p>
+
+<div class="code-block">
+  <div class="code-head"><span class="lang">YAML</span><span class="path">bootstrap/03-spire.yaml  (excerpt — full file in repo)</span><button class="copy-btn">Copy</button></div>
+<pre><code>apiVersion: v1
+kind: ServiceAccount
+metadata: { name: spire-server, namespace: spire }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: spire-server, namespace: spire }
+data:
+  server.conf: |
+    server {
+      bind_address = "0.0.0.0"
+      bind_port = "8081"
+      trust_domain = "zta.homelab"
+      data_dir = "/run/spire/data"
+      log_level = "INFO"
+      ca_ttl = "24h"
+      default_x509_svid_ttl = "5m"
+      default_jwt_svid_ttl  = "5m"
+    }
+    plugins {
+      DataStore "sql" { plugin_data { database_type = "sqlite3"
+                                      connection_string = "/run/spire/data/datastore.sqlite3" } }
+      KeyManager "disk" { plugin_data { keys_path = "/run/spire/data/keys.json" } }
+      NodeAttestor "k8s_psat" {
+        plugin_data {
+          clusters = {
+            "docker-desktop" = {
+              service_account_allow_list = ["spire:spire-agent"]
+            }
+          }
+        }
+      }
+      Notifier "k8sbundle" { plugin_data { namespace = "spire" } }
+    }
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata: { name: spire-server, namespace: spire }
+spec:
+  serviceName: spire-server
+  replicas: 1
+  selector: { matchLabels: { app: spire-server } }
+  template:
+    metadata: { labels: { app: spire-server } }
+    spec:
+      serviceAccountName: spire-server
+      containers:
+      - name: spire-server
+        image: ghcr.io/spiffe/spire-server:1.10.1
+        args: ["-config", "/run/spire/config/server.conf"]
+        ports: [{ containerPort: 8081, name: grpc }]
+        volumeMounts:
+        - { name: config, mountPath: /run/spire/config, readOnly: true }
+        - { name: data,   mountPath: /run/spire/data }
+      volumes:
+      - { name: config, configMap: { name: spire-server } }
+  volumeClaimTemplates:
+  - metadata: { name: data }
+    spec:
+      accessModes: [ReadWriteOnce]
+      resources: { requests: { storage: 1Gi } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: spire-server, namespace: spire }
+spec:
+  selector: { app: spire-server }
+  ports: [{ name: grpc, port: 8081, targetPort: 8081 }]
+</code></pre>
+</div>
+
+<p class="footnote">The SPIRE agent <code>DaemonSet</code>, RBAC, and registration entries (one per bookstore tier) are in the companion file. Defaults chosen: trust domain <code>zta.homelab</code>, SVID TTL <strong>5 minutes</strong> — deliberately short so that Lab 3 can demonstrate rotation in real time.</p>
+
+<h3>2.5 Bootstrap — Keycloak, OPA, Gatekeeper, Falco, observability, bookstore</h3>
+
+<div class="code-block">
+  <div class="code-head"><span class="lang">YAML</span><span class="path">bootstrap/04-keycloak.yaml  (excerpt)</span><button class="copy-btn">Copy</button></div>
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata: { name: keycloak, namespace: zta-identity }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: keycloak } }
+  template:
+    metadata: { labels: { app: keycloak } }
+    spec:
+      containers:
+      - name: keycloak
+        image: quay.io/keycloak/keycloak:25.0.6
+        args: ["start-dev", "--http-enabled=true", "--hostname-strict=false"]
+        env:
+        - { name: KEYCLOAK_ADMIN,          value: "admin" }
+        - { name: KEYCLOAK_ADMIN_PASSWORD, value: "admin" }   # dev only
+        - { name: KC_HTTP_PORT,            value: "8080" }
+        ports: [{ containerPort: 8080, name: http }]
+        readinessProbe:
+          httpGet: { path: /realms/master, port: 8080 }
+          initialDelaySeconds: 30
+          periodSeconds: 5
+        resources:
+          requests: { cpu: 100m, memory: 512Mi }
+          limits:   { cpu: 1000m, memory: 1Gi }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: keycloak, namespace: zta-identity }
+spec:
+  selector: { app: keycloak }
+  ports: [{ name: http, port: 8080, targetPort: 8080 }]
+---
+# Ingress via Istio Gateway — exposes http://keycloak.local
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata: { name: keycloak-gw, namespace: zta-identity }
+spec:
+  selector: { istio: ingressgateway }
+  servers:
+  - port: { number: 80, name: http, protocol: HTTP }
+    hosts: ["keycloak.local"]
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata: { name: keycloak-vs, namespace: zta-identity }
+spec:
+  hosts: ["keycloak.local"]
+  gateways: [keycloak-gw]
+  http:
+  - route:
+    - destination: { host: keycloak.zta-identity.svc.cluster.local, port: { number: 8080 } }
+</code></pre>
+</div>
+
+<div class="code-block">
+  <div class="code-head"><span class="lang">YAML</span><span class="path">bootstrap/05-opa.yaml  (standalone PE + bundle pull)</span><button class="copy-btn">Copy</button></div>
+<pre><code>apiVersion: v1
+kind: ConfigMap
+metadata: { name: opa-config, namespace: zta-policy }
+data:
+  config.yaml: |
+    services:
+      bundles-local:
+        url: http://opa-bundle-server.zta-policy.svc.cluster.local
+    bundles:
+      zta:
+        resource: "bundles/zta.tar.gz"
+        service: bundles-local
+        polling:
+          min_delay_seconds: 10
+          max_delay_seconds: 30
+        signing:
+          keyid: "zta-bundle-key"
+    decision_logs:
+      console: true
+    plugins:
+      envoy_ext_authz_grpc:
+        addr: :9191
+        path: zta/authz/allow
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: opa, namespace: zta-policy }
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: opa } }
+  template:
+    metadata: { labels: { app: opa } }
+    spec:
+      containers:
+      - name: opa
+        image: openpolicyagent/opa:0.68.0-envoy
+        args:
+        - "run"
+        - "--server"
+        - "--config-file=/config/config.yaml"
+        - "--addr=:8181"
+        - "--diagnostic-addr=:8282"
+        - "--set=plugins.envoy_ext_authz_grpc.addr=:9191"
+        - "--set=decision_logs.console=true"
+        ports:
+        - { containerPort: 8181, name: http }
+        - { containerPort: 9191, name: grpc }
+        - { containerPort: 8282, name: diag }
+        readinessProbe: { httpGet: { path: /health?plugins, port: 8282 } }
+        volumeMounts:
+        - { name: config, mountPath: /config }
+      volumes:
+      - { name: config, configMap: { name: opa-config } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: opa, namespace: zta-policy }
+spec:
+  selector: { app: opa }
+  ports:
+  - { name: http, port: 8181, targetPort: 8181 }
+  - { name: grpc, port: 9191, targetPort: 9191 }
+</code></pre>
+</div>
+
+<div class="code-block terminal">
+  <div class="code-head"><span class="lang">Bash</span><span class="path">bootstrap/06-gatekeeper.sh + 07-falco.sh + 08-observability.sh</span><button class="copy-btn">Copy</button></div>
+<pre><code>#!/usr/bin/env bash
+set -euo pipefail
+CTX=docker-desktop
+
+# OPA Gatekeeper — admission-time policy PEP
+helm repo add gatekeeper https://open-policy-agent.github.io/gatekeeper/charts
+helm --kube-context $CTX upgrade --install gatekeeper gatekeeper/gatekeeper \
+  --namespace gatekeeper-system --create-namespace \
+  --version 3.17.1 --wait
+
+# Falco — runtime integrity monitor (Tenet 5)
+helm repo add falcosecurity https://falcosecurity.github.io/charts
+helm --kube-context $CTX upgrade --install falco falcosecurity/falco \
+  --namespace zta-runtime-security \
+  --version 4.8.1 \
+  --set driver.kind=modern_ebpf \
+  --set tty=true \
+  --set falcosidekick.enabled=true \
+  --set falcosidekick.webui.enabled=true \
+  --wait
+
+# Observability stack — kube-prometheus-stack + Loki + Tempo (Tenet 7)
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo add grafana https://grafana.github.io/helm-charts
+helm --kube-context $CTX upgrade --install kube-prom prometheus-community/kube-prometheus-stack \
+  --namespace zta-observability --version 62.3.0 \
+  --set grafana.adminPassword=admin --wait
+helm --kube-context $CTX upgrade --install loki grafana/loki \
+  --namespace zta-observability --version 6.10.0 \
+  --set deploymentMode=SingleBinary --set singleBinary.replicas=1 \
+  --set loki.auth_enabled=false --wait
+helm --kube-context $CTX upgrade --install tempo grafana/tempo \
+  --namespace zta-observability --version 1.10.1 --wait
+
+echo "Bootstrap stage 2 complete."
+</code></pre>
+</div>
+
+<p>Finally, the sample <strong>bookstore</strong> — a deliberately simple three-tier app: an nginx <code>frontend</code>, an httpbin <code>api</code> (whose handy echo behaviour makes policy effects obvious), and a postgres <code>db</code>. Each tier is in its own namespace so 800-207 Tenet 1 — <em>resources</em> — has concrete objects to enumerate.</p>
+
+<div class="code-block">
+  <div class="code-head"><span class="lang">YAML</span><span class="path">bootstrap/09-bookstore.yaml</span><button class="copy-btn">Copy</button></div>
+<pre><code>apiVersion: v1
+kind: ConfigMap
+metadata: { name: frontend-html, namespace: bookstore-frontend }
+data:
+  index.html: |
+    &lt;!doctype html&gt;&lt;html&gt;&lt;body style="font-family: system-ui; padding: 2rem"&gt;
+    &lt;h1&gt;ZTA Bookstore&lt;/h1&gt;&lt;p&gt;Frontend tier — calls API at /api.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: bookstore-frontend
+  labels: { app: frontend, zta.resource: "true", zta.data-class: "public", zta.tier-role: "presentation" }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: frontend } }
+  template:
+    metadata:
+      labels: { app: frontend, zta.resource: "true", zta.data-class: "public", zta.tier-role: "presentation" }
+    spec:
+      serviceAccountName: default
+      containers:
+      - name: nginx
+        image: nginx:1.27-alpine
+        ports: [{ containerPort: 80 }]
+        volumeMounts:
+        - { name: html, mountPath: /usr/share/nginx/html }
+      volumes:
+      - { name: html, configMap: { name: frontend-html } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: bookstore-frontend
+  labels: { zta.resource: "true", zta.data-class: "public" }
+spec:
+  selector: { app: frontend }
+  ports: [{ name: http, port: 80, targetPort: 80 }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: bookstore-api
+  labels: { app: api, zta.resource: "true", zta.data-class: "confidential", zta.tier-role: "api" }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: api } }
+  template:
+    metadata:
+      labels: { app: api, zta.resource: "true", zta.data-class: "confidential", zta.tier-role: "api" }
+    spec:
+      containers:
+      - name: httpbin
+        image: kennethreitz/httpbin:latest
+        ports: [{ containerPort: 80 }]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+  namespace: bookstore-api
+  labels: { zta.resource: "true", zta.data-class: "confidential" }
+spec:
+  selector: { app: api }
+  ports: [{ name: http, port: 80, targetPort: 80 }]
+---
+apiVersion: v1
+kind: Secret
+metadata: { name: db-creds, namespace: bookstore-data }
+type: Opaque
+stringData:
+  POSTGRES_PASSWORD: "bookstore-dev-only"
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db
+  namespace: bookstore-data
+  labels: { app: db, zta.resource: "true", zta.data-class: "restricted", zta.tier-role: "data" }
+spec:
+  serviceName: db
+  replicas: 1
+  selector: { matchLabels: { app: db } }
+  template:
+    metadata:
+      labels: { app: db, zta.resource: "true", zta.data-class: "restricted", zta.tier-role: "data" }
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:16-alpine
+        ports: [{ containerPort: 5432 }]
+        envFrom: [{ secretRef: { name: db-creds } }]
+        env:
+        - { name: POSTGRES_DB,   value: "bookstore" }
+        - { name: POSTGRES_USER, value: "bookstore" }
+        volumeMounts:
+        - { name: pgdata, mountPath: /var/lib/postgresql/data }
+  volumeClaimTemplates:
+  - metadata: { name: pgdata }
+    spec:
+      accessModes: [ReadWriteOnce]
+      resources: { requests: { storage: 1Gi } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+  namespace: bookstore-data
+  labels: { zta.resource: "true", zta.data-class: "restricted" }
+spec:
+  selector: { app: db }
+  ports: [{ name: pg, port: 5432, targetPort: 5432 }]
+---
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata: { name: bookstore-gw, namespace: bookstore-frontend }
+spec:
+  selector: { istio: ingressgateway }
+  servers:
+  - port: { number: 80, name: http, protocol: HTTP }
+    hosts: ["bookstore.local"]
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata: { name: bookstore-vs, namespace: bookstore-frontend }
+spec:
+  hosts: ["bookstore.local"]
+  gateways: [bookstore-gw]
+  http:
+  - match: [{ uri: { prefix: /api/ } }]
+    rewrite: { uri: / }
+    route:
+    - destination: { host: api.bookstore-api.svc.cluster.local, port: { number: 80 } }
+  - route:
+    - destination: { host: frontend.bookstore-frontend.svc.cluster.local, port: { number: 80 } }
+</code></pre>
+</div>
+
+<h3>2.6 Verification</h3>
+
+<div class="code-block terminal">
+  <div class="code-head"><span class="lang">Bash</span><span class="path">verify bootstrap</span><button class="copy-btn">Copy</button></div>
+<pre><code>kubectl --context docker-desktop get ns | grep -E 'zta|bookstore|spire|cert-manager|gatekeeper|istio'
+
+# Expected (namespaces — status Active):
+# bookstore-api           Active
+# bookstore-data          Active
+# bookstore-frontend      Active
+# cert-manager            Active
+# gatekeeper-system       Active
+# istio-system            Active
+# spire                   Active
+# zta-identity            Active
+# zta-observability       Active
+# zta-policy              Active
+# zta-runtime-security    Active
+# zta-system              Active
+
+kubectl --context docker-desktop get deploy -A | grep -E 'istiod|opa|keycloak|cert-manager|gatekeeper-controller|grafana'
+
+# Expected (a row per deployment, READY = 1/1 or higher):
+# cert-manager         cert-manager              1/1   1   1   ...
+# gatekeeper-system    gatekeeper-controller     3/3   3   3   ...
+# istio-system         istiod                    1/1   1   1   ...
+# zta-identity         keycloak                  1/1   1   1   ...
+# zta-observability    kube-prom-grafana         1/1   1   1   ...
+# zta-policy           opa                       2/2   2   2   ...
+
+curl -s -H 'Host: bookstore.local' http://localhost/ | head -1
+# Expected: &lt;!doctype html&gt;
+
+curl -s -H 'Host: bookstore.local' http://localhost/api/headers | jq '.headers | keys[:5]'
+# Expected (keys in alphabetical order):
+# ["Accept", "Host", "User-Agent", "X-B3-Sampled", "X-B3-Spanid"]
+</code></pre>
+</div>
+
+<p>If every expected line appears, the lab environment is ready. Proceed to Lab 1.</p>
+</section>
+
+<!-- ============================================================== -->
+<!-- LAB 1 — TENET 1 · RESOURCES                                     -->
+<!-- ============================================================== -->
+<section id="lab-1" class="lab">
+  <div class="lab-header">
+    <span class="eyebrow">Lab 01 · 45 min</span>
+    <h2 class="lab-title">All data sources and computing services are resources</h2>
+    <p class="lab-tenet">NIST SP 800-207 §2.1 Tenet 1 — "An enterprise considers all of its data sources and computing services as resources."</p>
+  </div>
+
+  <dl class="nist-map">
+    <dt>Tenet</dt><dd><span class="badge tenet">T1</span> Resources (§2.1)</dd>
+    <dt>Components</dt><dd>Enterprise Resource (§3.1); CDM Data Source (§3.2) seeded</dd>
+    <dt>Variant</dt><dd>All four deployment variants begin here — you cannot protect what you have not enumerated</dd>
+    <dt>Source §</dt><dd>§4 (C4 L2 — Enterprise Resources), §7 (Component catalogue), §8.8 (data classification)</dd>
+  </dl>
+
+  <h4>Learning objectives</h4>
+  <ul>
+    <li>Enumerate every pod, service, and persistent volume in the cluster as a discrete <em>resource</em> per 800-207 §3.1.</li>
+    <li>Apply a consistent label schema (<code>zta.resource</code>, <code>zta.data-class</code>, <code>zta.tier-role</code>, <code>zta.owner</code>) that later labs will key off.</li>
+    <li>Produce a resource inventory usable as a CDM stand-in, mirroring the source §7.14 (Wiz + Tanium).</li>
+    <li>Recognise the source document's five-tier data classification (§8.8) and encode it as Kubernetes labels.</li>
+    <li>Distinguish <em>subjects</em>, <em>resources</em>, and <em>assets</em> — the three entities 800-207 §2 separates.</li>
+  </ul>
+
+  <h4>Concept primer</h4>
+  <p>The source document catalogues ~20 named components (§7) and places them inside four logical layers (Data Sources, Control Plane, PEPs, Enterprise Resources) at C4 L2 (§4). NIST 800-207 calls <em>all</em> of these — databases, APIs, services, even agents — <strong>resources</strong>, and Tenet 1 begins by insisting that the enterprise inventory them all and treat them as equally worthy of protection irrespective of whether they run on <code>z/OS</code>, EKS, or a laptop. In this lab the cluster plays the role of the bank's estate at miniature scale: the bookstore's <code>frontend</code>, <code>api</code>, and <code>db</code> are the "Subjects · Assets · Resources" box in the source diagram; the Istio sidecars are not resources, they are PEPs; OPA is the PE. The label schema you apply below becomes the primary key for <em>every</em> later lab's policy — policies will select resources by label, not by name, so that adding a new workload automatically inherits the correct enforcement without policy edits. This is the 800-207 §3.4.1 <em>Trust Algorithm</em> input schema, rendered in Kubernetes-native form.</p>
+
+  <h4>Step-by-step</h4>
+
+  <p><span class="step-num">01</span>Define the label schema as a ConfigMap so it is discoverable and versioned.</p>
+  <div class="code-block">
+    <div class="code-head"><span class="lang">YAML</span><span class="path">labs/01-resources/label-schema.yaml</span><button class="copy-btn">Copy</button></div>
+<pre><code>apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: zta-label-schema
+  namespace: zta-system
+  labels: { zta.resource: "true", zta.data-class: "internal" }
+data:
+  schema.yaml: |
+    # ZTA resource label schema v1 — aligns with 800-207 §3.1 & §3.4.1
+    labels:
+      zta.resource:      { values: ["true"],                 required: true }
+      zta.data-class:    { values: ["public","internal","confidential","restricted","secret"], required: true }
+      zta.tier-role:     { values: ["presentation","api","data","control-plane","observability"] }
+      zta.owner:         { pattern: "^[a-z0-9-]+$",          required: true }
+      zta.exposure:      { values: ["internal-only","partner","internet-facing"] }
+      zta.regulatory:    { values: ["none","pci","sox","gdpr","dora","cscf"] }
+</code></pre>
+  </div>
+
+  <p><span class="step-num">02</span>Back-fill missing labels onto the bookstore resources. Bootstrap set <code>zta.resource</code>, <code>zta.data-class</code>, <code>zta.tier-role</code>; this step adds <code>zta.owner</code> and <code>zta.exposure</code>.</p>
+
+  <div class="code-block">
+    <div class="code-head"><span class="lang">YAML</span><span class="path">labs/01-resources/backfill-labels.yaml</span><button class="copy-btn">Copy</button></div>
+<pre><code># Apply with:
+#   kubectl --context docker-desktop apply -f labs/01-resources/backfill-labels.yaml
+# This uses server-side apply patches — re-applicable and idempotent.
+apiVersion: v1
+kind: List
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: frontend
+    namespace: bookstore-frontend
+    labels:
+      zta.owner: "retail-web"
+      zta.exposure: "internet-facing"
+      zta.regulatory: "gdpr"
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: api
+    namespace: bookstore-api
+    labels:
+      zta.owner: "retail-api"
+      zta.exposure: "internal-only"
+      zta.regulatory: "gdpr,pci"
+- apiVersion: apps/v1
+  kind: StatefulSet
+  metadata:
+    name: db
+    namespace: bookstore-data
+    labels:
+      zta.owner: "retail-data"
+      zta.exposure: "internal-only"
+      zta.regulatory: "gdpr,pci,sox"
+</code></pre>
+  </div>
+
+  <p><span class="step-num">03</span>Install a Gatekeeper constraint that refuses any <em>new</em> workload missing the three required labels. This is the admission-time PEP expressing Tenet 1.</p>
+
+  <div class="code-block">
+    <div class="code-head"><span class="lang">YAML</span><span class="path">labs/01-resources/gatekeeper-required-labels.yaml</span><button class="copy-btn">Copy</button></div>
+<pre><code>apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8srequiredztalabels
+spec:
+  crd:
+    spec:
+      names: { kind: K8sRequiredZtaLabels }
+      validation:
+        openAPIV3Schema:
+          type: object
+          properties:
+            required: { type: array, items: { type: string } }
+  targets:
+  - target: admission.k8s.gatekeeper.sh
+    rego: |
+      package k8srequiredztalabels
+      violation[{"msg": msg}] {
+        required := input.parameters.required
+        provided := input.review.object.metadata.labels
+        missing := [k | k := required[_]; not provided[k]]
+        count(missing) &gt; 0
+        msg := sprintf("ZTA labels missing: %v (per 800-207 §2.1 T1)", [missing])
+      }
+---
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sRequiredZtaLabels
+metadata: { name: bookstore-resources-labelled }
+spec:
+  match:
+    kinds:
+    - { apiGroups: ["apps"], kinds: ["Deployment","StatefulSet","DaemonSet"] }
+    - { apiGroups: [""],     kinds: ["Service"] }
+    namespaces: ["bookstore-frontend","bookstore-api","bookstore-data"]
+  parameters:
+    required: ["zta.resource","zta.data-class","zta.owner"]
+</code></pre>
+  </div>
+
+  <p><span class="step-num">04</span>Produce the resource inventory — the CDM stand-in. A single <code>kubectl</code> invocation reports every labelled resource across the cluster, mimicking the Wiz/Tanium CDM feed in §7.14.</p>
+
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">labs/01-resources/inventory.sh</span><button class="copy-btn">Copy</button></div>
+<pre><code>#!/usr/bin/env bash
+set -euo pipefail
+CTX=docker-desktop
+kubectl --context $CTX get deploy,statefulset,daemonset,svc,pvc -A \
+  -l zta.resource=true \
+  -o custom-columns='\
+NAMESPACE:.metadata.namespace,\
+KIND:.kind,\
+NAME:.metadata.name,\
+DATA-CLASS:.metadata.labels.zta\.data-class,\
+TIER:.metadata.labels.zta\.tier-role,\
+OWNER:.metadata.labels.zta\.owner,\
+EXPOSURE:.metadata.labels.zta\.exposure'
+</code></pre>
+  </div>
+
+  <h4>Validation</h4>
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">validate Lab 1</span><button class="copy-btn">Copy</button></div>
+<pre><code>bash labs/01-resources/inventory.sh
+
+# Expected (exact rows; order may vary):
+# NAMESPACE           KIND          NAME       DATA-CLASS     TIER          OWNER         EXPOSURE
+# bookstore-frontend  Deployment    frontend   public         presentation  retail-web    internet-facing
+# bookstore-frontend  Service       frontend   public         &lt;none&gt;        &lt;none&gt;        &lt;none&gt;
+# bookstore-api       Deployment    api        confidential   api           retail-api    internal-only
+# bookstore-api       Service       api        confidential   &lt;none&gt;        &lt;none&gt;        &lt;none&gt;
+# bookstore-data      StatefulSet   db         restricted     data          retail-data   internal-only
+# bookstore-data      Service       db         restricted     &lt;none&gt;        &lt;none&gt;        &lt;none&gt;
+
+# Gatekeeper should report zero violations:
+kubectl --context docker-desktop get k8srequiredztalabels -o json \
+  | jq '.items[].status.totalViolations'
+# Expected: 0
+</code></pre>
+  </div>
+
+  <h4>Break-it exercise</h4>
+  <p>Attempt to deploy a new workload into <code>bookstore-api</code> missing the required labels. The admission-time PEP must refuse it.</p>
+
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">break-it</span><button class="copy-btn">Copy</button></div>
+<pre><code>cat &lt;&lt;'EOF' | kubectl --context docker-desktop apply -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: shadow-api, namespace: bookstore-api }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: shadow } }
+  template:
+    metadata: { labels: { app: shadow } }   # no zta.* labels
+    spec:
+      containers: [{ name: c, image: nginx:1.27-alpine }]
+EOF
+
+# Expected:
+# Error from server (Forbidden): error when creating "STDIN":
+# admission webhook "validation.gatekeeper.sh" denied the request:
+# [bookstore-resources-labelled] ZTA labels missing:
+#   ["zta.resource","zta.data-class","zta.owner"] (per 800-207 §2.1 T1)
+</code></pre>
+  </div>
+
+  <p>Now repair: add the labels and re-apply. The deployment succeeds. Delete the repaired deployment before moving on — it is not used in later labs.</p>
+
+  <h4>Reflection questions</h4>
+  <ol>
+    <li>The source document lists an <em>AI Gateway PEP</em> (§4, §9.7) that protects LLM traffic. Is the LLM itself a resource, a PEP, or both? Justify against 800-207 §2.1 T1 and §3.2.</li>
+    <li>Gatekeeper ran admission-time. Why is that not sufficient, and which later tenets (name them) close the remaining gap at request-time and run-time?</li>
+    <li>If you added a <code>zta.jurisdiction</code> label (EU, UK, US, SG), which paragraph of the source document (§2 or §8) does it support, and which tenets would make use of it?</li>
+  </ol>
+</section>
+
+<!-- ============================================================== -->
+<!-- LAB 2 — TENET 2 · SECURED COMMUNICATIONS                        -->
+<!-- ============================================================== -->
+<section id="lab-2" class="lab">
+  <div class="lab-header">
+    <span class="eyebrow">Lab 02 · 60 min</span>
+    <h2 class="lab-title">All communication is secured regardless of network location</h2>
+    <p class="lab-tenet">NIST SP 800-207 §2.1 Tenet 2 — "All communication is secured regardless of network location."</p>
+  </div>
+
+  <dl class="nist-map">
+    <dt>Tenet</dt><dd><span class="badge tenet">T2</span> Secured communications (§2.1)</dd>
+    <dt>Components</dt><dd>PEP (Envoy sidecar, §3.1.2), PKI Data Source (Istio CA; source §7.15 analogue)</dd>
+    <dt>Variant</dt><dd>Device-agent/gateway (§3.2.1) — each workload's sidecar is the on-resource gateway that terminates mTLS</dd>
+    <dt>Source §</dt><dd>§4 (Istio mesh + SPIFFE), §7.8 (Istio), §8.5 (telemetry), §8.7 (API security)</dd>
+  </dl>
+
+  <h4>Learning objectives</h4>
+  <ul>
+    <li>Flip mesh-wide <code>PeerAuthentication</code> from the Istio default (PERMISSIVE) to STRICT mTLS.</li>
+    <li>Prove east-west encryption empirically with <code>tcpdump</code> inside a debug pod — not by trusting the control plane's word.</li>
+    <li>Observe that "inside the cluster" carries no trust — an in-cluster plaintext client is rejected.</li>
+    <li>Map the observed behaviour to source §4 and §8.7 and to 800-207 §2.1 T2 and §3.4.2 (implicit trust zone minimisation).</li>
+  </ul>
+
+  <h4>Concept primer</h4>
+  <p>The source document's §3 Context warns that <em>no network segment, including the corporate LAN, is trusted by default</em>, and §4 places Istio at every east-west hop with SPIFFE SVIDs rotated every 60 minutes. NIST 800-207 §2.1 T2 is categorical: it does not matter whether traffic is "internal" or "external"; the same authentication and encryption obligations apply. The subtle point is that T2 does not by itself demand mTLS — it demands the <em>strongest possible</em> method — but in practice a modern mesh delivers mTLS cheaply enough that it is the default. What T2 rules out is the older defence-in-depth fallacy that perimeter firewalls can justify plaintext inside. The proof in this lab is deliberately adversarial: rather than reading the Istio control plane's claim that mTLS is on, you sniff a live packet from an untrusted-looking pod in an unrelated namespace. The bytes are opaque or not; there is no middle ground.</p>
+
+  <h4>Step-by-step</h4>
+
+  <p><span class="step-num">01</span>Apply the mesh-wide STRICT <code>PeerAuthentication</code>. Per-workload policies can still relax this, but nothing does by default.</p>
+
+  <div class="code-block">
+    <div class="code-head"><span class="lang">YAML</span><span class="path">labs/02-secured-comms/peer-authn-strict.yaml</span><button class="copy-btn">Copy</button></div>
+<pre><code>apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: istio-system        # mesh-wide when applied to the root namespace
+spec:
+  mtls:
+    mode: STRICT
+</code></pre>
+  </div>
+
+  <p><span class="step-num">02</span>Apply a default-deny <code>AuthorizationPolicy</code> to each bookstore namespace. T2 is about encryption; combining it with a default-deny is how 800-207 §3.3.1 intends enforcement to look.</p>
+
+  <div class="code-block">
+    <div class="code-head"><span class="lang">YAML</span><span class="path">labs/02-secured-comms/default-deny.yaml</span><button class="copy-btn">Copy</button></div>
+<pre><code>apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata: { name: default-deny, namespace: bookstore-api }
+spec: {}   # empty spec == deny-all
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata: { name: default-deny, namespace: bookstore-data }
+spec: {}
+---
+# Allow the ingress gateway to reach the api and frontend
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata: { name: allow-ingress-to-frontend, namespace: bookstore-frontend }
+spec:
+  selector: { matchLabels: { app: frontend } }
+  rules:
+  - from:
+    - source:
+        principals: ["cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account"]
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata: { name: allow-ingress-and-frontend-to-api, namespace: bookstore-api }
+spec:
+  selector: { matchLabels: { app: api } }
+  rules:
+  - from:
+    - source:
+        principals:
+        - "cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account"
+        - "cluster.local/ns/bookstore-frontend/sa/default"
+</code></pre>
+  </div>
+
+  <p><span class="step-num">03</span>Deploy a <em>debug pod</em> without sidecar injection in an unrelated namespace. This is the "hostile insider on the same LAN" scenario.</p>
+
+  <div class="code-block">
+    <div class="code-head"><span class="lang">YAML</span><span class="path">labs/02-secured-comms/debug-pod.yaml</span><button class="copy-btn">Copy</button></div>
+<pre><code>apiVersion: v1
+kind: Namespace
+metadata:
+  name: zta-lab-debug
+  labels: { istio-injection: "disabled" }   # deliberately NO sidecar
+---
+apiVersion: v1
+kind: Pod
+metadata: { name: debug, namespace: zta-lab-debug }
+spec:
+  containers:
+  - name: tools
+    image: nicolaka/netshoot:v0.13
+    command: ["sleep", "36000"]
+    securityContext:
+      capabilities: { add: ["NET_RAW","NET_ADMIN"] }   # tcpdump needs these
+</code></pre>
+  </div>
+
+  <p><span class="step-num">04</span>Attempt a plaintext HTTP call from the debug pod to the API. Because the API sidecar enforces STRICT mTLS, the handshake fails.</p>
+
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">plaintext attempt</span><button class="copy-btn">Copy</button></div>
+<pre><code>kubectl --context docker-desktop -n zta-lab-debug exec debug -- \
+  curl -sv --max-time 5 http://api.bookstore-api.svc.cluster.local/headers
+
+# Expected: a TLS alert surfaced as curl failure — note 'Empty reply' or 'Recv failure'
+# * Connected to api.bookstore-api.svc.cluster.local (...) port 80
+# * Empty reply from server
+# * Closing connection
+# curl: (52) Empty reply from server
+</code></pre>
+  </div>
+
+  <p><span class="step-num">05</span>Prove encryption on the wire by sniffing while a legitimate call flows between the frontend and api. The frontend pod has a sidecar; its outbound traffic to the api should be TLS on port 80 of the sidecar-redirected flow.</p>
+
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">packet capture</span><button class="copy-btn">Copy</button></div>
+<pre><code># Terminal A — start a capture from the debug pod's eth0.
+# Note: this sees traffic only if it is on the same node (true on single-node Docker Desktop).
+kubectl --context docker-desktop -n zta-lab-debug exec debug -- \
+  tcpdump -i any -nn -s 0 -c 20 -A 'tcp port 80 or tcp port 15006' 2&gt;&amp;1 | tee /tmp/capture.txt
+
+# Terminal B — drive traffic from the frontend pod (has a sidecar):
+FRONTEND=$(kubectl --context docker-desktop -n bookstore-frontend get pod -l app=frontend -o name | head -1)
+kubectl --context docker-desktop -n bookstore-frontend exec $FRONTEND -c nginx -- \
+  wget -qO- http://api.bookstore-api.svc.cluster.local/headers
+
+# Expected in /tmp/capture.txt:
+# - Frames carry TLS record headers (0x16 0x03 0x03) and random bytes.
+# - No plaintext HTTP verbs (GET / POST / Host:) appear.
+# - Port 15006 (Istio inbound sidecar) is visible; cleartext on :80 is not.
+grep -E 'GET |Host: |User-Agent' /tmp/capture.txt || echo 'no plaintext HTTP'
+# Expected: no plaintext HTTP
+</code></pre>
+  </div>
+
+  <p><span class="step-num">06</span>Cross-check the mesh's own view with <code>istioctl</code>. This must <em>agree</em> with the packet capture — if it contradicts, believe the capture.</p>
+
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">istio mTLS status</span><button class="copy-btn">Copy</button></div>
+<pre><code>istioctl --context docker-desktop authn tls-check \
+  $(kubectl --context docker-desktop -n bookstore-frontend get pod -l app=frontend -o name | head -1 | cut -d/ -f2).bookstore-frontend \
+  api.bookstore-api.svc.cluster.local
+
+# Expected:
+# HOST:PORT                                     STATUS    SERVER   CLIENT   AUTHN POLICY   DESTINATION RULE
+# api.bookstore-api.svc.cluster.local:80        OK        STRICT   ISTIO_MUTUAL   default/istio-system   -
+</code></pre>
+  </div>
+
+  <h4>Validation</h4>
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">validate Lab 2</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. STRICT mesh-wide:
+kubectl --context docker-desktop -n istio-system get peerauthentication default \
+  -o jsonpath='{.spec.mtls.mode}'; echo
+# Expected: STRICT
+
+# 2. Plaintext client refused:
+kubectl --context docker-desktop -n zta-lab-debug exec debug -- \
+  curl -sS --max-time 3 http://api.bookstore-api.svc.cluster.local/headers; echo $?
+# Expected exit code: 52 (Empty reply)
+
+# 3. Mesh-authenticated client succeeds:
+kubectl --context docker-desktop -n bookstore-frontend exec \
+  $(kubectl --context docker-desktop -n bookstore-frontend get pod -l app=frontend -o name | head -1) \
+  -c nginx -- wget -qO- http://api.bookstore-api.svc.cluster.local/headers \
+  | jq -r '.headers."X-Forwarded-Client-Cert" // "missing"' | cut -c1-60
+# Expected: a non-"missing" value containing 'By=spiffe://cluster.local/...'
+</code></pre>
+  </div>
+
+  <h4>Break-it exercise</h4>
+  <p>Downgrade the <code>bookstore-api</code> namespace to PERMISSIVE and observe that the plaintext client from step 4 <em>succeeds</em>. This is exactly the risk that T2 prohibits.</p>
+
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">break-it</span><button class="copy-btn">Copy</button></div>
+<pre><code>cat &lt;&lt;'EOF' | kubectl --context docker-desktop apply -f -
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata: { name: downgrade, namespace: bookstore-api }
+spec:
+  mtls: { mode: PERMISSIVE }
+EOF
+
+# Re-run the plaintext attempt:
+kubectl --context docker-desktop -n zta-lab-debug exec debug -- \
+  curl -sS --max-time 3 http://api.bookstore-api.svc.cluster.local/headers \
+  | jq '.headers | keys | length'
+# Expected now: a small integer (the call succeeded) — and NO X-Forwarded-Client-Cert
+
+# Restore:
+kubectl --context docker-desktop -n bookstore-api delete peerauthentication downgrade
+</code></pre>
+  </div>
+
+  <h4>Reflection questions</h4>
+  <ol>
+    <li>The source §5 Flow A step 8 references SPIFFE IDs <code>spiffe://bank/retail/payments-api</code> and <code>spiffe://bank/retail/payments-service</code>. In your cluster, which header embedded these identities and which sidecar produced it?</li>
+    <li>Istio's <code>PeerAuthentication</code> and <code>AuthorizationPolicy</code> ran at different OSI layers. Which 800-207 logical components (§3.1) did each instantiate?</li>
+    <li>T2 demands security <em>regardless of location</em>. What evidence in your capture file distinguishes a T2-compliant mesh from a network whose perimeter firewall merely hid plaintext?</li>
+  </ol>
+</section>
+
+<!-- ============================================================== -->
+<!-- LAB 3 — TENET 3 · PER-SESSION                                   -->
+<!-- ============================================================== -->
+<section id="lab-3" class="lab">
+  <div class="lab-header">
+    <span class="eyebrow">Lab 03 · 75 min</span>
+    <h2 class="lab-title">Access to individual enterprise resources is granted on a per-session basis</h2>
+    <p class="lab-tenet">NIST SP 800-207 §2.1 Tenet 3 — "Access to individual enterprise resources is granted on a per-session basis."</p>
+  </div>
+
+  <dl class="nist-map">
+    <dt>Tenet</dt><dd><span class="badge tenet">T3</span> Per-session access (§2.1)</dd>
+    <dt>Components</dt><dd>ID Management (§3.1, Keycloak analogue of ForgeRock CIAM / Entra ID), PKI (§3.1, SPIRE analogue of Venafi + AWS PCA)</dd>
+    <dt>Variant</dt><dd>Resource-portal (§3.2.3) for human→API; device-agent/gateway (§3.2.1) for workload→workload</dd>
+    <dt>Source §</dt><dd>§1 (DPoP-bound tokens, 60-min SVIDs), §5 Flow A (5-min token), §7.1, §7.4, §8.2</dd>
+  </dl>
+
+  <h4>Learning objectives</h4>
+  <ul>
+    <li>Configure Keycloak to issue 5-minute OAuth2 access tokens with a realm-specific audience.</li>
+    <li>Configure SPIRE to issue 5-minute X.509 SVIDs and observe rotation in real time.</li>
+    <li>Demonstrate that session expiry forces re-authentication — the defining behaviour of T3.</li>
+    <li>Contrast per-session (T3) with per-request dynamic evaluation (T4, covered next).</li>
+  </ul>
+
+  <h4>Concept primer</h4>
+  <p>800-207 §2.1 T3 specifies that access is <em>session-bound</em>, not granted as an open-ended grant that can be replayed forever. Two session artefacts dominate practice: the human-session OAuth2/OIDC access token, bound to a subject (and optionally a key via DPoP or mTLS per the source §1 and §8.7), and the workload-session SPIFFE SVID, bound to a workload identity. The source document picks five-minute Keycloak/ForgeRock tokens and fifteen-minute SPIFFE SVIDs — short enough that theft is time-boxed, long enough that re-authentication cost is bearable. In this lab you set both to five minutes and watch them roll. T3 does not, by itself, guarantee that any given request inside a session is authorised (that is T4 and T6); it guarantees only that the session cannot outlive its intended lifetime, and that resumption requires a fresh proof. Crucially, "session" here is per-resource — a token good for the frontend is not good for the API unless its audience claim matches. That per-resource scoping is what the phrase "individual enterprise resources" in the tenet text insists on.</p>
+
+  <h4>Step-by-step</h4>
+
+  <p><span class="step-num">01</span>Bootstrap a Keycloak realm <code>zta-bookstore</code> with a 5-minute access-token lifespan, a confidential client <code>bookstore-api</code>, and a test user <code>alice / alice</code>.</p>
+
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">labs/03-per-session/keycloak-realm.sh</span><button class="copy-btn">Copy</button></div>
+<pre><code>#!/usr/bin/env bash
+set -euo pipefail
+CTX=docker-desktop
+KC_POD=$(kubectl --context $CTX -n zta-identity get pod -l app=keycloak -o name | head -1)
+
+kc() { kubectl --context $CTX -n zta-identity exec -i $KC_POD -- /opt/keycloak/bin/kcadm.sh "$@"; }
+
+kc config credentials --server http://localhost:8080 --realm master --user admin --password admin
+
+kc create realms -s realm=zta-bookstore -s enabled=true \
+  -s accessTokenLifespan=300 \
+  -s ssoSessionIdleTimeout=1800 \
+  -s ssoSessionMaxLifespan=3600
+
+kc create clients -r zta-bookstore -s clientId=bookstore-api \
+  -s protocol=openid-connect -s publicClient=false \
+  -s 'redirectUris=["http://bookstore.local/*"]' \
+  -s directAccessGrantsEnabled=true \
+  -s serviceAccountsEnabled=false
+CID=$(kc get clients -r zta-bookstore -q clientId=bookstore-api --fields id --format csv --noquotes | tail -1)
+kc update clients/$CID -r zta-bookstore -s 'attributes."access.token.lifespan"=300'
+SECRET=$(kc get clients/$CID/client-secret -r zta-bookstore --fields value --format csv --noquotes | tail -1)
+
+kc create users -r zta-bookstore -s username=alice -s enabled=true -s email=alice@zta.homelab
+kc set-password -r zta-bookstore --username alice --new-password alice
+
+echo "BOOKSTORE_CLIENT_SECRET=$SECRET" &gt; labs/03-per-session/.env
+echo "Realm ready. Secret stored in labs/03-per-session/.env"
+</code></pre>
+  </div>
+
+  <p><span class="step-num">02</span>Acquire an access token via the OAuth2 Password Grant and inspect its <code>exp</code> claim.</p>
+
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">token and expiry</span><button class="copy-btn">Copy</button></div>
+<pre><code>source labs/03-per-session/.env
+
+TOKEN=$(curl -s -H 'Host: keycloak.local' \
+  -d 'grant_type=password' \
+  -d 'client_id=bookstore-api' \
+  -d "client_secret=$BOOKSTORE_CLIENT_SECRET" \
+  -d 'username=alice' -d 'password=alice' \
+  http://localhost/realms/zta-bookstore/protocol/openid-connect/token \
+  | jq -r .access_token)
+
+# Decode payload (JWT is base64url; pad and decode):
+echo "$TOKEN" | cut -d. -f2 | base64 -d 2&gt;/dev/null | jq '{sub, aud, iss, exp, iat, lifetime_s: (.exp - .iat)}'
+
+# Expected (abbreviated):
+# {
+#   "sub": "...uuid...",
+#   "aud": "account",
+#   "iss": "http://keycloak.local/realms/zta-bookstore",
+#   "exp": 1760000000,
+#   "iat": 1759999700,
+#   "lifetime_s": 300
+# }
+</code></pre>
+  </div>
+
+  <p><span class="step-num">03</span>Register the bookstore-api workload in SPIRE with a 5-minute X.509 TTL; confirm it receives and rotates SVIDs.</p>
+
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">SPIRE workload registration</span><button class="copy-btn">Copy</button></div>
+<pre><code>SS=$(kubectl --context docker-desktop -n spire get pod -l app=spire-server -o name | head -1)
+
+# Register the bookstore-api ServiceAccount as a workload
+kubectl --context docker-desktop -n spire exec -i $SS -- \
+  /opt/spire/bin/spire-server entry create \
+    -parentID spiffe://zta.homelab/spire/agent/k8s_psat/docker-desktop \
+    -spiffeID spiffe://zta.homelab/ns/bookstore-api/sa/default \
+    -selector k8s:ns:bookstore-api \
+    -selector k8s:sa:default \
+    -x509SVIDTTL 300 \
+    -jwtSVIDTTL 300
+# Expected:
+# Entry ID         : 7d2...
+# SPIFFE ID        : spiffe://zta.homelab/ns/bookstore-api/sa/default
+# Parent ID        : spiffe://zta.homelab/spire/agent/k8s_psat/docker-desktop
+# X509-SVID TTL    : 300
+# JWT-SVID TTL     : 300
+</code></pre>
+  </div>
+
+  <p><span class="step-num">04</span>Deploy a thin sidecar-less watcher that uses the SPIFFE Workload API to fetch SVIDs and prints the serial number. Each rotation (every ~150 s, half the TTL) is visible.</p>
+
+  <div class="code-block">
+    <div class="code-head"><span class="lang">YAML</span><span class="path">labs/03-per-session/svid-watcher.yaml</span><button class="copy-btn">Copy</button></div>
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata: { name: svid-watcher, namespace: bookstore-api, labels: { zta.resource: "true", zta.data-class: "confidential", zta.owner: "retail-api", zta.tier-role: "api" } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: svid-watcher } }
+  template:
+    metadata:
+      labels: { app: svid-watcher, zta.resource: "true", zta.data-class: "confidential", zta.owner: "retail-api", zta.tier-role: "api" }
+    spec:
+      serviceAccountName: default
+      containers:
+      - name: watcher
+        image: ghcr.io/spiffe/spiffe-helper:0.9.0
+        args: ["-config", "/config/helper.conf"]
+        volumeMounts:
+        - { name: config,   mountPath: /config }
+        - { name: svid-out, mountPath: /svid }
+        - { name: spire-agent-socket, mountPath: /run/spire/sockets }
+      - name: observer
+        image: alpine:3.20
+        command: ["sh","-c","apk add --no-cache openssl &gt;/dev/null; while true; do if [ -f /svid/svid.pem ]; then openssl x509 -in /svid/svid.pem -noout -serial -enddate -subject; fi; sleep 15; done"]
+        volumeMounts:
+        - { name: svid-out, mountPath: /svid, readOnly: true }
+      volumes:
+      - name: config
+        configMap:
+          name: svid-helper
+      - { name: svid-out, emptyDir: {} }
+      - name: spire-agent-socket
+        hostPath: { path: /run/spire/sockets, type: DirectoryOrCreate }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: svid-helper, namespace: bookstore-api }
+data:
+  helper.conf: |
+    agent_address = "/run/spire/sockets/agent.sock"
+    cmd = ""
+    cmd_args = ""
+    cert_dir = "/svid"
+    svid_file_name = "svid.pem"
+    svid_key_file_name = "svid.key"
+    svid_bundle_file_name = "bundle.pem"
+    renew_signal = "SIGUSR1"
+</code></pre>
+  </div>
+
+  <p><span class="step-num">05</span>Tail the <code>observer</code> container and watch serials change.</p>
+
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">watch rotation</span><button class="copy-btn">Copy</button></div>
+<pre><code>kubectl --context docker-desktop -n bookstore-api logs -f deploy/svid-watcher -c observer
+
+# Expected (abbreviated; a new serial every ~150 s, notAfter ~5 min out):
+# serial=4F7A...01  notAfter=Apr 17 09:42:03 2026 GMT  subject=... URI:spiffe://zta.homelab/ns/bookstore-api/sa/default
+# serial=4F7A...01  notAfter=Apr 17 09:42:03 2026 GMT  ...
+# serial=4F7A...02  notAfter=Apr 17 09:44:33 2026 GMT  subject=... URI:spiffe://zta.homelab/ns/bookstore-api/sa/default
+</code></pre>
+  </div>
+
+  <h4>Validation</h4>
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">validate Lab 3</span><button class="copy-btn">Copy</button></div>
+<pre><code># Token lifespan == 300 s:
+source labs/03-per-session/.env
+LIFE=$(curl -s -H 'Host: keycloak.local' \
+  -d 'grant_type=password' -d 'client_id=bookstore-api' \
+  -d "client_secret=$BOOKSTORE_CLIENT_SECRET" \
+  -d 'username=alice' -d 'password=alice' \
+  http://localhost/realms/zta-bookstore/protocol/openid-connect/token \
+  | jq -r .expires_in)
+[ "$LIFE" = "300" ] &amp;&amp; echo OK || echo FAIL
+# Expected: OK
+
+# SVID TTL &lt;= 300 s:
+SS=$(kubectl --context docker-desktop -n spire get pod -l app=spire-server -o name | head -1)
+kubectl --context docker-desktop -n spire exec $SS -- \
+  /opt/spire/bin/spire-server entry show -spiffeID spiffe://zta.homelab/ns/bookstore-api/sa/default \
+  | grep 'X509-SVID TTL'
+# Expected: X509-SVID TTL    : 300
+</code></pre>
+  </div>
+
+  <h4>Break-it exercise</h4>
+  <p>Re-use an expired token and see the API gateway refuse it. This demonstrates why replay windows matter.</p>
+
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">break-it — replay expired token</span><button class="copy-btn">Copy</button></div>
+<pre><code># Capture a token and wait past its lifespan:
+source labs/03-per-session/.env
+TOKEN=$(curl -s -H 'Host: keycloak.local' \
+  -d 'grant_type=password' -d 'client_id=bookstore-api' \
+  -d "client_secret=$BOOKSTORE_CLIENT_SECRET" \
+  -d 'username=alice' -d 'password=alice' \
+  http://localhost/realms/zta-bookstore/protocol/openid-connect/token \
+  | jq -r .access_token)
+
+sleep 310
+
+# Install a simple JWT-validation RequestAuthentication (used again in Lab 4):
+cat &lt;&lt;'EOF' | kubectl --context docker-desktop apply -f -
+apiVersion: security.istio.io/v1
+kind: RequestAuthentication
+metadata: { name: keycloak-jwt, namespace: bookstore-api }
+spec:
+  selector: { matchLabels: { app: api } }
+  jwtRules:
+  - issuer: "http://keycloak.local/realms/zta-bookstore"
+    jwksUri: "http://keycloak.zta-identity.svc.cluster.local:8080/realms/zta-bookstore/protocol/openid-connect/certs"
+    forwardOriginalToken: true
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata: { name: require-valid-jwt, namespace: bookstore-api }
+spec:
+  selector: { matchLabels: { app: api } }
+  action: DENY
+  rules:
+  - from: [{ source: { notRequestPrincipals: ["*"] } }]
+EOF
+
+curl -s -o /dev/null -w '%{http_code}\n' \
+  -H 'Host: bookstore.local' -H "Authorization: Bearer $TOKEN" \
+  http://localhost/api/headers
+# Expected: 401   (token is expired; Istio rejects before hitting the api pod)
+</code></pre>
+  </div>
+
+  <h4>Reflection questions</h4>
+  <ol>
+    <li>The source §1 says CIAM tokens are DPoP-bound and workforce tokens are Entra-issued. Which property of DPoP makes the difference between "valid token" and "valid session for this client"? Which 800-207 tenet does that strengthen — T3, T6, or both?</li>
+    <li>SPIRE SVIDs rotate silently every ~TTL/2 without the workload being aware. In what circumstances would you accept a longer TTL, and how does that decision trade against 800-207 §2.1 T3 and the §3.4 Trust Algorithm?</li>
+    <li>Per-session does not mean per-request. Name one attack — present in the source §8.10 threat model — that per-session access alone does not mitigate, and indicate the tenet that does.</li>
+  </ol>
+</section>
+
+<!-- ============================================================== -->
+<!-- LAB 4 — TENET 4 · DYNAMIC POLICY                                -->
+<!-- ============================================================== -->
+<section id="lab-4" class="lab">
+  <div class="lab-header">
+    <span class="eyebrow">Lab 04 · 90 min</span>
+    <h2 class="lab-title">Access is determined by dynamic policy</h2>
+    <p class="lab-tenet">NIST SP 800-207 §2.1 Tenet 4 — "Access to resources is determined by dynamic policy including the observable state of client identity, application/service, and the requesting asset — and may include other behavioural and environmental attributes."</p>
+  </div>
+
+  <dl class="nist-map">
+    <dt>Tenet</dt><dd><span class="badge tenet">T4</span> Dynamic policy (§2.1)</dd>
+    <dt>Components</dt><dd>Policy Engine (§3.1.1 — OPA), PEP (§3.1.2 — Envoy ext-authz), Trust Algorithm (§3.4.1), Data Source signals (CDM, identity)</dd>
+    <dt>Variant</dt><dd>Device-agent/gateway (§3.2.1) — posture travels with the request</dd>
+    <dt>Source §</dt><dd>§4 (OPA + AuthZEN), §5 Flow A (Rego evaluation with risk signal), §6 (Rego code), §8.5 (decision log)</dd>
+  </dl>
+
+  <h4>Learning objectives</h4>
+  <ul>
+    <li>Author a Rego policy that reads subject identity (Keycloak JWT), workload identity (SPIFFE ID), request attributes (path, method), and a <em>device posture</em> signal injected as a header.</li>
+    <li>Wire OPA to Envoy via the <code>envoy.ext_authz</code> gRPC filter so that every API request is evaluated.</li>
+    <li>Observe identical requests succeed or fail based on a posture value that has nothing to do with the token itself.</li>
+    <li>Read the OPA decision log and recognise the evidence artefact that the source §8.5 calls the <code>decision_id</code>.</li>
+  </ul>
+
+  <h4>Concept primer</h4>
+  <p>The source §6 shows a Rego policy that evaluates four inputs — <code>subject</code>, <code>resource</code>, <code>action</code>, <code>context</code> — plus an <code>env</code> carrying the signed policy-bundle hash. 800-207 §2.1 T4 says exactly this: a request is not permitted solely because its credentials are valid; the authorisation calculus must reach into the <em>observable state</em> of client, app, and asset, and may use behavioural attributes (UEBA, fraud/AML scores in the source §9). In this lab we implement a trimmed-down version: JWT claims stand in for CIAM identity, the SPIFFE peer identity on the sidecar stands in for workload identity, and a <code>x-device-posture</code> header stands in for the Tanium/Wiz CDM signal. The posture values <code>trusted | suspect | tampered</code> change outcomes per method — a <code>GET</code> from a <code>suspect</code> device is permitted, but any <code>POST</code> requires <code>trusted</code>. The policy is <strong>fail-closed</strong> (default deny) and <strong>self-auditing</strong> (every evaluation emits a decision log) — two properties the source §6 calls out explicitly.</p>
+
+  <h4>Step-by-step</h4>
+
+  <p><span class="step-num">01</span>Author the Rego policy. Save it under the repo and load it into OPA as a ConfigMap.</p>
+
+  <div class="code-block">
+    <div class="code-head"><span class="lang">Rego</span><span class="path">labs/04-dynamic-policy/zta.authz.rego</span><button class="copy-btn">Copy</button></div>
+<pre><code>package zta.authz
+
+import rego.v1
+
+# Envoy ext_authz input shape:
+#   input.attributes.request.http.{method,path,headers}
+#   input.attributes.source.principal          -- SPIFFE peer URI
+#   input.parsed_path, input.parsed_query
+
+default allow := false
+default decision := {"allow": false, "reason": "default-deny"}
+
+# --- helpers --------------------------------------------------------
+token := t if {
+  auth := input.attributes.request.http.headers.authorization
+  startswith(auth, "Bearer ")
+  t := substring(auth, 7, -1)
+}
+
+claims := c if {
+  [_, payload, _] := io.jwt.decode(token)
+  c := payload
+}
+
+posture := p if {
+  p := input.attributes.request.http.headers["x-device-posture"]
+} else := "unknown"
+
+method := m if { m := input.attributes.request.http.method }
+path   := p if { p := input.attributes.request.http.path }
+
+workload_peer := s if { s := input.attributes.source.principal }
+
+# --- rules ----------------------------------------------------------
+# Allow: authenticated user + trusted posture + known workload peer
+allow if {
+  claims.sub
+  posture == "trusted"
+  startswith(workload_peer, "spiffe://cluster.local/ns/")
+}
+
+# Allow read-only GET from suspect devices
+allow if {
+  method == "GET"
+  claims.sub
+  posture == "suspect"
+}
+
+# Hard deny if device is tampered, regardless of token
+decision := {"allow": false, "reason": "device-tampered"} if {
+  posture == "tampered"
+}
+
+# Deny if unknown posture AND write method
+decision := {"allow": false, "reason": "posture-unknown-on-write"} if {
+  posture == "unknown"
+  method != "GET"
+}
+
+# If a narrow deny rule didn't fire, project `allow` to decision
+decision := {"allow": true,  "reason": "ok"}                    if allow
+decision := {"allow": false, "reason": "no-matching-allow"}     if not allow
+
+# Final response Envoy expects
+result := {
+  "allowed": decision.allow,
+  "headers": {
+    "x-zta-decision-id": decision_id,
+    "x-zta-decision-reason": decision.reason,
+  },
+  "body": body,
+  "http_status": status,
+}
+
+status := 200 if decision.allow
+status := 403 if not decision.allow
+
+body := "" if decision.allow
+body := sprintf(`{"error":"forbidden","reason":"%s","decision_id":"%s"}`, [decision.reason, decision_id]) if not decision.allow
+
+decision_id := crypto.sha256(sprintf("%v|%v|%v|%v|%v",
+  [claims.sub, method, path, posture, time.now_ns()]))
+</code></pre>
+  </div>
+
+  <p><span class="step-num">02</span>Load the policy into the running OPA. We re-use the OPA from bootstrap (§2.5). The ConfigMap is mounted as a bundle-free policy file.</p>
+
+  <div class="code-block">
+    <div class="code-head"><span class="lang">YAML</span><span class="path">labs/04-dynamic-policy/opa-policy.yaml</span><button class="copy-btn">Copy</button></div>
+<pre><code>apiVersion: v1
+kind: ConfigMap
+metadata: { name: opa-policy, namespace: zta-policy }
+data:
+  zta.authz.rego: |
+    # (paste the Rego above here verbatim — omitted for brevity in this snippet)
+---
+# Patch the OPA Deployment to mount the policy and enable ext_authz
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: opa, namespace: zta-policy }
+spec:
+  template:
+    spec:
+      containers:
+      - name: opa
+        args:
+        - "run"
+        - "--server"
+        - "--addr=:8181"
+        - "--diagnostic-addr=:8282"
+        - "--set=plugins.envoy_ext_authz_grpc.addr=:9191"
+        - "--set=plugins.envoy_ext_authz_grpc.path=zta/authz/result"
+        - "--set=decision_logs.console=true"
+        - "/policies/zta.authz.rego"
+        volumeMounts:
+        - { name: policy, mountPath: /policies }
+      volumes:
+      - { name: policy, configMap: { name: opa-policy } }
+</code></pre>
+  </div>
+
+  <p><span class="step-num">03</span>Wire Envoy (the bookstore-api sidecar) to call OPA via the <code>envoy.ext_authz</code> HTTP filter.</p>
+
+  <div class="code-block">
+    <div class="code-head"><span class="lang">YAML</span><span class="path">labs/04-dynamic-policy/ext-authz-envoyfilter.yaml</span><button class="copy-btn">Copy</button></div>
+<pre><code>apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata: { name: ext-authz-opa, namespace: istio-system }
+spec:
+  configPatches:
+  - applyTo: CLUSTER
+    match:
+      context: SIDECAR_INBOUND
+    patch:
+      operation: ADD
+      value:
+        name: opa-ext-authz
+        type: STRICT_DNS
+        connect_timeout: 1s
+        http2_protocol_options: {}
+        load_assignment:
+          cluster_name: opa-ext-authz
+          endpoints:
+          - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address:
+                    address: opa.zta-policy.svc.cluster.local
+                    port_value: 9191
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata: { name: ext-authz-opa, namespace: bookstore-api }
+spec:
+  selector: { matchLabels: { app: api } }
+  action: CUSTOM
+  provider: { name: opa-ext-authz }
+  rules:
+  - to:
+    - operation:
+        paths: ["/*"]
+</code></pre>
+  </div>
+
+  <p>Register the provider once at the mesh root:</p>
+
+  <div class="code-block">
+    <div class="code-head"><span class="lang">YAML</span><span class="path">labs/04-dynamic-policy/ext-authz-provider.yaml</span><button class="copy-btn">Copy</button></div>
+<pre><code>apiVersion: v1
+kind: ConfigMap
+metadata: { name: istio, namespace: istio-system }
+data:
+  mesh: |
+    extensionProviders:
+    - name: opa-ext-authz
+      envoyExtAuthzGrpc:
+        service: opa.zta-policy.svc.cluster.local
+        port: 9191
+</code></pre>
+  </div>
+
+  <p><span class="step-num">04</span>Drive three requests that differ only in the posture header. Collect OPA decision logs.</p>
+
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">three requests</span><button class="copy-btn">Copy</button></div>
+<pre><code>source labs/03-per-session/.env
+TOKEN=$(curl -s -H 'Host: keycloak.local' \
+  -d 'grant_type=password' -d 'client_id=bookstore-api' \
+  -d "client_secret=$BOOKSTORE_CLIENT_SECRET" \
+  -d 'username=alice' -d 'password=alice' \
+  http://localhost/realms/zta-bookstore/protocol/openid-connect/token \
+  | jq -r .access_token)
+
+for POSTURE in trusted suspect tampered; do
+  for METHOD in GET POST; do
+    CODE=$(curl -s -o /dev/null -w '%{http_code}' \
+      -X $METHOD \
+      -H 'Host: bookstore.local' \
+      -H "Authorization: Bearer $TOKEN" \
+      -H "x-device-posture: $POSTURE" \
+      http://localhost/api/anything)
+    printf 'posture=%-9s method=%-4s -&gt; %s\n' "$POSTURE" "$METHOD" "$CODE"
+  done
+done
+
+# Expected:
+# posture=trusted   method=GET  -&gt; 200
+# posture=trusted   method=POST -&gt; 200
+# posture=suspect   method=GET  -&gt; 200
+# posture=suspect   method=POST -&gt; 403
+# posture=tampered  method=GET  -&gt; 403
+# posture=tampered  method=POST -&gt; 403
+</code></pre>
+  </div>
+
+  <p><span class="step-num">05</span>Inspect the OPA decision log for the <code>decision_id</code>. Source §8.5 names this the canonical audit artefact.</p>
+
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">decision log</span><button class="copy-btn">Copy</button></div>
+<pre><code>kubectl --context docker-desktop -n zta-policy logs deploy/opa --tail=20 \
+  | jq -c 'select(.decision_id != null) | {time: .timestamp, decision_id, path: .input.attributes.request.http.path, posture: .input.attributes.request.http.headers["x-device-posture"], result: .result.allowed, reason: .result.headers["x-zta-decision-reason"]}'
+
+# Expected (one line per request, ISO timestamps elided):
+# {"decision_id":"b7c1...","path":"/anything","posture":"trusted","result":true,"reason":"ok"}
+# {"decision_id":"0a3e...","path":"/anything","posture":"suspect","result":true,"reason":"ok"}
+# {"decision_id":"f19d...","path":"/anything","posture":"suspect","result":false,"reason":"no-matching-allow"}
+# {"decision_id":"c821...","path":"/anything","posture":"tampered","result":false,"reason":"device-tampered"}
+</code></pre>
+  </div>
+
+  <h4>Validation</h4>
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">validate Lab 4</span><button class="copy-btn">Copy</button></div>
+<pre><code># Exactly one allow on POST: only posture=trusted
+# Exactly two denies on POST: posture in {suspect, tampered}
+# Exactly two allows on GET: posture in {trusted, suspect}
+# Exactly one deny on GET: posture=tampered
+# Your script above should reproduce this pattern deterministically.
+
+# Ensure ext_authz filter is attached:
+istioctl --context docker-desktop pc listeners \
+  $(kubectl --context docker-desktop -n bookstore-api get pod -l app=api -o name | head -1 | cut -d/ -f2).bookstore-api \
+  | grep -i ext_authz
+# Expected: a line referencing envoy.filters.http.ext_authz
+</code></pre>
+  </div>
+
+  <h4>Break-it exercise</h4>
+  <p>Loosen the Rego to treat <code>unknown</code> posture as allowed. Observe that attackers can now simply omit the header. Revert.</p>
+
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">break-it</span><button class="copy-btn">Copy</button></div>
+<pre><code># In labs/04-dynamic-policy/zta.authz.rego, REPLACE the line:
+#     posture := p if { p := ...headers["x-device-posture"] } else := "unknown"
+# WITH:
+#     posture := p if { p := ...headers["x-device-posture"] } else := "trusted"   # BAD
+kubectl --context docker-desktop -n zta-policy create configmap opa-policy \
+  --from-file=zta.authz.rego=labs/04-dynamic-policy/zta.authz.rego --dry-run=client -o yaml \
+  | kubectl --context docker-desktop apply -f -
+kubectl --context docker-desktop -n zta-policy rollout restart deploy/opa
+
+# Attack: drop the posture header entirely.
+curl -s -o /dev/null -w '%{http_code}\n' -X POST \
+  -H 'Host: bookstore.local' -H "Authorization: Bearer $TOKEN" \
+  http://localhost/api/anything
+# Expected (bad): 200  — fail-open on missing signal
+
+# Repair: restore the default to "unknown" and redeploy. Re-run the attack:
+# Expected (good): 403
+</code></pre>
+  </div>
+
+  <h4>Reflection questions</h4>
+  <ol>
+    <li>The source §6 policy is <em>fail-closed</em> by default. Write the one line of your Rego that enforces this, and explain the STRIDE risk (§8.10) it mitigates.</li>
+    <li>The posture header in this lab is trivially spoofable from outside the mesh. In a real deployment, what source §4 component would sign the posture claim, and where in the request flow would the PEP verify the signature?</li>
+    <li>800-207 §2.1 T4 cites "behavioural and environmental attributes." Which source §9 AI use case most closely feeds such attributes into the PE, and what false-positive tolerance applies (source §9)?</li>
+  </ol>
+</section>
+
+<!-- ============================================================== -->
+<!-- LAB 5 — TENET 5 · POSTURE MONITORING                            -->
+<!-- ============================================================== -->
+<section id="lab-5" class="lab">
+  <div class="lab-header">
+    <span class="eyebrow">Lab 05 · 75 min</span>
+    <h2 class="lab-title">The enterprise monitors and measures the integrity and security posture of all owned and associated assets</h2>
+    <p class="lab-tenet">NIST SP 800-207 §2.1 Tenet 5 — "The enterprise monitors and measures the integrity and security posture of all owned and associated assets."</p>
+  </div>
+
+  <dl class="nist-map">
+    <dt>Tenet</dt><dd><span class="badge tenet">T5</span> Integrity &amp; posture monitoring (§2.1)</dd>
+    <dt>Components</dt><dd>CDM Data Source (§3.1), Threat Intel / SIEM feed (§3.1), Trust Algorithm input (§3.4.1)</dd>
+    <dt>Variant</dt><dd>Device-agent/gateway (§3.2.1) — posture signal becomes a policy input</dd>
+    <dt>Source §</dt><dd>§4 (CDM box), §7.14 (Wiz + Tanium), §8.10 (threat model)</dd>
+  </dl>
+
+  <h4>Learning objectives</h4>
+  <ul>
+    <li>Deploy Falco with the <em>modern_ebpf</em> driver as the runtime integrity monitor.</li>
+    <li>Build a minimal CDM stand-in — a webhook that consumes Falco events and mutates a Kubernetes annotation used by policy.</li>
+    <li>Trigger a detection (shell in container) and watch the <code>x-device-posture</code> signal your Lab 4 policy reads flip from <code>trusted</code> to <code>tampered</code>.</li>
+    <li>Close the detection-to-enforcement loop inside 30 seconds, end-to-end.</li>
+  </ul>
+
+  <h4>Concept primer</h4>
+  <p>The source §4 diagram places CDM (Tanium for endpoints, Wiz for cloud) as a Data Source feeding the Policy Engine; §7.14 insists this is not a reporting dashboard but a real-time <em>signal</em>. NIST 800-207 §2.1 T5 says the enterprise measures integrity of <em>all</em> owned assets — pods included. In a real bank, Wiz surfaces CVEs and drift; Tanium surfaces endpoint tampering. In this lab Falco plays the runtime-integrity role: eBPF-kernel syscall inspection detects "a shell ran in a container" and emits a structured event. A small Go/Python webhook — running in <code>zta-runtime-security</code> — receives the event, looks up the owning pod, and patches its ServiceAccount's annotation <code>zta.posture</code>. Your Envoy sidecar can then project that annotation onto outbound requests via a header (the simplest plumbing), or — in more mature deployments — the CDM signal flows over a signed Kafka channel into the PE directly. Either way, the <em>Trust Algorithm</em> (§3.4.1) is no longer static.</p>
+
+  <h4>Step-by-step</h4>
+
+  <p><span class="step-num">01</span>Confirm Falco is running and tail its structured output.</p>
+
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">verify Falco</span><button class="copy-btn">Copy</button></div>
+<pre><code>kubectl --context docker-desktop -n zta-runtime-security get ds falco -o jsonpath='{.status.numberReady}'; echo
+# Expected: 1   (one node on Docker Desktop)
+
+kubectl --context docker-desktop -n zta-runtime-security logs ds/falco --tail=5 | grep -E 'ebpf|engine'
+# Expected (abbreviated):
+# Falco initialized with configuration file ... modern_ebpf driver enabled
+</code></pre>
+  </div>
+
+  <p><span class="step-num">02</span>Deploy the CDM stand-in. It listens on HTTP for Falco sidekick webhooks and patches annotations. The code below is intentionally small.</p>
+
+  <div class="code-block">
+    <div class="code-head"><span class="lang">YAML</span><span class="path">labs/05-posture-monitoring/cdm.yaml</span><button class="copy-btn">Copy</button></div>
+<pre><code>apiVersion: v1
+kind: ServiceAccount
+metadata: { name: cdm, namespace: zta-runtime-security }
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata: { name: cdm-patch-pods }
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get","list","patch","watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata: { name: cdm-patch-pods }
+roleRef: { apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: cdm-patch-pods }
+subjects:
+- { kind: ServiceAccount, name: cdm, namespace: zta-runtime-security }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: cdm-app, namespace: zta-runtime-security }
+data:
+  app.py: |
+    # Minimal CDM stand-in: Falco webhook -&gt; pod annotation
+    import json, os, urllib.request
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+    from kubernetes import client, config
+    config.load_incluster_config()
+    v1 = client.CoreV1Api()
+
+    class H(BaseHTTPRequestHandler):
+      def do_POST(self):
+        n = int(self.headers.get('content-length', 0))
+        body = json.loads(self.rfile.read(n) or b'{}')
+        rule = body.get('rule','')
+        out  = body.get('output_fields',{}) or {}
+        ns   = out.get('k8s.ns.name')  or out.get('k8s_ns_name')
+        pod  = out.get('k8s.pod.name') or out.get('k8s_pod_name')
+        if ns and pod:
+          posture = 'tampered' if 'Terminal shell' in rule or 'shell' in rule.lower() else 'suspect'
+          patch = {'metadata':{'annotations':{'zta.posture': posture,
+                                               'zta.posture.rule': rule,
+                                               'zta.posture.at':  body.get('time','')}}}
+          v1.patch_namespaced_pod(pod, ns, patch)
+          print(f'PATCHED ns={ns} pod={pod} posture={posture} rule={rule}', flush=True)
+        self.send_response(204); self.end_headers()
+    HTTPServer(('0.0.0.0', 8080), H).serve_forever()
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: cdm, namespace: zta-runtime-security, labels: { zta.resource: "true", zta.data-class: "internal", zta.owner: "soc" } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: cdm } }
+  template:
+    metadata: { labels: { app: cdm, zta.resource: "true", zta.data-class: "internal", zta.owner: "soc" } }
+    spec:
+      serviceAccountName: cdm
+      containers:
+      - name: app
+        image: python:3.12-alpine
+        command: ["sh","-c","pip install --quiet kubernetes==30.1.0 &amp;&amp; python /app/app.py"]
+        volumeMounts: [{ name: code, mountPath: /app }]
+      volumes: [{ name: code, configMap: { name: cdm-app } }]
+---
+apiVersion: v1
+kind: Service
+metadata: { name: cdm, namespace: zta-runtime-security }
+spec:
+  selector: { app: cdm }
+  ports: [{ name: http, port: 80, targetPort: 8080 }]
+</code></pre>
+  </div>
+
+  <p><span class="step-num">03</span>Point Falcosidekick at the CDM webhook.</p>
+
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">wire sidekick → CDM</span><button class="copy-btn">Copy</button></div>
+<pre><code>helm --kube-context docker-desktop upgrade --install falco falcosecurity/falco \
+  --namespace zta-runtime-security --version 4.8.1 \
+  --set driver.kind=modern_ebpf \
+  --set falcosidekick.enabled=true \
+  --set falcosidekick.webui.enabled=true \
+  --set falcosidekick.config.webhook.address=http://cdm.zta-runtime-security.svc.cluster.local/ \
+  --set falcosidekick.config.webhook.minimumpriority=notice \
+  --wait
+</code></pre>
+  </div>
+
+  <p><span class="step-num">04</span>Patch the bookstore-api sidecar to project the pod annotation onto the outbound <code>x-device-posture</code> header. This is the "posture flows with the request" piece.</p>
+
+  <div class="code-block">
+    <div class="code-head"><span class="lang">YAML</span><span class="path">labs/05-posture-monitoring/posture-header.yaml</span><button class="copy-btn">Copy</button></div>
+<pre><code>apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata: { name: project-posture-header, namespace: bookstore-api }
+spec:
+  workloadSelector: { labels: { app: api } }
+  configPatches:
+  - applyTo: HTTP_FILTER
+    match:
+      context: SIDECAR_INBOUND
+      listener:
+        filterChain: { filter: { name: "envoy.filters.network.http_connection_manager" } }
+    patch:
+      operation: INSERT_BEFORE
+      value:
+        name: envoy.filters.http.lua
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
+          inlineCode: |
+            function envoy_on_request(request_handle)
+              local p = os.getenv("ZTA_POD_POSTURE") or "trusted"
+              if request_handle:headers():get("x-device-posture") == nil then
+                request_handle:headers():add("x-device-posture", p)
+              end
+            end
+---
+# Mount the pod annotation as an env var via the downward API.
+# Requires a small patch to the api Deployment:
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: api, namespace: bookstore-api }
+spec:
+  template:
+    spec:
+      containers:
+      - name: httpbin
+        env:
+        - name: ZTA_POD_POSTURE
+          valueFrom:
+            fieldRef: { fieldPath: metadata.annotations['zta.posture'] }
+</code></pre>
+  </div>
+
+  <p class="footnote">Istio's Envoy does not trivially read pod annotations at runtime; the downward-API env var is the portable trick — when the pod annotation changes, Kubernetes <em>does not</em> restart the pod, so we schedule a small reconciliation in step 5 to bounce the pod after a posture change. In a production setup the CDM would push posture to Redis and the Lua filter would read it there — faster than pod restarts.</p>
+
+  <p><span class="step-num">05</span>Reconciliation: a tiny controller deletes a pod whose <code>zta.posture</code> annotation has changed, forcing the new env-var value to materialise.</p>
+
+  <div class="code-block">
+    <div class="code-head"><span class="lang">YAML</span><span class="path">labs/05-posture-monitoring/reconciler.yaml</span><button class="copy-btn">Copy</button></div>
+<pre><code>apiVersion: batch/v1
+kind: CronJob
+metadata: { name: posture-reconciler, namespace: zta-runtime-security }
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: cdm
+          restartPolicy: OnFailure
+          containers:
+          - name: reconcile
+            image: bitnami/kubectl:1.30
+            command:
+            - sh
+            - -c
+            - |
+              for p in $(kubectl get pods -A -l app=api \
+                    -o jsonpath='{range .items[?(@.metadata.annotations.zta\.posture)]}{.metadata.namespace}/{.metadata.name}{"\n"}{end}'); do
+                NS=${p%/*}; POD=${p#*/}
+                ENV_NOW=$(kubectl get pod -n $NS $POD -o jsonpath='{.spec.containers[?(@.name=="httpbin")].env[?(@.name=="ZTA_POD_POSTURE")].value}' || true)
+                ANN_NOW=$(kubectl get pod -n $NS $POD -o jsonpath='{.metadata.annotations.zta\.posture}')
+                if [ "$ENV_NOW" != "$ANN_NOW" ]; then
+                  echo "bouncing $NS/$POD: env=$ENV_NOW ann=$ANN_NOW"
+                  kubectl delete pod -n $NS $POD --wait=false
+                fi
+              done
+</code></pre>
+  </div>
+
+  <p><span class="step-num">06</span>Trigger a detection. Exec a shell inside the api pod — Falco rule <em>Terminal shell in container</em> fires.</p>
+
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">trigger detection</span><button class="copy-btn">Copy</button></div>
+<pre><code># Before:
+kubectl --context docker-desktop -n bookstore-api get pod -l app=api \
+  -o jsonpath='{.items[0].metadata.annotations.zta\.posture}'; echo
+# Expected: (empty)
+
+# Fire the shell-in-container rule:
+kubectl --context docker-desktop -n bookstore-api exec -it \
+  $(kubectl --context docker-desktop -n bookstore-api get pod -l app=api -o name | head -1) \
+  -c httpbin -- sh -c 'exit 0'
+
+sleep 10
+
+# Falco event visible:
+kubectl --context docker-desktop -n zta-runtime-security logs ds/falco --tail=50 \
+  | grep -E 'Terminal shell in container' | head -2
+# Expected (abbreviated):
+# {"priority":"Notice","rule":"Terminal shell in container","output":"A shell was spawned in a container..."}
+
+# CDM should have patched the annotation:
+kubectl --context docker-desktop -n bookstore-api get pod -l app=api \
+  -o jsonpath='{.items[0].metadata.annotations.zta\.posture}'; echo
+# Expected: tampered
+</code></pre>
+  </div>
+
+  <h4>Validation</h4>
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">validate Lab 5</span><button class="copy-btn">Copy</button></div>
+<pre><code># Within 60–90 s the reconciler bounces the pod; the new pod's env picks up 'tampered'.
+# Now a legitimate request from the frontend is denied by the Lab 4 policy:
+source labs/03-per-session/.env
+TOKEN=$(curl -s -H 'Host: keycloak.local' \
+  -d 'grant_type=password' -d 'client_id=bookstore-api' \
+  -d "client_secret=$BOOKSTORE_CLIENT_SECRET" \
+  -d 'username=alice' -d 'password=alice' \
+  http://localhost/realms/zta-bookstore/protocol/openid-connect/token \
+  | jq -r .access_token)
+
+curl -s -o /dev/null -w '%{http_code}\n' \
+  -H 'Host: bookstore.local' -H "Authorization: Bearer $TOKEN" \
+  http://localhost/api/headers
+# Expected: 403     (posture = tampered -&gt; Lab 4 policy denies)
+
+# OPA log shows the deny reason:
+kubectl --context docker-desktop -n zta-policy logs deploy/opa --tail=5 \
+  | jq -c 'select(.result.headers["x-zta-decision-reason"]=="device-tampered") | {decision_id, reason: .result.headers["x-zta-decision-reason"]}' | head -1
+# Expected: {"decision_id":"...","reason":"device-tampered"}
+</code></pre>
+  </div>
+
+  <h4>Break-it exercise</h4>
+  <p>Disable the webhook subscriber in Falcosidekick and repeat the shell-in-container event. The annotation no longer changes; the policy stays at <code>trusted</code>. This is what a CDM outage looks like — and why source §8.5 mandates WORM retention: detection that never reaches the PE is invisible forever unless it is also logged.</p>
+
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">break-it</span><button class="copy-btn">Copy</button></div>
+<pre><code>kubectl --context docker-desktop -n zta-runtime-security set env deploy/falco-falcosidekick WEBHOOK_ADDRESS=''
+# Trigger the shell. Observe:
+kubectl --context docker-desktop -n bookstore-api get pod -l app=api \
+  -o jsonpath='{.items[0].metadata.annotations.zta\.posture}'; echo
+# Expected: unchanged (possibly empty or the last known value) — signal lost.
+# Repair:
+helm --kube-context docker-desktop upgrade falco falcosecurity/falco -n zta-runtime-security --reuse-values \
+  --set falcosidekick.config.webhook.address=http://cdm.zta-runtime-security.svc.cluster.local/
+</code></pre>
+  </div>
+
+  <h4>Reflection questions</h4>
+  <ol>
+    <li>Source §7.14 names Wiz and Tanium as CDM sources. Which classes of event can Falco detect that Wiz typically cannot, and which detections belong to Wiz rather than Falco?</li>
+    <li>The reconciler introduces seconds of latency between detection and enforcement. Against the source §8.10 STRIDE list, which adversary technique becomes easier during that window?</li>
+    <li>Tenet 5 says "owned <em>and associated</em> assets." In the bank, which non-owned assets still count — and what ZTA control surface exists to measure their posture (hint: source §7.17 and §9.2)?</li>
+  </ol>
+</section>
+
+<!-- ============================================================== -->
+<!-- LAB 6 — TENET 6 · STRICT ENFORCEMENT                            -->
+<!-- ============================================================== -->
+<section id="lab-6" class="lab">
+  <div class="lab-header">
+    <span class="eyebrow">Lab 06 · 90 min</span>
+    <h2 class="lab-title">All resource authentication and authorization are dynamic and strictly enforced before access is allowed</h2>
+    <p class="lab-tenet">NIST SP 800-207 §2.1 Tenet 6 — "All resource authentication and authorization are dynamic and strictly enforced before access is allowed."</p>
+  </div>
+
+  <dl class="nist-map">
+    <dt>Tenet</dt><dd><span class="badge tenet">T6</span> Strict enforcement (§2.1)</dd>
+    <dt>Components</dt><dd>Policy Engine (§3.1.1), Policy Administrator (§3.1.1 — signed bundle publisher), PEP (§3.1.2)</dd>
+    <dt>Variant</dt><dd>All four §3.2 variants collapse onto the same PE↔PA↔PEP loop; this lab is the <em>canonical</em> NIST picture</dd>
+    <dt>Source §</dt><dd>§4 (control-plane placement), §5 Flow A end-to-end, §7.5–§7.6, §8.10 (policy-plane threat model)</dd>
+  </dl>
+
+  <h4>Learning objectives</h4>
+  <ul>
+    <li>Stand up a minimal Policy Administrator: a signed-bundle HTTP server that publishes OPA bundles over HTTPS.</li>
+    <li>Configure OPA PEs to verify bundle signatures and reject unsigned or unknown-signer bundles — the <code>trusted_bundles</code> pattern from source §6.</li>
+    <li>Exercise the full loop: a denied request → operator changes posture through the Lab 5 webhook → PA re-publishes → PE re-evaluates → PEP now permits.</li>
+    <li>Read the sequence diagram and locate every 800-207 §3.1 component participating.</li>
+  </ul>
+
+  <h4>Concept primer</h4>
+  <p>Tenets 1–5 describe what is watched and how; Tenet 6 is the thesis statement — <em>no request succeeds without a fresh, dynamic, authoritative authorisation</em>, and that authorisation is enforced at the resource, not merely requested. The source §4 makes the policy plane Tier-0 for exactly this reason. In production the PA compiles Rego, runs <code>opa test</code>, signs the bundle with cosign, publishes it to an immutable bucket, and signs a manifest of <em>trusted bundles</em> the PE uses to reject anything else. In a home lab we shrink this to: a Deployment that runs <code>opa build --signing-alg RS256 --signing-key key.pem</code>, an HTTPS service that serves the resulting tarball, and an OPA configuration that includes the public key under <code>keys</code> and the bundle name under <code>signing.keyid</code>. The PEP side is already in place from Lab 4. The lab's value is seeing the loop close at request time: the <em>same</em> request, run twice, gets two different decisions because the posture input — signal, bundle, or policy — changed between calls.</p>
+
+  <h4>Sequence diagram</h4>
+  <figure class="diagram" aria-label="PE–PA–PEP sequence diagram">
+<svg viewBox="0 0 820 360" xmlns="http://www.w3.org/2000/svg" role="img">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#0A0A0A"/>
+    </marker>
+  </defs>
+  <style>
+    .lane { stroke: #E5E7EB; stroke-dasharray: 4 4; }
+    .head { fill: #FFFFFF; stroke: #0A0A0A; }
+    .head-txt { font: 600 12px var(--sans, sans-serif); fill: #0A0A0A; text-anchor: middle; }
+    .msg { stroke: #0A0A0A; stroke-width: 1.2; fill: none; }
+    .msg-txt { font: 11px var(--sans, sans-serif); fill: #1F2937; }
+    .step-lbl { font: 600 10px var(--sans, sans-serif); fill: #B45309; }
+    .note { fill: #FFFBEB; stroke: #B45309; stroke-width: 0.5; }
+    .note-txt { font: 10px var(--sans, sans-serif); fill: #78350F; }
+  </style>
+  <!-- Lanes -->
+  <g>
+    <rect x="40"  y="30" width="120" height="26" class="head"/>
+    <text x="100" y="48" class="head-txt">Client</text>
+    <line x1="100" y1="56" x2="100" y2="330" class="lane"/>
+
+    <rect x="200" y="30" width="140" height="26" class="head"/>
+    <text x="270" y="48" class="head-txt">PEP (Envoy)</text>
+    <line x1="270" y1="56" x2="270" y2="330" class="lane"/>
+
+    <rect x="380" y="30" width="130" height="26" class="head"/>
+    <text x="445" y="48" class="head-txt">PE (OPA)</text>
+    <line x1="445" y1="56" x2="445" y2="330" class="lane"/>
+
+    <rect x="550" y="30" width="120" height="26" class="head"/>
+    <text x="610" y="48" class="head-txt">PA (bundle)</text>
+    <line x1="610" y1="56" x2="610" y2="330" class="lane"/>
+
+    <rect x="700" y="30" width="80" height="26" class="head"/>
+    <text x="740" y="48" class="head-txt">CDM</text>
+    <line x1="740" y1="56" x2="740" y2="330" class="lane"/>
+  </g>
+
+  <!-- Step 1: PA -> PE bundle push (background) -->
+  <text x="210" y="82" class="step-lbl">1 · signed bundle (periodic)</text>
+  <line x1="610" y1="92" x2="445" y2="92" class="msg" marker-end="url(#arr)"/>
+  <text x="460" y="88" class="msg-txt">GET bundles/zta.tar.gz (+signature)</text>
+
+  <!-- Step 2: CDM -> PE trust_score stream (background) -->
+  <text x="470" y="116" class="step-lbl">2 · signal stream</text>
+  <line x1="740" y1="126" x2="445" y2="126" class="msg" marker-end="url(#arr)"/>
+  <text x="460" y="122" class="msg-txt">posture patch (annotation / event)</text>
+
+  <!-- Step 3: Client -> PEP request -->
+  <text x="110" y="150" class="step-lbl">3 · request (denied round)</text>
+  <line x1="100" y1="160" x2="270" y2="160" class="msg" marker-end="url(#arr)"/>
+  <text x="110" y="156" class="msg-txt">GET /api/anything + JWT</text>
+
+  <!-- Step 4: PEP -> PE ext_authz -->
+  <line x1="270" y1="178" x2="445" y2="178" class="msg" marker-end="url(#arr)"/>
+  <text x="282" y="174" class="msg-txt">CheckRequest (posture=tampered)</text>
+
+  <!-- Step 5: PE -> PEP decision -->
+  <line x1="445" y1="198" x2="270" y2="198" class="msg" marker-end="url(#arr)"/>
+  <text x="282" y="194" class="msg-txt">denied, reason=device-tampered</text>
+
+  <!-- Step 6: PEP -> Client 403 -->
+  <line x1="270" y1="216" x2="100" y2="216" class="msg" marker-end="url(#arr)"/>
+  <text x="110" y="212" class="msg-txt">403 forbidden</text>
+
+  <!-- Note: operator remediates -->
+  <rect x="348" y="232" width="260" height="26" class="note"/>
+  <text x="358" y="249" class="note-txt">operator remediates → CDM updates posture to 'trusted' → PA re-publishes policy (if needed)</text>
+
+  <!-- Step 7: repeat request (allowed round) -->
+  <text x="110" y="278" class="step-lbl">4 · repeat request (allowed round)</text>
+  <line x1="100" y1="288" x2="270" y2="288" class="msg" marker-end="url(#arr)"/>
+  <text x="110" y="284" class="msg-txt">GET /api/anything + JWT</text>
+
+  <line x1="270" y1="306" x2="445" y2="306" class="msg" marker-end="url(#arr)"/>
+  <text x="282" y="302" class="msg-txt">CheckRequest (posture=trusted)</text>
+
+  <line x1="445" y1="324" x2="100" y2="324" class="msg" marker-end="url(#arr)"/>
+  <text x="282" y="320" class="msg-txt">allowed 200 · decision_id emitted</text>
+</svg>
+<figcaption>PE → PA → PEP loop. Same request, two decisions, determined by a dynamic posture signal.</figcaption>
+</figure>
+
+  <h4>Step-by-step</h4>
+
+  <p><span class="step-num">01</span>Generate a bundle-signing key pair.</p>
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">keys</span><button class="copy-btn">Copy</button></div>
+<pre><code>mkdir -p labs/06-strict-enforcement/keys
+cd labs/06-strict-enforcement/keys
+openssl genrsa -out bundle-signer.pem 2048
+openssl rsa -in bundle-signer.pem -pubout -out bundle-signer.pub
+cd -
+
+kubectl --context docker-desktop -n zta-policy create secret generic bundle-signer \
+  --from-file=labs/06-strict-enforcement/keys/bundle-signer.pem \
+  --from-file=labs/06-strict-enforcement/keys/bundle-signer.pub \
+  --dry-run=client -o yaml | kubectl --context docker-desktop apply -f -
+</code></pre>
+  </div>
+
+  <p><span class="step-num">02</span>Build and serve a signed bundle. The PA is a sidecar that runs <code>opa build</code> on each policy change and an nginx that serves the tarball.</p>
+
+  <div class="code-block">
+    <div class="code-head"><span class="lang">YAML</span><span class="path">labs/06-strict-enforcement/pa.yaml</span><button class="copy-btn">Copy</button></div>
+<pre><code>apiVersion: v1
+kind: ConfigMap
+metadata: { name: pa-policies, namespace: zta-policy }
+data:
+  zta.authz.rego: |
+    # (the Lab 4 Rego, unchanged)
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pa
+  namespace: zta-policy
+  labels: { zta.resource: "true", zta.data-class: "restricted", zta.owner: "policy-coe", zta.tier-role: "control-plane" }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: pa } }
+  template:
+    metadata: { labels: { app: pa, zta.resource: "true", zta.data-class: "restricted", zta.owner: "policy-coe", zta.tier-role: "control-plane" } }
+    spec:
+      initContainers:
+      - name: build
+        image: openpolicyagent/opa:0.68.0
+        command:
+        - sh
+        - -c
+        - |
+          set -e
+          mkdir -p /out/bundles
+          opa build -b /policies \
+            --signing-alg RS256 \
+            --signing-key /keys/bundle-signer.pem \
+            --bundle \
+            -o /out/bundles/zta.tar.gz
+          echo 'built signed bundle:'; ls -lah /out/bundles
+        volumeMounts:
+        - { name: policies, mountPath: /policies, readOnly: true }
+        - { name: keys,     mountPath: /keys,     readOnly: true }
+        - { name: out,      mountPath: /out }
+      containers:
+      - name: nginx
+        image: nginx:1.27-alpine
+        volumeMounts:
+        - { name: out, mountPath: /usr/share/nginx/html }
+        ports: [{ containerPort: 80 }]
+      volumes:
+      - { name: policies, configMap: { name: pa-policies } }
+      - { name: keys,     secret:    { secretName: bundle-signer } }
+      - { name: out,      emptyDir:  {} }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: opa-bundle-server, namespace: zta-policy }
+spec:
+  selector: { app: pa }
+  ports: [{ name: http, port: 80, targetPort: 80 }]
+</code></pre>
+  </div>
+
+  <p><span class="step-num">03</span>Reconfigure OPA to consume the signed bundle and reject anything that does not verify. Replace the earlier <code>opa-config</code> ConfigMap.</p>
+
+  <div class="code-block">
+    <div class="code-head"><span class="lang">YAML</span><span class="path">labs/06-strict-enforcement/opa-config.yaml</span><button class="copy-btn">Copy</button></div>
+<pre><code>apiVersion: v1
+kind: ConfigMap
+metadata: { name: opa-config, namespace: zta-policy }
+data:
+  config.yaml: |
+    services:
+      pa:
+        url: http://opa-bundle-server.zta-policy.svc.cluster.local
+    bundles:
+      zta:
+        resource: "bundles/zta.tar.gz"
+        service: pa
+        polling:
+          min_delay_seconds: 5
+          max_delay_seconds: 10
+        signing:
+          keyid: zta-bundle-key
+    keys:
+      zta-bundle-key:
+        algorithm: RS256
+        key: |
+          -----BEGIN PUBLIC KEY-----
+          &lt;paste contents of keys/bundle-signer.pub here&gt;
+          -----END PUBLIC KEY-----
+    decision_logs:
+      console: true
+---
+# Also set OPA to load ONLY the bundle (not the local file used in Lab 4)
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: opa, namespace: zta-policy }
+spec:
+  template:
+    spec:
+      containers:
+      - name: opa
+        args:
+        - "run"
+        - "--server"
+        - "--config-file=/config/config.yaml"
+        - "--addr=:8181"
+        - "--diagnostic-addr=:8282"
+        - "--set=plugins.envoy_ext_authz_grpc.addr=:9191"
+        - "--set=plugins.envoy_ext_authz_grpc.path=zta/authz/result"
+</code></pre>
+  </div>
+
+  <p><span class="step-num">04</span>Apply, then verify that OPA reports the bundle as <code>ok</code>.</p>
+
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">verify bundle load</span><button class="copy-btn">Copy</button></div>
+<pre><code>kubectl --context docker-desktop apply \
+  -f labs/06-strict-enforcement/pa.yaml \
+  -f labs/06-strict-enforcement/opa-config.yaml
+kubectl --context docker-desktop -n zta-policy rollout restart deploy/opa
+kubectl --context docker-desktop -n zta-policy rollout status deploy/opa
+
+curl -s http://$(kubectl --context docker-desktop -n zta-policy get svc opa -o jsonpath='{.spec.clusterIP}'):8282/status \
+  | jq '.bundles.zta | {name, last_successful_activation, last_successful_download, errors}'
+# Expected (abbreviated):
+# {
+#   "name": "zta",
+#   "last_successful_activation": "2026-04-17T...Z",
+#   "last_successful_download":   "2026-04-17T...Z",
+#   "errors": null
+# }
+</code></pre>
+  </div>
+
+  <p><span class="step-num">05</span>Run the full loop. With Lab 5 still active, the api pod's posture is <code>tampered</code>. Call once (403), remediate (set posture back to trusted via a manual annotation patch), call again (200).</p>
+
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">close the loop</span><button class="copy-btn">Copy</button></div>
+<pre><code>source labs/03-per-session/.env
+TOKEN=$(curl -s -H 'Host: keycloak.local' \
+  -d 'grant_type=password' -d 'client_id=bookstore-api' \
+  -d "client_secret=$BOOKSTORE_CLIENT_SECRET" \
+  -d 'username=alice' -d 'password=alice' \
+  http://localhost/realms/zta-bookstore/protocol/openid-connect/token \
+  | jq -r .access_token)
+
+# Round 1 — denied:
+curl -s -o /dev/null -w 'round1=%{http_code}\n' \
+  -H 'Host: bookstore.local' -H "Authorization: Bearer $TOKEN" \
+  http://localhost/api/headers
+# Expected: round1=403
+
+# Operator remediates — manually clear the tampered annotation:
+POD=$(kubectl --context docker-desktop -n bookstore-api get pod -l app=api -o name | head -1)
+kubectl --context docker-desktop -n bookstore-api annotate --overwrite $POD zta.posture=trusted
+# Wait for reconciler (up to ~60 s) or force a bounce:
+kubectl --context docker-desktop -n bookstore-api delete $POD
+kubectl --context docker-desktop -n bookstore-api rollout status deploy/api
+
+# Round 2 — allowed:
+curl -s -o /dev/null -w 'round2=%{http_code}\n' \
+  -H 'Host: bookstore.local' -H "Authorization: Bearer $TOKEN" \
+  http://localhost/api/headers
+# Expected: round2=200
+</code></pre>
+  </div>
+
+  <h4>Validation</h4>
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">validate Lab 6</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. Bundle signature verification is enforced (see bundle load above).
+# 2. Two consecutive requests with identical credentials returned different codes (403 then 200).
+# 3. Both decisions are in the OPA log, each with a distinct decision_id:
+kubectl --context docker-desktop -n zta-policy logs deploy/opa --tail=30 \
+  | jq -c 'select(.decision_id) | {decision_id, allow: .result.allowed, reason: .result.headers["x-zta-decision-reason"]}' \
+  | tail -4
+# Expected pattern:
+# {"decision_id":"...","allow":false,"reason":"device-tampered"}
+# {"decision_id":"...","allow":true, "reason":"ok"}
+</code></pre>
+  </div>
+
+  <h4>Break-it exercise</h4>
+  <p>Ship an <em>unsigned</em> bundle and verify the PE refuses it. This is the <code>untrusted-bundle</code> defence from source §6 made concrete.</p>
+
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">break-it — unsigned bundle</span><button class="copy-btn">Copy</button></div>
+<pre><code># Tamper: rebuild the bundle WITHOUT --signing-key in an adversarial PA pod
+kubectl --context docker-desktop -n zta-policy run adversary --rm -it --restart=Never \
+  --image=openpolicyagent/opa:0.68.0 --command -- sh -c '
+    mkdir /p &amp;&amp; echo "package zta.authz
+default allow := true" &gt; /p/evil.rego
+    opa build -b /p -o /tmp/zta.tar.gz
+    apk add --no-cache curl &gt;/dev/null 2&gt;&amp;1
+    # upload to PA nginx /usr/share/nginx/html/bundles/zta.tar.gz — requires attacker access
+    # For this exercise, verify the PE's rejection by temporarily swapping services instead.
+  '
+
+# Easier adversarial path: flip opa-config to point to an unsigned source.
+# Inspect OPA status when the evil bundle cannot verify:
+curl -s http://$(kubectl --context docker-desktop -n zta-policy get svc opa -o jsonpath='{.spec.clusterIP}'):8282/status \
+  | jq '.bundles.zta.errors'
+# Expected: non-null — "verification failed: signature is invalid" or similar.
+
+# OPA keeps serving the last-known-good bundle, but rejects the new one — fail-closed against tampering.
+</code></pre>
+  </div>
+
+  <h4>Reflection questions</h4>
+  <ol>
+    <li>The source §8.10 "Elevation via policy regression" mitigation names <em>signed CI</em>, <em>staged rollout</em>, and <em>automated rollback on allow-rate anomaly</em>. Which of these did this lab implement, and which would you add next?</li>
+    <li>If the PA itself is compromised, signed bundles still protect the PE — but only up to a point. What source §8.10 control covers the residual risk?</li>
+    <li>Tenet 6 says enforcement is "strict <em>before</em> access is allowed." Identify the exact Envoy filter chain position at which the PEP consults the PE — is it inbound or outbound to the api pod, and why does that matter?</li>
+  </ol>
+</section>
+
+<!-- ============================================================== -->
+<!-- LAB 7 — TENET 7 · TELEMETRY LOOP                                -->
+<!-- ============================================================== -->
+<section id="lab-7" class="lab">
+  <div class="lab-header">
+    <span class="eyebrow">Lab 07 · 90 min</span>
+    <h2 class="lab-title">Collect as much information as possible and use it to improve posture</h2>
+    <p class="lab-tenet">NIST SP 800-207 §2.1 Tenet 7 — "The enterprise collects as much information as possible about the current state of assets, network infrastructure, and communications and uses it to improve its security posture."</p>
+  </div>
+
+  <dl class="nist-map">
+    <dt>Tenet</dt><dd><span class="badge tenet">T7</span> Telemetry loop (§2.1)</dd>
+    <dt>Components</dt><dd>Activity Log / SIEM Data Source (§3.1), Observability (§3.1), Trust Algorithm feedback (§3.4.1)</dd>
+    <dt>Variant</dt><dd>All variants — telemetry is the shared substrate</dd>
+    <dt>Source §</dt><dd>§7.12 (Splunk + Snowflake), §7.13 (OTel + Grafana), §8.5 (logging), §8.6 (observability SLOs)</dd>
+  </dl>
+
+  <h4>Learning objectives</h4>
+  <ul>
+    <li>Wire Prometheus metrics, Loki logs (OPA decision log), and Tempo traces (Istio) into a single Grafana workspace.</li>
+    <li>Build one dashboard showing allow/deny/step-up rates, decision latency P50/P99, and deny reasons broken down by cause — the telemetry SLOs from source §8.6.</li>
+    <li>Use the dashboard to detect an unusual pattern and refine the Lab 4 policy in response — the closing step in 800-207 T7's "use it to improve its security posture."</li>
+  </ul>
+
+  <h4>Concept primer</h4>
+  <p>T7 is often read as "collect lots of logs." The source §8.6 is more exact: SLOs are <em>quantitative</em>, telemetry feeds the Trust Algorithm, and observed allow-rate regressions are themselves an input to policy release gates. In this lab you hold up a magnifying glass to the cluster: Prometheus scrapes OPA's metrics endpoint for decision counters and latency histograms; the Loki Grafana Agent tails OPA pod logs, parses each line as JSON, and indexes on <code>decision_id</code>, <code>reason</code>, <code>allow</code>; Tempo receives OpenTelemetry traces from the Istio sidecars via the Zipkin endpoint. One Grafana dashboard stitches them together — a classic golden-signals view but with the decision itself as the first-class object. The <em>improvement</em> step is the point: you will notice that too many denies with reason <code>no-matching-allow</code> come from one API path, and you will tighten the Rego to give the operator a clearer error.</p>
+
+  <h4>Step-by-step</h4>
+
+  <p><span class="step-num">01</span>Expose OPA's Prometheus metrics endpoint and add a <code>ServiceMonitor</code> so kube-prometheus scrapes it.</p>
+
+  <div class="code-block">
+    <div class="code-head"><span class="lang">YAML</span><span class="path">labs/07-telemetry-loop/opa-servicemonitor.yaml</span><button class="copy-btn">Copy</button></div>
+<pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: opa-metrics
+  namespace: zta-policy
+  labels: { app: opa }
+spec:
+  selector: { app: opa }
+  ports: [{ name: metrics, port: 8282, targetPort: 8282 }]
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: opa
+  namespace: zta-observability
+  labels: { release: kube-prom }
+spec:
+  namespaceSelector: { matchNames: ["zta-policy"] }
+  selector: { matchLabels: { app: opa } }
+  endpoints:
+  - port: metrics
+    path: /metrics
+    interval: 15s
+</code></pre>
+  </div>
+
+  <p><span class="step-num">02</span>Deploy Grafana Agent to tail OPA logs into Loki, parsing JSON so every field is a label.</p>
+
+  <div class="code-block">
+    <div class="code-head"><span class="lang">YAML</span><span class="path">labs/07-telemetry-loop/grafana-agent.yaml</span><button class="copy-btn">Copy</button></div>
+<pre><code>apiVersion: v1
+kind: ConfigMap
+metadata: { name: grafana-agent-config, namespace: zta-observability }
+data:
+  agent.yaml: |
+    logs:
+      configs:
+      - name: default
+        positions: { filename: /tmp/positions.yaml }
+        clients:
+        - url: http://loki.zta-observability.svc.cluster.local:3100/loki/api/v1/push
+        scrape_configs:
+        - job_name: opa-decisions
+          kubernetes_sd_configs: [{ role: pod }]
+          relabel_configs:
+          - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_pod_label_app]
+            regex: "zta-policy;opa"
+            action: keep
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: namespace
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: pod
+          pipeline_stages:
+          - json:
+              expressions:
+                decision_id: decision_id
+                allow: result.allowed
+                reason: 'result.headers["x-zta-decision-reason"]'
+                path:   input.attributes.request.http.path
+                method: input.attributes.request.http.method
+                posture: 'input.attributes.request.http.headers["x-device-posture"]'
+          - labels:
+              decision_id:
+              allow:
+              reason:
+              path:
+              method:
+              posture:
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata: { name: grafana-agent, namespace: zta-observability }
+spec:
+  selector: { matchLabels: { app: grafana-agent } }
+  template:
+    metadata: { labels: { app: grafana-agent } }
+    spec:
+      serviceAccountName: default
+      containers:
+      - name: agent
+        image: grafana/agent:v0.43.4
+        args: ["-config.file=/etc/agent/agent.yaml"]
+        volumeMounts:
+        - { name: config, mountPath: /etc/agent }
+        - { name: varlog, mountPath: /var/log, readOnly: true }
+      volumes:
+      - { name: config, configMap: { name: grafana-agent-config } }
+      - { name: varlog, hostPath: { path: /var/log } }
+</code></pre>
+  </div>
+
+  <p><span class="step-num">03</span>Enable OpenTelemetry emission from Istio to Tempo.</p>
+
+  <div class="code-block">
+    <div class="code-head"><span class="lang">YAML</span><span class="path">labs/07-telemetry-loop/istio-tracing.yaml</span><button class="copy-btn">Copy</button></div>
+<pre><code>apiVersion: telemetry.istio.io/v1
+kind: Telemetry
+metadata: { name: mesh-default, namespace: istio-system }
+spec:
+  tracing:
+  - providers: [{ name: otel-tempo }]
+    randomSamplingPercentage: 100
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: istio, namespace: istio-system }
+data:
+  mesh: |
+    extensionProviders:
+    - name: opa-ext-authz
+      envoyExtAuthzGrpc:
+        service: opa.zta-policy.svc.cluster.local
+        port: 9191
+    - name: otel-tempo
+      opentelemetry:
+        service: tempo.zta-observability.svc.cluster.local
+        port: 4317
+</code></pre>
+  </div>
+
+  <p><span class="step-num">04</span>Load the dashboard JSON. Four panels only — kept deliberately sparse so each reflects a Tenet 7 obligation rather than a vanity metric.</p>
+
+  <div class="code-block">
+    <div class="code-head"><span class="lang">YAML</span><span class="path">labs/07-telemetry-loop/dashboard.yaml  (ConfigMap — full JSON in repo)</span><button class="copy-btn">Copy</button></div>
+<pre><code>apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: zta-dashboard
+  namespace: zta-observability
+  labels: { grafana_dashboard: "1" }
+data:
+  zta.json: |
+    {
+      "title": "ZTA — Decisions, Latency, Drift (800-207 §8.6 SLOs)",
+      "uid": "zta-main",
+      "schemaVersion": 38,
+      "timezone": "browser",
+      "panels": [
+        { "title": "Decision rate (allow / deny / step-up)",
+          "type": "timeseries",
+          "gridPos": {"h":8,"w":12,"x":0,"y":0},
+          "targets": [
+            { "expr": "sum by (decision) (rate(http_request_duration_seconds_count{job=~\"opa.*\"}[5m]))" }
+          ] },
+        { "title": "Decision latency P50 / P99 (ms)",
+          "type": "timeseries",
+          "gridPos": {"h":8,"w":12,"x":12,"y":0},
+          "targets": [
+            { "expr": "1000 * histogram_quantile(0.5,  sum by (le) (rate(http_request_duration_seconds_bucket{job=~\"opa.*\"}[5m])))" },
+            { "expr": "1000 * histogram_quantile(0.99, sum by (le) (rate(http_request_duration_seconds_bucket{job=~\"opa.*\"}[5m])))" }
+          ] },
+        { "title": "Deny reasons — last 1h",
+          "type": "bargauge",
+          "gridPos": {"h":8,"w":12,"x":0,"y":8},
+          "targets": [
+            { "expr": "sum by (reason) (count_over_time({namespace=\"zta-policy\", allow=\"false\"} | json [1h]))", "datasource": {"type":"loki"} }
+          ] },
+        { "title": "Recent denies (decision_id, path, posture, reason)",
+          "type": "logs",
+          "gridPos": {"h":8,"w":12,"x":12,"y":8},
+          "targets": [
+            { "expr": "{namespace=\"zta-policy\", allow=\"false\"} | json", "datasource": {"type":"loki"} }
+          ] }
+      ]
+    }
+</code></pre>
+  </div>
+
+  <p><span class="step-num">05</span>Drive a small load mix and watch the dashboard update. This synthesises the source §5 flow traffic: mostly trusted GETs, a trickle of suspect POSTs, and an occasional tampered device.</p>
+
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">load mix</span><button class="copy-btn">Copy</button></div>
+<pre><code>source labs/03-per-session/.env
+TOKEN=$(curl -s -H 'Host: keycloak.local' \
+  -d 'grant_type=password' -d 'client_id=bookstore-api' \
+  -d "client_secret=$BOOKSTORE_CLIENT_SECRET" \
+  -d 'username=alice' -d 'password=alice' \
+  http://localhost/realms/zta-bookstore/protocol/openid-connect/token \
+  | jq -r .access_token)
+
+for i in $(seq 1 200); do
+  POSTURES=(trusted trusted trusted trusted suspect suspect tampered)
+  METHODS=(GET GET GET GET POST)
+  P=${POSTURES[$((RANDOM % 7))]}
+  M=${METHODS[$((RANDOM % 5))]}
+  curl -s -o /dev/null -X $M \
+    -H 'Host: bookstore.local' -H "Authorization: Bearer $TOKEN" \
+    -H "x-device-posture: $P" \
+    http://localhost/api/anything &amp;
+  if [ $((i % 20)) -eq 0 ]; then wait; fi
+done
+wait
+echo "load mix complete"
+</code></pre>
+  </div>
+
+  <p>Open Grafana at <code>http://localhost:3000</code> (admin / admin) — the dashboard <em>ZTA — Decisions, Latency, Drift</em> should show data inside 60 s. Expose via port-forward if needed:</p>
+
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">grafana access</span><button class="copy-btn">Copy</button></div>
+<pre><code>kubectl --context docker-desktop -n zta-observability port-forward svc/kube-prom-grafana 3000:80
+# Visit http://localhost:3000 — Dashboards &gt; ZTA — Decisions, Latency, Drift
+</code></pre>
+  </div>
+
+  <p><span class="step-num">06</span>Use the telemetry to improve the policy. You should see that the single largest deny reason is <code>no-matching-allow</code> — a catch-all. Distinguish <em>missing token</em> from <em>unmatched rule</em> so operators see a faster path to fix.</p>
+
+  <div class="code-block">
+    <div class="code-head"><span class="lang">Rego</span><span class="path">labs/07-telemetry-loop/zta.authz.rego  (diff)</span><button class="copy-btn">Copy</button></div>
+<pre><code>--- original
++++ refined
+-decision := {"allow": false, "reason": "no-matching-allow"} if not allow
++decision := {"allow": false, "reason": "missing-token"}       if not token
++decision := {"allow": false, "reason": "invalid-subject"}     if { token; not claims.sub }
++decision := {"allow": false, "reason": "no-matching-allow"}   if { token; claims.sub; not allow }
+</code></pre>
+  </div>
+
+  <p>Republish the bundle (Lab 6 PA rebuilds it on ConfigMap change — rollout restart <code>pa</code>). Repeat the load mix; the deny-reasons bar chart should now distinguish <code>missing-token</code> from <code>no-matching-allow</code>, which is the T7 feedback loop closing.</p>
+
+  <h4>Validation</h4>
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">validate Lab 7</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. Prometheus scrapes OPA:
+kubectl --context docker-desktop -n zta-observability port-forward svc/kube-prom-kube-prome-prometheus 9090:9090 &amp;
+sleep 2
+curl -s 'http://localhost:9090/api/v1/targets?state=active' \
+  | jq '[.data.activeTargets[] | select(.labels.job=="opa")] | length'
+# Expected: 2 (one per OPA pod replica)
+
+# 2. Loki has decision logs:
+curl -sG 'http://localhost:3100/loki/api/v1/query_range' \
+  --data-urlencode 'query={namespace="zta-policy"} | json | allow="false"' \
+  --data-urlencode "start=$(date -u -d '-15 min' +%s)000000000" \
+  --data-urlencode "end=$(date -u +%s)000000000" \
+  | jq '.data.result | length'
+# Expected: &gt;= 1
+
+# 3. Tempo has traces from the ingress gateway:
+curl -s 'http://localhost:3200/api/search?tags=service.name=istio-ingressgateway' \
+  | jq '.traces | length'
+# Expected: &gt;= 1
+</code></pre>
+  </div>
+
+  <h4>Break-it exercise</h4>
+  <p>Drop OPA's decision-log console sink. Repeat the load. Observe the dashboard goes silent on reasons while latency and counters continue — the policy decisions are still enforced but no longer <em>auditable</em>, which the source §8.5 calls a SOX §404 violation. Restore.</p>
+
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">break-it</span><button class="copy-btn">Copy</button></div>
+<pre><code>kubectl --context docker-desktop -n zta-policy patch configmap opa-config --type merge -p '
+data:
+  config.yaml: |
+    services:
+      pa: { url: http://opa-bundle-server.zta-policy.svc.cluster.local }
+    bundles:
+      zta: { resource: "bundles/zta.tar.gz", service: pa,
+             polling: { min_delay_seconds: 5, max_delay_seconds: 10 },
+             signing: { keyid: zta-bundle-key } }
+    decision_logs: { console: false }   # telemetry gap
+'
+kubectl --context docker-desktop -n zta-policy rollout restart deploy/opa
+# Observe: deny-reasons panel empties within 5 min.
+# Repair by setting console: true and rolling OPA again.
+</code></pre>
+  </div>
+
+  <h4>Reflection questions</h4>
+  <ol>
+    <li>Source §8.6 sets PE availability at 99.995% and decision latency P99 &lt; 10 ms. Which of those SLOs is your dashboard showing, and which would you add a burn-rate alert for first?</li>
+    <li>The refined policy produced a new deny reason, <code>missing-token</code>. Which tenet does the <em>act of refinement</em> satisfy — T4, T7, or both — and why?</li>
+    <li>T7 says "<em>as much information as possible</em>." Identify one source §9 AI use case whose quality depends on this telemetry, and one regulatory obligation (source §8.5) that could not be met without it.</li>
+  </ol>
+</section>
+
+<!-- ============================================================== -->
+<!-- CAPSTONE                                                        -->
+<!-- ============================================================== -->
+<section id="capstone" class="lab">
+  <div class="lab-header">
+    <span class="eyebrow">Capstone · 90 min</span>
+    <h2 class="lab-title">End-to-end: external user → PE → PEP → Data → Telemetry</h2>
+    <p class="lab-tenet">All seven tenets exercised in a single request trace.</p>
+  </div>
+
+  <p>The capstone scenario composes everything from Labs 1–7. An external user <strong>Alice</strong> authenticates at Keycloak, requests a write against the bookstore API, is denied because her (simulated) device is in <code>suspect</code> posture for a POST, remediates, retries, and succeeds — with every step visible in the dashboard you built in Lab 7 and bound to a <code>decision_id</code> that can be traced from the ingress gateway through the PE to the data tier. Every 800-207 §3.1 logical component is present.</p>
+
+  <h3>Architecture — every §3.1 component labelled</h3>
+  <figure class="diagram" aria-label="Capstone architecture diagram">
+<svg viewBox="0 0 900 440" xmlns="http://www.w3.org/2000/svg" role="img">
+  <style>
+    .zone { fill: #FFFFFF; stroke: #E5E7EB; stroke-width: 1; }
+    .zone-title { font: 600 11px var(--sans, sans-serif); fill: #6B7280; letter-spacing: 0.08em; text-transform: uppercase; }
+    .box { fill: #FFFFFF; stroke: #0A0A0A; stroke-width: 1; }
+    .box-ctrl { fill: #FFFBEB; stroke: #B45309; stroke-width: 1; }
+    .box-pep { fill: #F7F7F5; stroke: #0A0A0A; stroke-width: 1; stroke-dasharray: 3 2; }
+    .box-title { font: 600 11px var(--sans, sans-serif); fill: #0A0A0A; text-anchor: middle; }
+    .box-sub { font: 10px var(--sans, sans-serif); fill: #6B7280; text-anchor: middle; }
+    .comp-tag { font: 600 9px var(--sans, sans-serif); fill: #B45309; text-anchor: middle; }
+    .flow { stroke: #0A0A0A; stroke-width: 1.2; fill: none; }
+    .flow-txt { font: 10px var(--sans, sans-serif); fill: #1F2937; }
+    .sig { stroke: #B45309; stroke-width: 1.2; stroke-dasharray: 4 3; fill: none; }
+  </style>
+  <defs>
+    <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#0A0A0A"/>
+    </marker>
+    <marker id="arr3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#B45309"/>
+    </marker>
+  </defs>
+
+  <!-- Subject -->
+  <rect x="20" y="180" width="110" height="60" class="box"/>
+  <text x="75" y="208" class="box-title">Alice</text>
+  <text x="75" y="224" class="box-sub">Subject (§2.2)</text>
+
+  <!-- Ingress PEP -->
+  <rect x="170" y="180" width="130" height="60" class="box-pep"/>
+  <text x="235" y="200" class="box-title">Istio Ingress</text>
+  <text x="235" y="216" class="box-sub">PEP (§3.1.2)</text>
+  <text x="235" y="232" class="comp-tag">device-agent/gateway §3.2.1</text>
+
+  <!-- Control plane zone -->
+  <rect x="330" y="20" width="400" height="220" class="zone"/>
+  <text x="340" y="42" class="zone-title">Control Plane (Tier-0)</text>
+
+  <!-- Identity DS -->
+  <rect x="345" y="60" width="110" height="48" class="box-ctrl"/>
+  <text x="400" y="80" class="box-title">Keycloak</text>
+  <text x="400" y="94" class="box-sub">Identity DS (§3.1)</text>
+  <text x="400" y="106" class="comp-tag">source §7.1 / §7.2</text>
+
+  <!-- SPIRE -->
+  <rect x="480" y="60" width="110" height="48" class="box-ctrl"/>
+  <text x="535" y="80" class="box-title">SPIRE</text>
+  <text x="535" y="94" class="box-sub">Workload ID / PKI</text>
+  <text x="535" y="106" class="comp-tag">source §7.4 / §7.15</text>
+
+  <!-- CDM -->
+  <rect x="615" y="60" width="105" height="48" class="box-ctrl"/>
+  <text x="667" y="80" class="box-title">Falco + CDM</text>
+  <text x="667" y="94" class="box-sub">CDM DS (§3.1)</text>
+  <text x="667" y="106" class="comp-tag">source §7.14</text>
+
+  <!-- PE -->
+  <rect x="345" y="130" width="165" height="48" class="box-ctrl"/>
+  <text x="427" y="150" class="box-title">OPA</text>
+  <text x="427" y="164" class="box-sub">Policy Engine (§3.1.1)</text>
+  <text x="427" y="176" class="comp-tag">source §7.5</text>
+
+  <!-- PA -->
+  <rect x="525" y="130" width="110" height="48" class="box-ctrl"/>
+  <text x="580" y="150" class="box-title">PA (signed)</text>
+  <text x="580" y="164" class="box-sub">Policy Admin</text>
+  <text x="580" y="176" class="comp-tag">source §7.6</text>
+
+  <!-- SIEM/Obs -->
+  <rect x="650" y="130" width="75" height="48" class="box-ctrl"/>
+  <text x="687" y="150" class="box-title">SIEM/Obs</text>
+  <text x="687" y="164" class="box-sub">Log/Trace DS</text>
+  <text x="687" y="176" class="comp-tag">§7.12 / §7.13</text>
+
+  <!-- Trust Algo -->
+  <rect x="345" y="196" width="390" height="30" class="box-ctrl"/>
+  <text x="540" y="215" class="box-title">Trust Algorithm — criteria-based (§3.3.1)</text>
+
+  <!-- Api PEP -->
+  <rect x="170" y="290" width="130" height="60" class="box-pep"/>
+  <text x="235" y="312" class="box-title">API Sidecar</text>
+  <text x="235" y="328" class="box-sub">PEP · ext_authz</text>
+  <text x="235" y="344" class="comp-tag">§3.1.2</text>
+
+  <!-- Resource -->
+  <rect x="330" y="290" width="120" height="60" class="box"/>
+  <text x="390" y="312" class="box-title">bookstore-api</text>
+  <text x="390" y="328" class="box-sub">Resource (§2.2)</text>
+
+  <!-- Data PEP + DB -->
+  <rect x="480" y="290" width="110" height="60" class="box-pep"/>
+  <text x="535" y="312" class="box-title">DB Sidecar</text>
+  <text x="535" y="328" class="box-sub">PEP — data egress</text>
+
+  <rect x="610" y="290" width="100" height="60" class="box"/>
+  <text x="660" y="312" class="box-title">postgres</text>
+  <text x="660" y="328" class="box-sub">Resource (§2.2)</text>
+
+  <!-- Flows -->
+  <!-- 1 Alice -> Ingress -->
+  <line x1="130" y1="210" x2="170" y2="210" class="flow" marker-end="url(#arr2)"/>
+  <text x="134" y="205" class="flow-txt">1 OIDC token + posture</text>
+
+  <!-- 2 Ingress -> PE via ext_authz -->
+  <line x1="300" y1="200" x2="345" y2="150" class="flow" marker-end="url(#arr2)"/>
+  <text x="305" y="190" class="flow-txt">2 CheckRequest</text>
+
+  <!-- 3 PE -> Identity / CDM / SPIRE -->
+  <line x1="427" y1="130" x2="400" y2="108" class="sig" marker-end="url(#arr3)"/>
+  <line x1="460" y1="130" x2="535" y2="108" class="sig" marker-end="url(#arr3)"/>
+  <line x1="495" y1="130" x2="640" y2="108" class="sig" marker-end="url(#arr3)"/>
+  <text x="555" y="122" class="flow-txt" style="fill:#B45309">3 signals: identity · workload · posture</text>
+
+  <!-- 4 PA -> PE signed bundle -->
+  <line x1="580" y1="130" x2="510" y2="145" class="sig" marker-end="url(#arr3)"/>
+
+  <!-- 5 PE -> Ingress decision -->
+  <line x1="345" y1="168" x2="300" y2="220" class="flow" marker-end="url(#arr2)"/>
+  <text x="302" y="238" class="flow-txt">5 allow / deny / step_up</text>
+
+  <!-- 6 Ingress -> API sidecar (mTLS) -->
+  <line x1="235" y1="240" x2="235" y2="290" class="flow" marker-end="url(#arr2)"/>
+  <text x="240" y="268" class="flow-txt">6 mTLS (SVID)</text>
+
+  <!-- 7 API -> DB via PEP -->
+  <line x1="450" y1="320" x2="480" y2="320" class="flow" marker-end="url(#arr2)"/>
+  <line x1="590" y1="320" x2="610" y2="320" class="flow" marker-end="url(#arr2)"/>
+  <text x="455" y="314" class="flow-txt">7 SQL query</text>
+
+  <!-- 8 PEPs emit logs/traces -->
+  <line x1="235" y1="290" x2="687" y2="180" class="sig" marker-end="url(#arr3)"/>
+  <text x="450" y="260" class="flow-txt" style="fill:#B45309">8 decision_id, trace_id → SIEM/Obs</text>
+</svg>
+<figcaption>Capstone: every NIST 800-207 §3.1 logical component is rendered in the cluster. Solid arrows = request path; dashed amber = signals and bundles.</figcaption>
+</figure>
+
+  <h3>Run the capstone</h3>
+
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">capstone/run.sh</span><button class="copy-btn">Copy</button></div>
+<pre><code>#!/usr/bin/env bash
+set -euo pipefail
+source labs/03-per-session/.env
+
+TOKEN=$(curl -s -H 'Host: keycloak.local' \
+  -d 'grant_type=password' -d 'client_id=bookstore-api' \
+  -d "client_secret=$BOOKSTORE_CLIENT_SECRET" \
+  -d 'username=alice' -d 'password=alice' \
+  http://localhost/realms/zta-bookstore/protocol/openid-connect/token \
+  | jq -r .access_token)
+
+echo "==&gt; T3: token lifetime"
+echo "$TOKEN" | cut -d. -f2 | base64 -d 2&gt;/dev/null | jq '{exp, iat, lifetime_s: (.exp - .iat)}'
+
+echo "==&gt; T1-T2-T4-T6: denied round (suspect posture + POST)"
+curl -sS -o /dev/null -w 'status=%{http_code}\n' \
+  -X POST -H 'Host: bookstore.local' -H "Authorization: Bearer $TOKEN" \
+  -H 'x-device-posture: suspect' \
+  http://localhost/api/anything
+# Expected: status=403
+
+echo "==&gt; T5: remediate — operator resets posture"
+POD=$(kubectl --context docker-desktop -n bookstore-api get pod -l app=api -o name | head -1)
+kubectl --context docker-desktop -n bookstore-api annotate --overwrite $POD zta.posture=trusted
+kubectl --context docker-desktop -n bookstore-api delete $POD
+kubectl --context docker-desktop -n bookstore-api rollout status deploy/api
+
+echo "==&gt; T6: allowed round"
+curl -sS -o /dev/null -w 'status=%{http_code}\n' \
+  -X POST -H 'Host: bookstore.local' -H "Authorization: Bearer $TOKEN" \
+  -H 'x-device-posture: trusted' \
+  http://localhost/api/anything
+# Expected: status=200
+
+echo "==&gt; T7: the decision chain is visible"
+kubectl --context docker-desktop -n zta-policy logs deploy/opa --tail=6 \
+  | jq -c 'select(.decision_id) | {decision_id, allow: .result.allowed, reason: .result.headers["x-zta-decision-reason"]}' \
+  | tail -2
+</code></pre>
+  </div>
+
+  <p>Open Grafana; the <em>ZTA — Decisions, Latency, Drift</em> dashboard should now show the denied-then-allowed transition for Alice and a corresponding latency envelope — the source §8.6 SLO surface in miniature. Every tenet has had a measurable effect on the request's journey.</p>
+</section>
+
+<!-- ============================================================== -->
+<!-- MAPPING APPENDIX                                                -->
+<!-- ============================================================== -->
+<section id="appendix">
+<h2>Mapping Appendix · Source § × NIST 800-207</h2>
+
+<p>Each row is a paragraph-level section of the source document. Cells under T1–T7 use: <span class="badge primary">P</span> primary (the section substantively implements the tenet), <span class="badge secondary">S</span> secondary (the section touches the tenet in passing), <span class="badge na">—</span> n/a. Logical components name the §3.1 component(s) instantiated; deployment variants cite §3.2. One-sentence justifications for every <em>Primary</em> follow each row group.</p>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr>
+      <th style="width:22%">Source §</th>
+      <th style="width:3%">T1</th><th style="width:3%">T2</th><th style="width:3%">T3</th><th style="width:3%">T4</th><th style="width:3%">T5</th><th style="width:3%">T6</th><th style="width:3%">T7</th>
+      <th>§3.1 Components</th>
+      <th>§3.2 Variant</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>§1 Executive summary</td>
+      <td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td>
+      <td>PE, PA, PEP (all), Identity/CDM/SIEM DS, Trust Algo</td>
+      <td>Hybrid · §3.2.1 + §3.2.2 + §3.2.3 + §3.2.4</td></tr>
+    <tr><td>§2 Assumptions &amp; scope</td>
+      <td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge na">—</span></td>
+      <td>Resources enumerated; data-residency PEP hint</td>
+      <td>Resource-portal §3.2.3 (mainframe facade)</td></tr>
+    <tr><td>§3 C4 L1 — Context</td>
+      <td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge na">—</span></td>
+      <td>Subject / Resource boundary; adversary model</td>
+      <td>Device-agent/gateway §3.2.1 for workforce</td></tr>
+    <tr><td>§4 C4 L2 — Container</td>
+      <td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td>
+      <td>PE fleet, PA, PEPs (all classes), 8 Data Sources, Trust Algo</td>
+      <td>Hybrid (all four variants)</td></tr>
+    <tr><td>§5 C4 L3 — Flow A (retail)</td>
+      <td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td>
+      <td>CIAM, API PEP, PE, Risk DS, Mesh PEP, Mainframe PEP</td>
+      <td>Resource-portal §3.2.3 (API) + §3.2.1 (device-agent)</td></tr>
+    <tr><td>§5 C4 L3 — Flow B (SWIFT)</td>
+      <td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td>
+      <td>SPIRE, Mesh PEP, Secure-Zone PEP, PAM PEP, PE, SIEM</td>
+      <td>Enclave §3.2.2 (SWIFT Secure Zone)</td></tr>
+    <tr><td>§6 C4 L4 — Rego sample</td>
+      <td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td>
+      <td>PE decision logic; fail-closed default; signed-bundle gate</td>
+      <td>Variant-agnostic PE contract</td></tr>
+    <tr><td>§7.1–§7.3 Identity DS</td>
+      <td><span class="badge secondary">S</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td>
+      <td>ForgeRock CIAM, Entra ID, Okta</td>
+      <td>Resource-portal §3.2.3</td></tr>
+    <tr><td>§7.4 SPIFFE/SPIRE</td>
+      <td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td>
+      <td>Workload Identity DS (§3.1.3)</td>
+      <td>Device-agent/gateway §3.2.1</td></tr>
+    <tr><td>§7.5 OPA</td>
+      <td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td>
+      <td>Policy Engine (§3.1.1)</td>
+      <td>Variant-agnostic</td></tr>
+    <tr><td>§7.6 Policy Administrator</td>
+      <td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td>
+      <td>Policy Administrator (§3.1.1 — control plane)</td>
+      <td>Variant-agnostic</td></tr>
+    <tr><td>§7.7 Kong + Authlete</td>
+      <td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td>
+      <td>API PEP (§3.1.2)</td>
+      <td>Resource-portal §3.2.3</td></tr>
+    <tr><td>§7.8 Istio mesh</td>
+      <td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td>
+      <td>East-west PEP</td>
+      <td>Device-agent/gateway §3.2.1</td></tr>
+    <tr><td>§7.9 Zscaler ZPA</td>
+      <td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td>
+      <td>User-to-app PEP</td>
+      <td>Resource-portal §3.2.3</td></tr>
+    <tr><td>§7.10 CyberArk PAM</td>
+      <td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td>
+      <td>Privileged-session PEP; identity DS for priv events</td>
+      <td>Enclave §3.2.2 (break-glass into Secure Zone)</td></tr>
+    <tr><td>§7.11 Vault + HSM</td>
+      <td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge secondary">S</span></td><td><span class="badge na">—</span></td>
+      <td>Supporting PKI DS</td>
+      <td>Variant-agnostic</td></tr>
+    <tr><td>§7.12 Splunk + Snowflake</td>
+      <td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td>
+      <td>Activity Log / SIEM DS</td>
+      <td>Variant-agnostic</td></tr>
+    <tr><td>§7.13 OpenTelemetry</td>
+      <td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td>
+      <td>Activity Log DS; PE/PA health</td>
+      <td>Variant-agnostic</td></tr>
+    <tr><td>§7.14 Wiz + Tanium</td>
+      <td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td>
+      <td>CDM DS</td>
+      <td>Device-agent/gateway §3.2.1</td></tr>
+    <tr><td>§7.15 Venafi + AWS PCA</td>
+      <td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge secondary">S</span></td><td><span class="badge na">—</span></td>
+      <td>PKI DS</td>
+      <td>Variant-agnostic</td></tr>
+    <tr><td>§7.16 Immuta</td>
+      <td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td>
+      <td>Data-plane PEP + Data-Access Policy DS</td>
+      <td>Application sandboxing §3.2.4 (data plane)</td></tr>
+    <tr><td>§7.17 Netskope SSE</td>
+      <td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td>
+      <td>SaaS/egress PEP; DLP DS</td>
+      <td>Resource-portal §3.2.3 (SaaS)</td></tr>
+    <tr><td>§7.18 Authlete</td>
+      <td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge na">—</span></td>
+      <td>FAPI engine under API PEP</td>
+      <td>Resource-portal §3.2.3</td></tr>
+    <tr><td>§7.19 Broadcom AAM</td>
+      <td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td>
+      <td>Mainframe PEP; identity gateway</td>
+      <td>Resource-portal §3.2.3</td></tr>
+    <tr><td>§7.20 Featurespace</td>
+      <td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td>
+      <td>Continuous-signal Data Source for PE</td>
+      <td>Variant-agnostic</td></tr>
+    <tr><td>§8.1 Human identity</td>
+      <td><span class="badge secondary">S</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td>
+      <td>Workforce / CIAM / B2B planes; AuthZEN normalisation</td>
+      <td>Device-agent/gateway §3.2.1 + resource-portal §3.2.3</td></tr>
+    <tr><td>§8.2 Machine identity</td>
+      <td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td>
+      <td>SPIFFE IDs across K8s/VM/Lambda/mainframe</td>
+      <td>Device-agent/gateway §3.2.1</td></tr>
+    <tr><td>§8.3 Secrets management</td>
+      <td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge na">—</span></td>
+      <td>Vault + HSM — supporting infrastructure</td>
+      <td>Variant-agnostic</td></tr>
+    <tr><td>§8.4 PAM</td>
+      <td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td>
+      <td>PAM as PEP; session broker</td>
+      <td>Enclave §3.2.2</td></tr>
+    <tr><td>§8.5 Logging / SIEM</td>
+      <td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td>
+      <td>Activity Log DS; WORM audit chain</td>
+      <td>Variant-agnostic</td></tr>
+    <tr><td>§8.6 Observability / SLOs</td>
+      <td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td>
+      <td>OTel; Prom/Tempo/Loki equivalents</td>
+      <td>Variant-agnostic</td></tr>
+    <tr><td>§8.7 API security (FAPI 2.0)</td>
+      <td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td>
+      <td>API PEP with PAR / DPoP / mTLS-bound / JARM</td>
+      <td>Resource-portal §3.2.3</td></tr>
+    <tr><td>§8.8 Data protection</td>
+      <td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td>
+      <td>Data-plane PEPs; tokenisation; classification</td>
+      <td>Application sandboxing §3.2.4</td></tr>
+    <tr><td>§8.9 Third-party / supply chain</td>
+      <td><span class="badge secondary">S</span></td><td><span class="badge secondary">S</span></td><td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td>
+      <td>sigstore, in-toto; signed PA bundles</td>
+      <td>Variant-agnostic</td></tr>
+    <tr><td>§8.10 Threat model of ZTA</td>
+      <td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge secondary">S</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td>
+      <td>Policy plane as Tier-0; STRIDE mitigations</td>
+      <td>Variant-agnostic</td></tr>
+    <tr><td>§9.1 UEBA</td>
+      <td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td>
+      <td>Trust Algorithm signal input</td>
+      <td>Application sandboxing §3.2.4 (model)</td></tr>
+    <tr><td>§9.2 Adaptive auth</td>
+      <td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td>
+      <td>Identity DS feature; PE input</td>
+      <td>Device-agent/gateway §3.2.1</td></tr>
+    <tr><td>§9.3 Fraud / AML</td>
+      <td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td>
+      <td>Risk DS; API PEP enforces</td>
+      <td>Resource-portal §3.2.3</td></tr>
+    <tr><td>§9.4 SOC copilot</td>
+      <td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td>
+      <td>Analytics layer over SIEM DS</td>
+      <td>Application sandboxing §3.2.4</td></tr>
+    <tr><td>§9.5 Policy-as-code AI</td>
+      <td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge na">—</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td>
+      <td>Augments Policy Administrator authoring</td>
+      <td>Application sandboxing §3.2.4</td></tr>
+    <tr><td>§9.6 AI vuln discovery</td>
+      <td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td>
+      <td>Supports ZTA threat model &amp; CDM</td>
+      <td>Application sandboxing §3.2.4</td></tr>
+    <tr><td>§9.7 AI governance</td>
+      <td><span class="badge secondary">S</span></td><td><span class="badge secondary">S</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge secondary">S</span></td>
+      <td>AI Gateway PEP; agent SPIFFE identity</td>
+      <td>Application sandboxing §3.2.4</td></tr>
+    <tr><td>§10 Summary table</td>
+      <td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td>
+      <td>Every §3.1 component by name</td>
+      <td>All four §3.2 variants</td></tr>
+    <tr><td>§11 Open questions / PoCs</td>
+      <td><span class="badge na">—</span></td><td><span class="badge secondary">S</span></td><td><span class="badge secondary">S</span></td><td><span class="badge secondary">S</span></td><td><span class="badge secondary">S</span></td><td><span class="badge primary">P</span></td><td><span class="badge primary">P</span></td>
+      <td>PE/PA resilience; TLPT; PQ; AuthZEN interop</td>
+      <td>Variant-agnostic</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>Primary-cell justifications (one sentence each)</h3>
+
+<ul>
+  <li><strong>§1 all tenets P:</strong> the executive summary explicitly names identity-centric controls, FAPI tokens, mesh mTLS, signed policy bundles, continuous signals, and evidence pipelines — mapping one-to-one to T1 through T7.</li>
+  <li><strong>§2 T1 P:</strong> assumptions define the <em>scope</em> of enterprise resources (AWS 60%, z/OS authoritative, ~1,200 SaaS), which is Tenet 1 in practice.</li>
+  <li><strong>§3 T2, T4 P:</strong> the L1 diagram declares no network segment is trusted by default and every arrow is a dynamic-policy evaluation crossing a trust boundary.</li>
+  <li><strong>§4 all tenets P:</strong> C4 L2 instantiates every §3.1 component in technology and is therefore the clearest tenet-to-component map in the source.</li>
+  <li><strong>§5 Flow A T2/T3/T4/T6/T7 P:</strong> the 10 numbered steps each cite the tenet they satisfy (step 1 = T6; steps 2-4 mTLS + token = T2/T3; step 6 = T4 policy evaluation; step 10 = T7 evidence).</li>
+  <li><strong>§5 Flow B T2/T3/T4/T6/T7 P:</strong> the SWIFT enclave illustrates machine-identity mTLS (T2/T3), dual-control policy (T4/T6), and UETR-indexed evidence (T7).</li>
+  <li><strong>§6 T4, T6 P:</strong> the Rego source code is the PE policy contract — dynamic (T4) and fail-closed-strict (T6).</li>
+  <li><strong>§7.1–§7.3 T3/T4/T6 P:</strong> identity-source components emit the session (T3) and claims (T4) the PE strictly consumes (T6).</li>
+  <li><strong>§7.4 T2/T3/T6 P:</strong> SPIRE SVIDs are the mTLS (T2), per-session (T3), strict-identity (T6) substrate for workloads.</li>
+  <li><strong>§7.5 T4/T6/T7 P:</strong> OPA <em>is</em> the PE — its Rego policies are dynamic (T4), strictly evaluated (T6), and their logs are telemetry (T7).</li>
+  <li><strong>§7.6 T6/T7 P:</strong> the PA signs and publishes bundles (T6) and its release telemetry drives SLO-based gating (T7).</li>
+  <li><strong>§7.7 / §7.8 / §7.9 T2/T3/T4/T6 P:</strong> every PEP class terminates identity (T3), enforces crypto (T2), consults the PE (T4), and blocks before allow (T6).</li>
+  <li><strong>§7.10 T3/T4/T5/T6/T7 P:</strong> CyberArk PAM is a PEP <em>and</em> a signal source — JIT elevation (T3), risk policy (T4), session recording (T5/T7) with strict gating (T6).</li>
+  <li><strong>§7.11 T2/T3 P:</strong> Vault + HSM underwrites the keys that make T2 and T3 cryptographically credible.</li>
+  <li><strong>§7.12 T5/T7 P:</strong> Splunk + Snowflake are the SIEM and long-retention stores that hold the evidence T5 and T7 require.</li>
+  <li><strong>§7.13 T5/T7 P:</strong> OpenTelemetry is the unified instrumentation that the T7 feedback loop and T5 posture tracking share.</li>
+  <li><strong>§7.14 T1/T4/T5/T7 P:</strong> Wiz + Tanium enumerate resources (T1), feed CDM signals into the PE (T4), measure posture (T5), and stream telemetry (T7).</li>
+  <li><strong>§7.15 T2/T3 P:</strong> Venafi + AWS PCA are the enterprise PKI enabling durable T2 and T3.</li>
+  <li><strong>§7.16 T1/T4/T6 P:</strong> Immuta classifies data (T1), evaluates dynamic ABAC (T4), and enforces strictly at the row/column level (T6).</li>
+  <li><strong>§7.17 T2/T3/T4/T5/T6/T7 P:</strong> Netskope SSE carries all six because SaaS/egress is the most tenet-dense PEP surface in the source.</li>
+  <li><strong>§7.18 T2/T3 P:</strong> Authlete's FAPI engine makes T2 (mTLS-bound tokens) and T3 (DPoP sessions) concrete.</li>
+  <li><strong>§7.19 T3/T4/T6 P:</strong> Broadcom AAM maps modern identities onto RACF (T3), evaluates mainframe-specific scope (T4), and gates CICS at the transaction boundary (T6).</li>
+  <li><strong>§7.20 T4/T5/T7 P:</strong> Featurespace is the canonical §9-style signal: dynamic (T4), measures behaviour (T5), and continuously streams (T7).</li>
+  <li><strong>§8.1 T3/T4/T6 P:</strong> separate planes for workforce/customer/partner require per-population session logic (T3), policy (T4), and enforcement (T6).</li>
+  <li><strong>§8.2 T2/T3/T4/T6 P:</strong> SPIFFE propagation across K8s/VM/Lambda/mainframe implements T2/T3/T6 with attestation feeding T4.</li>
+  <li><strong>§8.3 T2/T3 P:</strong> dynamic secrets + HSM-rooted signing are the keystone that T2 and T3 rely on.</li>
+  <li><strong>§8.4 T3/T4/T5/T6/T7 P:</strong> PAM sessions are dynamically authorised, integrity-recorded, strictly brokered, and fully telemetered.</li>
+  <li><strong>§8.5 T5/T7 P:</strong> logging is the T5 integrity-evidence channel and the T7 information stream.</li>
+  <li><strong>§8.6 T5/T6/T7 P:</strong> SLOs and error budgets translate T5/T7 signals into T6 release gates.</li>
+  <li><strong>§8.7 T2/T3/T4/T6 P:</strong> FAPI 2.0 is the API expression of T2–T6 in a single profile.</li>
+  <li><strong>§8.8 T1/T2/T4/T6 P:</strong> classification (T1), crypto (T2), ABAC (T4), and data-plane PEPs (T6) together are the data-protection story.</li>
+  <li><strong>§8.9 T5/T6/T7 P:</strong> supply-chain provenance and policy-bundle signing sit squarely at T5/T6/T7.</li>
+  <li><strong>§8.10 T5/T6/T7 P:</strong> the ZTA self-threat-model is almost entirely about keeping strict enforcement (T6), integrity monitoring (T5), and telemetry (T7) honest.</li>
+  <li><strong>§9.1 T4/T5/T7 P:</strong> UEBA is a dynamic-policy input, a posture signal, and a telemetry product in one component.</li>
+  <li><strong>§9.2 T3/T4/T6 P:</strong> adaptive auth re-shapes sessions (T3) via dynamic scoring (T4) with strict gating (T6).</li>
+  <li><strong>§9.3 T4/T5/T7 P:</strong> fraud/AML scores are dynamic signals (T4), measure behavioural posture (T5), and are telemetered end-to-end (T7).</li>
+  <li><strong>§9.4 T5/T7 P:</strong> SOC copiloting operates on the measurement and telemetry surfaces.</li>
+  <li><strong>§9.5 T4/T6 P:</strong> AI-drafted policies must still compose dynamically (T4) and pass strict PA gating (T6).</li>
+  <li><strong>§9.6 T5/T7 P:</strong> AI-assisted vuln discovery feeds CDM (T5) and the telemetry loop (T7).</li>
+  <li><strong>§9.7 T4/T5/T6 P:</strong> AI Gateway PEP + agent identity = dynamic, posture-aware, strictly-enforced AI traffic.</li>
+  <li><strong>§10 all tenets P:</strong> the summary table itself is a tenet-by-component cross-reference.</li>
+  <li><strong>§11 T6/T7 P:</strong> every open question touches strict-enforcement resilience or telemetry quality.</li>
+</ul>
+</section>
+
+<!-- ============================================================== -->
+<!-- CLEANUP + NEXT STEPS                                            -->
+<!-- ============================================================== -->
+<section id="cleanup">
+<h2>Cleanup &amp; Next Steps</h2>
+
+<h3>Teardown</h3>
+<p>Two scripts: a fast <em>soft</em> teardown that removes workloads and leaves the control plane, and a <em>hard</em> teardown that resets the cluster. Both are idempotent.</p>
+
+<div class="code-block terminal">
+  <div class="code-head"><span class="lang">Bash</span><span class="path">teardown.sh — soft</span><button class="copy-btn">Copy</button></div>
+<pre><code>#!/usr/bin/env bash
+set -euo pipefail
+CTX=docker-desktop
+
+kubectl --context $CTX delete ns bookstore-frontend bookstore-api bookstore-data zta-lab-debug --ignore-not-found
+kubectl --context $CTX -n zta-policy delete cm opa-policy pa-policies opa-config --ignore-not-found
+kubectl --context $CTX -n zta-policy delete deploy opa pa --ignore-not-found
+kubectl --context $CTX -n zta-policy delete secret bundle-signer --ignore-not-found
+kubectl --context $CTX delete envoyfilter ext-authz-opa project-posture-header -A --ignore-not-found
+kubectl --context $CTX delete peerauthentication -A --all --ignore-not-found
+kubectl --context $CTX delete authorizationpolicy -A --all --ignore-not-found
+kubectl --context $CTX -n zta-runtime-security delete deploy cdm --ignore-not-found
+kubectl --context $CTX -n zta-runtime-security delete cronjob posture-reconciler --ignore-not-found
+echo "Soft teardown complete — control plane intact."
+</code></pre>
+</div>
+
+<div class="code-block terminal">
+  <div class="code-head"><span class="lang">Bash</span><span class="path">teardown.sh — hard</span><button class="copy-btn">Copy</button></div>
+<pre><code>#!/usr/bin/env bash
+set -euo pipefail
+CTX=docker-desktop
+
+helm --kube-context $CTX uninstall falco -n zta-runtime-security || true
+helm --kube-context $CTX uninstall kube-prom loki tempo -n zta-observability || true
+helm --kube-context $CTX uninstall gatekeeper -n gatekeeper-system || true
+helm --kube-context $CTX uninstall cert-manager -n cert-manager || true
+istioctl --context $CTX uninstall -y --purge || true
+
+kubectl --context $CTX delete ns \
+  zta-system zta-identity zta-policy spire \
+  zta-observability zta-runtime-security \
+  bookstore-frontend bookstore-api bookstore-data \
+  zta-lab-debug cert-manager gatekeeper-system istio-system \
+  --ignore-not-found --wait=false
+
+echo "Hard teardown requested; background namespace finalisation may take a minute."
+# Nuclear option (Docker Desktop): Settings → Kubernetes → Reset Kubernetes Cluster.
+</code></pre>
+</div>
+
+<h3>Suggested extensions</h3>
+<ul>
+  <li><strong>Swap Keycloak for Dex</strong> — smaller footprint and pure-OIDC; loses admin UI but gains a tighter audit surface. Exercises the same source §7.1 role at lower complexity.</li>
+  <li><strong>Add Cilium for L7 network policy</strong> (where kernel support allows). On Docker Desktop kernel feature support is limited; prefer running Cilium on a separate kind cluster with <code>cluster-pool</code> IPAM and enabling its Hubble UI. Adds a second §3.1.2 PEP below the mesh.</li>
+  <li><strong>Second cluster for enclave simulation</strong> — stand up a kind cluster labelled <code>swift-secure-zone</code>, install a second Istio mesh with a mesh-federation trust bundle to the main cluster. Map directly to 800-207 §3.2.2 (enclave-based deployment) and source §5 Flow B.</li>
+  <li><strong>Replace the Lua posture header with signed CDM events to Redis</strong> — removes the pod-bounce reconciler, shortens the T5→T6 loop to sub-second, and demonstrates a real-world upgrade path for source §7.14.</li>
+  <li><strong>Cosign-signed OPA bundles with keyless Fulcio + Rekor</strong> — extends Lab 6 from RS256 private-key signing to sigstore's keyless flow (source §8.9). Requires network egress to the public Sigstore log; skip in air-gapped environments.</li>
+  <li><strong>Add an AI Gateway PEP</strong> — a small egress proxy in front of an LLM endpoint that enforces prompt-injection filters and PAN/IBAN DLP, matching source §9.7. Uses the same OPA ext-authz pattern as Lab 4.</li>
+  <li><strong>Turn <code>zta.jurisdiction</code> into a Gatekeeper mutation</strong> and have the Lab 4 Rego deny cross-jurisdiction writes — one clean demonstration of source §2 data-residency mediation.</li>
+  <li><strong>Burn-rate alerts on SLOs</strong> — add Prometheus <code>PrometheusRule</code>s for the §8.6 SLOs (decision latency P99 &lt; 10 ms, availability 99.995%). Route to Alertmanager → stdout webhook for local development.</li>
+</ul>
+
+<h3>Further reading — anchored in the source</h3>
+<ul>
+  <li>NIST SP 800-207 (August 2020) — read §2.1, §3.1, §3.2, §3.3, and §3.4 in that order; every tenet in this lab cites paragraph-level anchors from these sections.</li>
+  <li>CNCF SPIFFE specification — the Workload API, Node/Workload Attestation, and SVID rotation semantics map one-to-one to source §7.4 and §8.2.</li>
+  <li>OpenID Foundation FAPI 2.0 Security Profile — the hardened OAuth profile referenced throughout source §8.7 and §7.18.</li>
+  <li>CISA Zero Trust Maturity Model v2.0 — complementary to 800-207; source §7.2 and §7.6 cite CISA's pillar and governance cross-cut.</li>
+</ul>
+</section>
+
+<footer class="site-foot">
+  <div>ZTA Home Lab · derived from ZTA-2026-001 · anchored to NIST SP 800-207 (Aug 2020) · tutorial v1.0 · 2026-04-17</div>
+  <div>Runs entirely on Docker Desktop Kubernetes · all components open source · no cloud resources required</div>
+</footer>
+
+</main>
+</div>
+
+<script>
+(function() {
+  // Copy-to-clipboard on code blocks
+  document.querySelectorAll('.copy-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var pre = btn.closest('.code-block').querySelector('pre');
+      if (!pre) return;
+      var txt = pre.innerText;
+      navigator.clipboard.writeText(txt).then(function() {
+        var original = btn.textContent;
+        btn.textContent = 'Copied';
+        btn.classList.add('copied');
+        setTimeout(function() {
+          btn.textContent = original;
+          btn.classList.remove('copied');
+        }, 1400);
+      });
+    });
+  });
+
+  // Active TOC item based on scroll position
+  var links = document.querySelectorAll('.toc-list a[href^="#"]');
+  var map = {};
+  links.forEach(function(l) {
+    var id = l.getAttribute('href').slice(1);
+    var el = document.getElementById(id);
+    if (el) map[id] = l;
+  });
+  if ('IntersectionObserver' in window) {
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(e) {
+        var id = e.target.id;
+        if (!map[id]) return;
+        if (e.isIntersecting) {
+          links.forEach(function(l) { l.classList.remove('active'); });
+          map[id].classList.add('active');
+        }
+      });
+    }, { rootMargin: '-30% 0px -60% 0px', threshold: 0 });
+    Object.values(map).forEach(function(link) {
+      var id = link.getAttribute('href').slice(1);
+      var el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+  }
+})();
+</script>
+</body>
+</html>
