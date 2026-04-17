@@ -313,6 +313,460 @@
 
   /* Icons */
   .ico { width: 14px; height: 14px; display: inline-block; vertical-align: -2px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* Tenet color system (NIST SP 800-207 2.1) */
+  :root {
+    --t1: #0F766E; --t1-tint: #CCFBF1; --t1-wash: #F0FDFA;
+    --t2: #0369A1; --t2-tint: #DBEAFE; --t2-wash: #EFF6FF;
+    --t3: #4338CA; --t3-tint: #E0E7FF; --t3-wash: #EEF2FF;
+    --t4: #B45309; --t4-tint: #FEF3C7; --t4-wash: #FFFBEB;
+    --t5: #7C3AED; --t5-tint: #EDE9FE; --t5-wash: #F5F3FF;
+    --t6: #BE123C; --t6-tint: #FFE4E6; --t6-wash: #FFF1F2;
+    --t7: #047857; --t7-tint: #D1FAE5; --t7-wash: #ECFDF5;
+  }
+
+  /* Tenet dots in sidebar */
+  .tdot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 8px;
+    vertical-align: 0;
+    flex-shrink: 0;
+  }
+  .tdot.t1 { background: var(--t1); }
+  .tdot.t2 { background: var(--t2); }
+  .tdot.t3 { background: var(--t3); }
+  .tdot.t4 { background: var(--t4); }
+  .tdot.t5 { background: var(--t5); }
+  .tdot.t6 { background: var(--t6); }
+  .tdot.t7 { background: var(--t7); }
+
+  .toc-list a { display: flex; align-items: center; }
+  .toc-list a .tenet-num { width: 20px; flex-shrink: 0; }
+
+  /* Sidebar progress card */
+  .progress-card {
+    margin-top: var(--space-5);
+    padding: var(--space-4);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .progress-card .pc-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); font-weight: 600; }
+  .progress-card .pc-value { font-size: 18px; color: var(--ink); font-weight: 600; margin-top: 2px; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+  .progress-card .pc-value small { font-size: 12px; color: var(--muted-2); font-weight: 400; }
+  .progress-track {
+    margin-top: 8px;
+    height: 4px;
+    background: var(--border-2);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--t1), var(--t2), var(--t3), var(--t4), var(--t5), var(--t6), var(--t7));
+    border-radius: 2px;
+    transition: width 400ms ease;
+  }
+  .progress-reset {
+    display: block;
+    margin-top: 10px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    font-family: var(--sans);
+    border-bottom: 1px dashed var(--border);
+  }
+  .progress-reset:hover { color: var(--ink); border-bottom-color: var(--ink); }
+
+  /* Lab checkbox (in lab headers) */
+  .lab-header { display: flex; align-items: flex-start; gap: var(--space-4); flex-wrap: wrap; }
+  .lab-header > .lab-heading { flex: 1; min-width: 260px; }
+  .lab-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: var(--space-3);
+    padding: 8px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+    user-select: none;
+    font-family: var(--sans);
+    transition: all 180ms ease;
+    letter-spacing: 0.02em;
+  }
+  .lab-check:hover { color: var(--ink); border-color: var(--ink); }
+  .lab-check .check-box {
+    width: 14px; height: 14px;
+    border: 1.5px solid currentColor;
+    border-radius: 3px;
+    display: inline-grid;
+    place-items: center;
+    transition: all 180ms ease;
+  }
+  .lab-check .check-box svg { width: 10px; height: 10px; stroke: #fff; stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transform: scale(0.6); transition: all 180ms ease; }
+  .lab-check.done { color: var(--ok); border-color: var(--ok); background: #ECFDF5; }
+  .lab-check.done .check-box { background: var(--ok); border-color: var(--ok); }
+  .lab-check.done .check-box svg { opacity: 1; transform: scale(1); }
+
+  /* Hero architecture diagram frame */
+  .hero-arch {
+    margin: var(--space-6) 0 var(--space-7);
+    padding: var(--space-6);
+    background:
+      radial-gradient(ellipse at top right, var(--accent-wash) 0%, transparent 55%),
+      radial-gradient(ellipse at bottom left, #F0FDFA 0%, transparent 50%),
+      var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-arch::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, rgba(10,10,10,0.025) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(10,10,10,0.025) 1px, transparent 1px);
+    background-size: 24px 24px;
+    pointer-events: none;
+  }
+  .hero-arch-head {
+    position: relative;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-bottom: var(--space-5);
+    flex-wrap: wrap;
+  }
+  .hero-arch-head h3 { margin: 0; font-size: clamp(16px, 1.4vw, 19px); letter-spacing: -0.01em; }
+  .hero-arch-head .hero-sub { font-size: 12px; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600; }
+  .hero-arch svg { position: relative; display: block; max-width: 100%; height: auto; margin: 0 auto; }
+  .hero-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: var(--space-5); position: relative; font-size: 12px; color: var(--muted); }
+  .hero-legend .lg { display: inline-flex; align-items: center; gap: 6px; }
+  .hero-legend .lg-swatch { width: 12px; height: 12px; border-radius: 2px; display: inline-block; }
+  .hero-legend .lg-swatch.ctrl { background: var(--t4-tint); border: 1px solid var(--t4); }
+  .hero-legend .lg-swatch.pep { background: var(--t2-wash); border: 1px dashed var(--t2); }
+  .hero-legend .lg-swatch.res { background: var(--surface); border: 1px solid var(--ink); }
+  .hero-legend .lg-swatch.sig { background: linear-gradient(90deg, transparent 0%, transparent 30%, var(--t4) 30%, var(--t4) 70%, transparent 70%); }
+  .hero-legend .lg-swatch.req { background: var(--ink); height: 2px; align-self: center; width: 22px; border-radius: 1px; }
+
+  /* Tenet grid (seven pillars) */
+  .tenet-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin: var(--space-5) 0 var(--space-7);
+  }
+  .tenet-card {
+    background: var(--surface);
+    padding: var(--space-5) var(--space-4);
+    cursor: pointer;
+    position: relative;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border: 0;
+    color: inherit;
+    border-bottom: 0;
+    transition: background 200ms ease, transform 200ms ease;
+  }
+  .tenet-card:hover { background: var(--surface); border-bottom: 0; }
+  .tenet-card:hover .tenet-bar { height: 6px; }
+  .tenet-card:hover .tenet-arrow { transform: translateX(3px); opacity: 1; }
+  .tenet-card:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+  .tenet-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    transition: height 200ms ease;
+  }
+  .tenet-card[data-t="1"] .tenet-bar { background: var(--t1); }
+  .tenet-card[data-t="2"] .tenet-bar { background: var(--t2); }
+  .tenet-card[data-t="3"] .tenet-bar { background: var(--t3); }
+  .tenet-card[data-t="4"] .tenet-bar { background: var(--t4); }
+  .tenet-card[data-t="5"] .tenet-bar { background: var(--t5); }
+  .tenet-card[data-t="6"] .tenet-bar { background: var(--t6); }
+  .tenet-card[data-t="7"] .tenet-bar { background: var(--t7); }
+
+  .tenet-card .tenet-head { display: flex; align-items: center; justify-content: space-between; }
+  .tenet-card .tenet-num-big {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    font-weight: 600;
+  }
+  .tenet-card[data-t="1"] .tenet-num-big { color: var(--t1); }
+  .tenet-card[data-t="2"] .tenet-num-big { color: var(--t2); }
+  .tenet-card[data-t="3"] .tenet-num-big { color: var(--t3); }
+  .tenet-card[data-t="4"] .tenet-num-big { color: var(--t4); }
+  .tenet-card[data-t="5"] .tenet-num-big { color: var(--t5); }
+  .tenet-card[data-t="6"] .tenet-num-big { color: var(--t6); }
+  .tenet-card[data-t="7"] .tenet-num-big { color: var(--t7); }
+  .tenet-card .tenet-icon {
+    width: 28px; height: 28px;
+    display: grid;
+    place-items: center;
+    border-radius: 6px;
+  }
+  .tenet-card[data-t="1"] .tenet-icon { background: var(--t1-tint); color: var(--t1); }
+  .tenet-card[data-t="2"] .tenet-icon { background: var(--t2-tint); color: var(--t2); }
+  .tenet-card[data-t="3"] .tenet-icon { background: var(--t3-tint); color: var(--t3); }
+  .tenet-card[data-t="4"] .tenet-icon { background: var(--t4-tint); color: var(--t4); }
+  .tenet-card[data-t="5"] .tenet-icon { background: var(--t5-tint); color: var(--t5); }
+  .tenet-card[data-t="6"] .tenet-icon { background: var(--t6-tint); color: var(--t6); }
+  .tenet-card[data-t="7"] .tenet-icon { background: var(--t7-tint); color: var(--t7); }
+  .tenet-card .tenet-icon svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .tenet-card .tenet-name { font-size: 14px; font-weight: 600; color: var(--ink); letter-spacing: -0.005em; line-height: 1.3; }
+  .tenet-card .tenet-summary { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+  .tenet-card .tenet-foot { display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 6px; font-size: 11px; color: var(--muted-2); font-family: var(--mono); letter-spacing: 0.04em; }
+  .tenet-card .tenet-arrow { opacity: 0.4; transition: transform 200ms ease, opacity 200ms ease; }
+  .tenet-card .tenet-arrow svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 1.8; fill: none; }
+
+  /* Lab mini-flow diagram */
+  .lab-flow {
+    margin: var(--space-4) 0 var(--space-5);
+    padding: var(--space-4) var(--space-5);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    overflow-x: auto;
+  }
+  .lab-flow .fstep {
+    flex: 1;
+    min-width: 120px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 14px;
+    position: relative;
+  }
+  .lab-flow .fstep + .fstep { border-left: 1px dashed var(--border); }
+  .lab-flow .fstep::after {
+    content: "";
+    position: absolute;
+    top: 50%; right: -7px;
+    width: 12px; height: 1px;
+    background: var(--muted-2);
+    transform: translateY(-50%);
+  }
+  .lab-flow .fstep:last-child::after { display: none; }
+  .lab-flow .fstep:last-child { border-right: 0; }
+  .lab-flow .fstep .fs-num {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .lab-flow .fstep .fs-title { font-size: 13px; font-weight: 600; color: var(--ink); line-height: 1.3; }
+  .lab-flow .fstep .fs-meta { font-size: 11px; color: var(--muted); font-family: var(--mono); letter-spacing: 0.02em; line-height: 1.4; }
+
+  .lab-flow[data-t="1"] .fstep .fs-num { color: var(--t1); }
+  .lab-flow[data-t="2"] .fstep .fs-num { color: var(--t2); }
+  .lab-flow[data-t="3"] .fstep .fs-num { color: var(--t3); }
+  .lab-flow[data-t="4"] .fstep .fs-num { color: var(--t4); }
+  .lab-flow[data-t="5"] .fstep .fs-num { color: var(--t5); }
+  .lab-flow[data-t="6"] .fstep .fs-num { color: var(--t6); }
+  .lab-flow[data-t="7"] .fstep .fs-num { color: var(--t7); }
+
+  /* Tenet accent stripe on lab section heading */
+  .lab[data-tenet="1"] { border-top-color: var(--t1); }
+  .lab[data-tenet="2"] { border-top-color: var(--t2); }
+  .lab[data-tenet="3"] { border-top-color: var(--t3); }
+  .lab[data-tenet="4"] { border-top-color: var(--t4); }
+  .lab[data-tenet="5"] { border-top-color: var(--t5); }
+  .lab[data-tenet="6"] { border-top-color: var(--t6); }
+  .lab[data-tenet="7"] { border-top-color: var(--t7); }
+  .lab[data-tenet] { border-top-width: 2px; }
+  .lab-header .eyebrow[data-t="1"] { background: var(--t1-tint); color: var(--t1); }
+  .lab-header .eyebrow[data-t="2"] { background: var(--t2-tint); color: var(--t2); }
+  .lab-header .eyebrow[data-t="3"] { background: var(--t3-tint); color: var(--t3); }
+  .lab-header .eyebrow[data-t="4"] { background: var(--t4-tint); color: var(--t4); }
+  .lab-header .eyebrow[data-t="5"] { background: var(--t5-tint); color: var(--t5); }
+  .lab-header .eyebrow[data-t="6"] { background: var(--t6-tint); color: var(--t6); }
+  .lab-header .eyebrow[data-t="7"] { background: var(--t7-tint); color: var(--t7); }
+
+  /* Trust Score interactive widget */
+  .trust-widget {
+    margin: var(--space-5) 0;
+    padding: var(--space-5) var(--space-6);
+    background:
+      linear-gradient(180deg, var(--surface) 0%, var(--accent-wash) 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    display: grid;
+    grid-template-columns: 1fr minmax(220px, 320px);
+    gap: var(--space-6);
+  }
+  @media (max-width: 720px) { .trust-widget { grid-template-columns: 1fr; } }
+  .trust-widget h4 { margin: 0 0 var(--space-3); text-transform: none; letter-spacing: -0.01em; font-size: 15px; color: var(--ink); }
+  .trust-widget .tw-intro { font-size: 13px; color: var(--muted); margin-bottom: var(--space-4); line-height: 1.55; }
+  .trust-signal { margin-bottom: 14px; }
+  .trust-signal .ts-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    font-family: var(--mono);
+    color: var(--ink-2);
+    letter-spacing: 0.02em;
+    margin-bottom: 4px;
+  }
+  .trust-signal .ts-label em { font-style: normal; color: var(--muted); font-size: 11px; }
+  .trust-signal input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    outline: none;
+  }
+  .trust-signal input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px; height: 16px;
+    background: var(--accent);
+    border: 2px solid var(--surface);
+    border-radius: 50%;
+    cursor: grab;
+    box-shadow: 0 0 0 1px var(--accent);
+    transition: transform 160ms ease;
+  }
+  .trust-signal input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+  .trust-signal input[type="range"]::-moz-range-thumb {
+    width: 14px; height: 14px;
+    background: var(--accent);
+    border: 2px solid var(--surface);
+    border-radius: 50%;
+    cursor: grab;
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  .trust-score {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: var(--space-4);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    position: relative;
+  }
+  .trust-score .ts-ring { width: 140px; height: 140px; }
+  .trust-score .ts-ring circle.bg { fill: none; stroke: var(--border); stroke-width: 10; }
+  .trust-score .ts-ring circle.fg {
+    fill: none;
+    stroke-width: 10;
+    stroke-linecap: round;
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+    transition: stroke-dashoffset 500ms cubic-bezier(0.22, 0.61, 0.36, 1), stroke 400ms ease;
+  }
+  .trust-score .ts-value { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -58%); font-size: 30px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .trust-score .ts-value small { display: block; font-size: 10px; font-weight: 500; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 4px; }
+  .trust-score .ts-verdict {
+    margin-top: var(--space-3);
+    padding: 4px 10px;
+    border-radius: 2px;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 600;
+    background: var(--border-2);
+    color: var(--muted);
+    transition: all 300ms ease;
+  }
+  .trust-score .ts-verdict.allow { background: var(--t7-tint); color: var(--t7); }
+  .trust-score .ts-verdict.step-up { background: var(--t4-tint); color: var(--t4); }
+  .trust-score .ts-verdict.deny { background: var(--t6-tint); color: var(--t6); }
+
+  /* Keyframes for subtle dash-flow on "flow" arrows */
+  @keyframes dashflow {
+    to { stroke-dashoffset: -16; }
+  }
+  .hero-arch svg .flow-anim {
+    stroke-dasharray: 4 4;
+    animation: dashflow 1.8s linear infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-arch svg .flow-anim { animation: none; }
+  }
+
+  /* Tenet card active (when scrolled) — subtle accent */
+  .tenet-card.active { background: linear-gradient(180deg, var(--surface) 0%, #FCFCFB 100%); }
+  .tenet-card.active .tenet-bar { height: 5px; }
+
+  /* Hover-labelled SVG components */
+  .hero-arch svg g.node { cursor: pointer; }
+  .hero-arch svg g.node:hover .node-bg { filter: brightness(0.97); }
+  .hero-arch svg g.node .node-hover-ring { opacity: 0; transition: opacity 200ms ease; }
+  .hero-arch svg g.node:hover .node-hover-ring { opacity: 1; }
+  .hero-arch svg g.node .node-title { transition: fill 200ms ease; }
+  .hero-arch svg g.node:hover .node-title { fill: var(--ink); }
+
+  .hero-tip {
+    position: absolute;
+    pointer-events: none;
+    background: var(--ink);
+    color: #FAFAFA;
+    padding: 6px 10px;
+    border-radius: 3px;
+    font-size: 11.5px;
+    line-height: 1.4;
+    max-width: 240px;
+    opacity: 0;
+    transform: translate(-50%, -100%) translateY(-10px);
+    transition: opacity 160ms ease, transform 160ms ease;
+    z-index: 10;
+    letter-spacing: 0.01em;
+  }
+  .hero-tip.show { opacity: 1; transform: translate(-50%, -100%) translateY(-14px); }
+  .hero-tip::after {
+    content: "";
+    position: absolute;
+    top: 100%; left: 50%;
+    margin-left: -4px;
+    border: 4px solid transparent;
+    border-top-color: var(--ink);
+  }
+  .hero-tip strong { color: #FFFBEB; }
+  .hero-tip .tip-tag { display: block; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent-tint); font-weight: 600; margin-bottom: 2px; }
+
+  /* Animated badges */
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 0 0 currentColor; }
+    50% { box-shadow: 0 0 0 3px currentColor; }
+  }
+
+  /* Utility: print-safe */
+  @media print {
+    .lab-check, .progress-card, .trust-widget { display: none; }
+    .tenet-grid, .hero-arch { break-inside: avoid; }
+  }
 </style>
 </head>
 <body>
@@ -331,15 +785,22 @@
   </ul>
 
   <div class="toc-title">Lab Modules</div>
-  <ul class="toc-list">
-    <li><a href="#lab-1"><span class="tenet-num">01</span>Resources</a></li>
-    <li><a href="#lab-2"><span class="tenet-num">02</span>Secured Comms</a></li>
-    <li><a href="#lab-3"><span class="tenet-num">03</span>Per-Session</a></li>
-    <li><a href="#lab-4"><span class="tenet-num">04</span>Dynamic Policy</a></li>
-    <li><a href="#lab-5"><span class="tenet-num">05</span>Posture Monitoring</a></li>
-    <li><a href="#lab-6"><span class="tenet-num">06</span>Strict Enforcement</a></li>
-    <li><a href="#lab-7"><span class="tenet-num">07</span>Telemetry Loop</a></li>
+  <ul class="toc-list" id="toc-labs">
+    <li><a href="#lab-1" data-lab="1"><span class="tdot t1"></span><span class="tenet-num">01</span>Resources</a></li>
+    <li><a href="#lab-2" data-lab="2"><span class="tdot t2"></span><span class="tenet-num">02</span>Secured Comms</a></li>
+    <li><a href="#lab-3" data-lab="3"><span class="tdot t3"></span><span class="tenet-num">03</span>Per-Session</a></li>
+    <li><a href="#lab-4" data-lab="4"><span class="tdot t4"></span><span class="tenet-num">04</span>Dynamic Policy</a></li>
+    <li><a href="#lab-5" data-lab="5"><span class="tdot t5"></span><span class="tenet-num">05</span>Posture Monitoring</a></li>
+    <li><a href="#lab-6" data-lab="6"><span class="tdot t6"></span><span class="tenet-num">06</span>Strict Enforcement</a></li>
+    <li><a href="#lab-7" data-lab="7"><span class="tdot t7"></span><span class="tenet-num">07</span>Telemetry Loop</a></li>
   </ul>
+
+  <div class="progress-card" aria-live="polite">
+    <div class="pc-label">Lab Progress</div>
+    <div class="pc-value"><span id="progress-count">0</span><small> / 7 complete</small></div>
+    <div class="progress-track" aria-hidden="true"><div class="progress-fill" id="progress-fill"></div></div>
+    <button type="button" class="progress-reset" id="progress-reset">Reset progress</button>
+  </div>
 
   <div class="toc-title">Close-out</div>
   <ul class="toc-list">
@@ -368,6 +829,260 @@
 <!-- ============================================================== -->
 <section id="overview">
 <h2>1 · Executive Overview</h2>
+
+<!-- Hero NIST SP 800-207 architecture diagram -->
+<figure class="hero-arch" aria-label="NIST SP 800-207 logical architecture diagram">
+  <div class="hero-arch-head">
+    <div>
+      <h3>The Zero Trust decision loop, at a glance</h3>
+    </div>
+    <span class="hero-sub">NIST SP 800-207 · §3.1 — §3.3</span>
+  </div>
+  <div id="hero-tip" class="hero-tip" role="tooltip"></div>
+  <svg id="hero-svg" viewBox="0 0 900 460" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="hero-title hero-desc">
+    <title id="hero-title">NIST SP 800-207 logical architecture</title>
+    <desc id="hero-desc">Subject connects through PEP to Resource. PEP consults the Policy Engine which draws on data sources and receives signed policy bundles from the Policy Administrator. Trust Algorithm sits inside the Policy Engine.</desc>
+    <defs>
+      <marker id="arr-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#0A0A0A"/>
+      </marker>
+      <marker id="arr-sig" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#B45309"/>
+      </marker>
+      <marker id="arr-allow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#047857"/>
+      </marker>
+    </defs>
+
+    <!-- Control-plane zone -->
+    <rect x="240" y="26" width="500" height="180" fill="#FFFBEB" stroke="#F3E3B8" stroke-width="1" rx="6"/>
+    <text x="260" y="50" font-family="ui-sans-serif" font-size="10.5" font-weight="700" fill="#B45309" letter-spacing="1.4">CONTROL PLANE · §3.1</text>
+
+    <!-- Data Plane band -->
+    <rect x="40" y="250" width="820" height="160" fill="#F7F7F5" stroke="#E7E5E0" stroke-width="1" rx="6"/>
+    <text x="60" y="274" font-family="ui-sans-serif" font-size="10.5" font-weight="700" fill="#6B7280" letter-spacing="1.4">DATA PLANE · §3.1.2</text>
+
+    <!-- ===== Control Plane nodes ===== -->
+    <!-- Policy Engine (PE) -->
+    <g class="node" data-tip-id="pe">
+      <rect class="node-hover-ring" x="306" y="92" width="176" height="82" rx="6" fill="none" stroke="#B45309" stroke-width="2"/>
+      <rect class="node-bg" x="312" y="98" width="164" height="70" rx="4" fill="#FEF3C7" stroke="#B45309" stroke-width="1.2"/>
+      <text class="node-title" x="394" y="122" text-anchor="middle" font-family="ui-sans-serif" font-size="13" font-weight="700" fill="#78350F">Policy Engine</text>
+      <text x="394" y="140" text-anchor="middle" font-family="ui-sans-serif" font-size="10.5" fill="#92400E">PE · §3.1.1</text>
+      <text x="394" y="157" text-anchor="middle" font-family="ui-monospace, monospace" font-size="9.5" fill="#B45309" letter-spacing="0.5">OPA / Cedar</text>
+    </g>
+
+    <!-- Policy Administrator (PA) -->
+    <g class="node" data-tip-id="pa">
+      <rect class="node-hover-ring" x="504" y="92" width="148" height="82" rx="6" fill="none" stroke="#B45309" stroke-width="2"/>
+      <rect class="node-bg" x="510" y="98" width="136" height="70" rx="4" fill="#FFFBEB" stroke="#B45309" stroke-width="1.2"/>
+      <text class="node-title" x="578" y="122" text-anchor="middle" font-family="ui-sans-serif" font-size="13" font-weight="700" fill="#78350F">Policy Admin</text>
+      <text x="578" y="140" text-anchor="middle" font-family="ui-sans-serif" font-size="10.5" fill="#92400E">PA · §3.1.1</text>
+      <text x="578" y="157" text-anchor="middle" font-family="ui-monospace, monospace" font-size="9.5" fill="#B45309" letter-spacing="0.5">Styra DAS · GitOps</text>
+    </g>
+
+    <!-- Trust Algorithm (inside control plane, below PE/PA) -->
+    <g class="node" data-tip-id="ta">
+      <rect class="node-hover-ring" x="258" y="176" width="460" height="24" rx="4" fill="none" stroke="#B45309" stroke-width="2" stroke-dasharray="3 3"/>
+      <rect class="node-bg" x="264" y="182" width="448" height="16" rx="3" fill="#FCE8B6" stroke="#B45309" stroke-width="0.8"/>
+      <text x="488" y="194" text-anchor="middle" font-family="ui-sans-serif" font-size="10" font-weight="700" fill="#78350F" letter-spacing="0.3">Trust Algorithm · §3.3 (criteria- or score-based)</text>
+    </g>
+
+    <!-- Data-source cluster — attached to control plane, left band -->
+    <g class="node" data-tip-id="ds">
+      <rect class="node-hover-ring" x="32" y="78" width="172" height="140" rx="6" fill="none" stroke="#0369A1" stroke-width="2"/>
+      <rect class="node-bg" x="38" y="84" width="160" height="128" rx="4" fill="#EFF6FF" stroke="#0369A1" stroke-width="1.1"/>
+      <text class="node-title" x="118" y="104" text-anchor="middle" font-family="ui-sans-serif" font-size="12" font-weight="700" fill="#0C4A6E">Data Sources</text>
+      <text x="118" y="119" text-anchor="middle" font-family="ui-sans-serif" font-size="10" fill="#075985">§3.1 contextual inputs</text>
+      <!-- chips -->
+      <g font-family="ui-sans-serif" font-size="9.5" fill="#0369A1">
+        <rect x="50" y="130" width="62" height="16" rx="2" fill="#DBEAFE"/><text x="81" y="141" text-anchor="middle">CDM</text>
+        <rect x="118" y="130" width="70" height="16" rx="2" fill="#DBEAFE"/><text x="153" y="141" text-anchor="middle">Identity</text>
+        <rect x="50" y="152" width="62" height="16" rx="2" fill="#DBEAFE"/><text x="81" y="163" text-anchor="middle">SIEM</text>
+        <rect x="118" y="152" width="70" height="16" rx="2" fill="#DBEAFE"/><text x="153" y="163" text-anchor="middle">Threat</text>
+        <rect x="50" y="174" width="62" height="16" rx="2" fill="#DBEAFE"/><text x="81" y="185" text-anchor="middle">Risk/UEBA</text>
+        <rect x="118" y="174" width="70" height="16" rx="2" fill="#DBEAFE"/><text x="153" y="185" text-anchor="middle">Data-Gov</text>
+      </g>
+    </g>
+
+    <!-- Industry / Compliance anchor (right rail) -->
+    <g class="node" data-tip-id="pol">
+      <rect class="node-hover-ring" x="754" y="78" width="118" height="140" rx="6" fill="none" stroke="#4338CA" stroke-width="2"/>
+      <rect class="node-bg" x="760" y="84" width="106" height="128" rx="4" fill="#EEF2FF" stroke="#4338CA" stroke-width="1.1"/>
+      <text class="node-title" x="813" y="104" text-anchor="middle" font-family="ui-sans-serif" font-size="12" font-weight="700" fill="#312E81">Policy Source</text>
+      <text x="813" y="120" text-anchor="middle" font-family="ui-sans-serif" font-size="10" fill="#3730A3">Regs · Standards</text>
+      <g font-family="ui-sans-serif" font-size="9.5" fill="#4338CA">
+        <rect x="770" y="134" width="86" height="16" rx="2" fill="#E0E7FF"/><text x="813" y="145" text-anchor="middle">NIST 800-207</text>
+        <rect x="770" y="154" width="86" height="16" rx="2" fill="#E0E7FF"/><text x="813" y="165" text-anchor="middle">FAPI 2.0</text>
+        <rect x="770" y="174" width="86" height="16" rx="2" fill="#E0E7FF"/><text x="813" y="185" text-anchor="middle">DORA · PCI</text>
+      </g>
+    </g>
+
+    <!-- ===== Data plane nodes ===== -->
+    <!-- Subject -->
+    <g class="node" data-tip-id="sub">
+      <rect class="node-hover-ring" x="56" y="298" width="148" height="90" rx="6" fill="none" stroke="#0A0A0A" stroke-width="2"/>
+      <rect class="node-bg" x="62" y="304" width="136" height="78" rx="4" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.1"/>
+      <text class="node-title" x="130" y="330" text-anchor="middle" font-family="ui-sans-serif" font-size="13" font-weight="700" fill="#0A0A0A">Subject</text>
+      <text x="130" y="348" text-anchor="middle" font-family="ui-sans-serif" font-size="10.5" fill="#6B7280">user · workload · device</text>
+      <!-- Small person icon -->
+      <g transform="translate(80 360)" stroke="#0A0A0A" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="7" cy="4" r="3"/>
+        <path d="M1 16 c1-4 3-6 6-6 s5 2 6 6"/>
+      </g>
+      <text x="144" y="373" text-anchor="middle" font-family="ui-monospace, monospace" font-size="9" fill="#9CA3AF" letter-spacing="0.5">§2.2</text>
+    </g>
+
+    <!-- PEP -->
+    <g class="node" data-tip-id="pep">
+      <rect class="node-hover-ring" x="334" y="298" width="232" height="90" rx="6" fill="none" stroke="#0369A1" stroke-width="2"/>
+      <rect class="node-bg" x="340" y="304" width="220" height="78" rx="4" fill="#EFF6FF" stroke="#0369A1" stroke-width="1.1" stroke-dasharray="4 3"/>
+      <text class="node-title" x="450" y="328" text-anchor="middle" font-family="ui-sans-serif" font-size="13" font-weight="700" fill="#0C4A6E">Policy Enforcement Points</text>
+      <text x="450" y="345" text-anchor="middle" font-family="ui-sans-serif" font-size="10.5" fill="#075985">PEP · §3.1.2 — the gate</text>
+      <g font-family="ui-monospace, monospace" font-size="9" fill="#0369A1" letter-spacing="0.3">
+        <rect x="352" y="358" width="52" height="14" rx="2" fill="#DBEAFE"/><text x="378" y="368" text-anchor="middle">Istio</text>
+        <rect x="408" y="358" width="52" height="14" rx="2" fill="#DBEAFE"/><text x="434" y="368" text-anchor="middle">Kong</text>
+        <rect x="464" y="358" width="42" height="14" rx="2" fill="#DBEAFE"/><text x="485" y="368" text-anchor="middle">ZPA</text>
+        <rect x="510" y="358" width="46" height="14" rx="2" fill="#DBEAFE"/><text x="533" y="368" text-anchor="middle">AAM</text>
+      </g>
+    </g>
+
+    <!-- Resource -->
+    <g class="node" data-tip-id="res">
+      <rect class="node-hover-ring" x="694" y="298" width="170" height="90" rx="6" fill="none" stroke="#0F766E" stroke-width="2"/>
+      <rect class="node-bg" x="700" y="304" width="158" height="78" rx="4" fill="#F0FDFA" stroke="#0F766E" stroke-width="1.1"/>
+      <text class="node-title" x="779" y="330" text-anchor="middle" font-family="ui-sans-serif" font-size="13" font-weight="700" fill="#134E4A">Enterprise Resource</text>
+      <text x="779" y="348" text-anchor="middle" font-family="ui-sans-serif" font-size="10.5" fill="#115E59">pod · API · data · device</text>
+      <g font-family="ui-monospace, monospace" font-size="9" fill="#0F766E" letter-spacing="0.3">
+        <rect x="710" y="360" width="56" height="14" rx="2" fill="#CCFBF1"/><text x="738" y="370" text-anchor="middle">API</text>
+        <rect x="770" y="360" width="56" height="14" rx="2" fill="#CCFBF1"/><text x="798" y="370" text-anchor="middle">DB</text>
+      </g>
+    </g>
+
+    <!-- ===== Flows ===== -->
+    <!-- Subject → PEP (request) -->
+    <line x1="204" y1="342" x2="334" y2="342" stroke="#0A0A0A" stroke-width="1.5" marker-end="url(#arr-ink)" class="flow-anim"/>
+    <text x="270" y="335" text-anchor="middle" font-family="ui-sans-serif" font-size="10" fill="#0A0A0A" font-weight="600">①  request</text>
+
+    <!-- PEP → PE (CheckRequest / authz query) -->
+    <path d="M 418 298 C 418 240, 394 220, 394 174" stroke="#0A0A0A" stroke-width="1.5" fill="none" marker-end="url(#arr-ink)"/>
+    <text x="424" y="244" font-family="ui-sans-serif" font-size="10" fill="#0A0A0A" font-weight="600">②  authz query</text>
+
+    <!-- PE → PEP (decision) -->
+    <path d="M 478 174 C 490 220, 500 256, 500 298" stroke="#047857" stroke-width="1.5" fill="none" marker-end="url(#arr-allow)"/>
+    <text x="510" y="252" font-family="ui-sans-serif" font-size="10" fill="#047857" font-weight="600">③  allow / deny / step-up</text>
+
+    <!-- DS → PE (signals) -->
+    <path d="M 204 150 Q 250 150 312 134" stroke="#B45309" stroke-width="1.3" fill="none" stroke-dasharray="4 3" marker-end="url(#arr-sig)"/>
+    <text x="222" y="132" font-family="ui-sans-serif" font-size="10" fill="#B45309" font-weight="600">signals</text>
+
+    <!-- PA → PE (signed bundle) -->
+    <path d="M 510 134 Q 500 126 476 126" stroke="#B45309" stroke-width="1.3" fill="none" stroke-dasharray="4 3" marker-end="url(#arr-sig)"/>
+    <text x="492" y="92" font-family="ui-sans-serif" font-size="10" fill="#B45309" font-weight="600">signed bundle</text>
+
+    <!-- Policy Source → PA -->
+    <line x1="760" y1="134" x2="652" y2="134" stroke="#4338CA" stroke-width="1.3" stroke-dasharray="4 3" fill="none" marker-end="url(#arr-sig)"/>
+
+    <!-- PEP → Resource (allowed session) -->
+    <line x1="566" y1="342" x2="694" y2="342" stroke="#047857" stroke-width="1.5" marker-end="url(#arr-allow)" class="flow-anim"/>
+    <text x="630" y="335" text-anchor="middle" font-family="ui-sans-serif" font-size="10" fill="#047857" font-weight="600">④  session</text>
+
+    <!-- Telemetry from PEP back to DS -->
+    <path d="M 450 388 Q 340 420 190 218" stroke="#7C3AED" stroke-width="1.2" fill="none" stroke-dasharray="3 3" marker-end="url(#arr-sig)" opacity="0.7"/>
+    <text x="300" y="412" font-family="ui-sans-serif" font-size="10" fill="#7C3AED" font-weight="600">⑤  telemetry loop</text>
+  </svg>
+
+  <div class="hero-legend" aria-label="Legend">
+    <span class="lg"><span class="lg-swatch ctrl"></span> Control plane (PE / PA / TA)</span>
+    <span class="lg"><span class="lg-swatch pep"></span> PEPs — dashed = distributed</span>
+    <span class="lg"><span class="lg-swatch res"></span> Resources & Subjects</span>
+    <span class="lg"><span class="lg-swatch req"></span> Request path</span>
+    <span class="lg"><span class="lg-swatch sig"></span> Signals & signed bundles</span>
+  </div>
+  <figcaption style="text-align:center; font-size:12px; color: var(--muted); margin-top: 16px; font-style: italic;">Hover any box for its role, 3.x reference, and this lab's component mapping.</figcaption>
+</figure>
+
+<h3>The Seven Tenets of Zero Trust — your learning arc</h3>
+<p>Each lab in this handbook targets exactly one tenet of NIST SP 800-207 §2.1. Click a tile to jump to its lab.</p>
+
+<div class="tenet-grid" role="list" aria-label="Seven tenets of Zero Trust">
+  <a class="tenet-card" role="listitem" data-t="1" href="#lab-1">
+    <span class="tenet-bar" aria-hidden="true"></span>
+    <div class="tenet-head">
+      <span class="tenet-num-big">T1 · 2.1.1</span>
+      <span class="tenet-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg></span>
+    </div>
+    <div class="tenet-name">Resources</div>
+    <div class="tenet-summary">All data sources and computing services are treated as resources — label everything, protect everything.</div>
+    <div class="tenet-foot"><span>Lab 01 · 45 min</span><span class="tenet-arrow"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span></div>
+  </a>
+
+  <a class="tenet-card" role="listitem" data-t="2" href="#lab-2">
+    <span class="tenet-bar" aria-hidden="true"></span>
+    <div class="tenet-head">
+      <span class="tenet-num-big">T2 · 2.1.2</span>
+      <span class="tenet-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg></span>
+    </div>
+    <div class="tenet-name">Secured Comms</div>
+    <div class="tenet-summary">Every hop is encrypted and authenticated regardless of network location — no "inside" to trust.</div>
+    <div class="tenet-foot"><span>Lab 02 · 60 min</span><span class="tenet-arrow"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span></div>
+  </a>
+
+  <a class="tenet-card" role="listitem" data-t="3" href="#lab-3">
+    <span class="tenet-bar" aria-hidden="true"></span>
+    <div class="tenet-head">
+      <span class="tenet-num-big">T3 · 2.1.3</span>
+      <span class="tenet-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+    </div>
+    <div class="tenet-name">Per-Session</div>
+    <div class="tenet-summary">Access is granted one session at a time, with short-lived tokens and continuous re-evaluation.</div>
+    <div class="tenet-foot"><span>Lab 03 · 60 min</span><span class="tenet-arrow"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span></div>
+  </a>
+
+  <a class="tenet-card" role="listitem" data-t="4" href="#lab-4">
+    <span class="tenet-bar" aria-hidden="true"></span>
+    <div class="tenet-head">
+      <span class="tenet-num-big">T4 · 2.1.4</span>
+      <span class="tenet-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12h4l3-7 4 14 3-7h2"/></svg></span>
+    </div>
+    <div class="tenet-name">Dynamic Policy</div>
+    <div class="tenet-summary">Decisions are a function of identity, resource, device posture, and behaviour — not static ACLs.</div>
+    <div class="tenet-foot"><span>Lab 04 · 75 min</span><span class="tenet-arrow"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span></div>
+  </a>
+
+  <a class="tenet-card" role="listitem" data-t="5" href="#lab-5">
+    <span class="tenet-bar" aria-hidden="true"></span>
+    <div class="tenet-head">
+      <span class="tenet-num-big">T5 · 2.1.5</span>
+      <span class="tenet-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 12c2-1 3-5 6-5s4 3 6 3 2-2 6-2"/><path d="M3 17c2-1 3-5 6-5s4 3 6 3 2-2 6-2"/></svg></span>
+    </div>
+    <div class="tenet-name">Posture Monitoring</div>
+    <div class="tenet-summary">Measure device and workload integrity continuously; compromised assets lose access in real time.</div>
+    <div class="tenet-foot"><span>Lab 05 · 60 min</span><span class="tenet-arrow"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span></div>
+  </a>
+
+  <a class="tenet-card" role="listitem" data-t="6" href="#lab-6">
+    <span class="tenet-bar" aria-hidden="true"></span>
+    <div class="tenet-head">
+      <span class="tenet-num-big">T6 · 2.1.6</span>
+      <span class="tenet-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2l9 4v6c0 5-4 9-9 10-5-1-9-5-9-10V6l9-4z"/><path d="M9 12l2 2 4-4"/></svg></span>
+    </div>
+    <div class="tenet-name">Strict Enforcement</div>
+    <div class="tenet-summary">Every authN + authZ check happens before access — fail-closed, signed bundles, admission gates.</div>
+    <div class="tenet-foot"><span>Lab 06 · 75 min</span><span class="tenet-arrow"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span></div>
+  </a>
+
+  <a class="tenet-card" role="listitem" data-t="7" href="#lab-7">
+    <span class="tenet-bar" aria-hidden="true"></span>
+    <div class="tenet-head">
+      <span class="tenet-num-big">T7 · 2.1.7</span>
+      <span class="tenet-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-6 3 4 5-8"/></svg></span>
+    </div>
+    <div class="tenet-name">Telemetry Loop</div>
+    <div class="tenet-summary">Every decision and every denial becomes a signal — feed it back to improve tomorrow's decisions.</div>
+    <div class="tenet-foot"><span>Lab 07 · 90 min</span><span class="tenet-arrow"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span></div>
+  </a>
+</div>
 
 <p>The source document, <em>ZTA-2026-001</em>, is a C4 × NIST SP 800-207 architecture prepared by a global bank's Security Solutions Architecture team. It proposes a distributed Policy Engine (OPA/Cedar), a policy-as-code Policy Administrator (Styra DAS + GitOps), and a heterogeneous fleet of Policy Enforcement Points (Kong FAPI, Istio, Zscaler ZPA, CyberArk, Broadcom AAM, Netskope, an in-house AI Gateway). Workload identity is SPIFFE/SPIRE; workforce identity is Microsoft Entra ID federated with Okta; customers sit on ForgeRock CIAM with FAPI 2.0 and DPoP-bound tokens. Signals flow from CDM (Wiz, Tanium), threat intel, SIEM (Splunk + Snowflake), UEBA, fraud/AML (Featurespace) and data-access policy (Immuta) into a Trust Algorithm that emits a continuous <code>trust_score</code>. This tutorial reconstructs the essential shape of that architecture on a laptop — using only open-source projects — so that each 800-207 tenet becomes a thing the reader can deploy, break, observe, and repair.</p>
 
@@ -1027,11 +1742,25 @@ curl -s -H 'Host: bookstore.local' http://localhost/api/headers | jq '.headers |
 <!-- ============================================================== -->
 <!-- LAB 1 — TENET 1 · RESOURCES                                     -->
 <!-- ============================================================== -->
-<section id="lab-1" class="lab">
+<section id="lab-1" class="lab" data-tenet="1">
   <div class="lab-header">
-    <span class="eyebrow">Lab 01 · 45 min</span>
-    <h2 class="lab-title">All data sources and computing services are resources</h2>
-    <p class="lab-tenet">NIST SP 800-207 2.1 Tenet 1 — "An enterprise considers all of its data sources and computing services as resources."</p>
+    <div class="lab-heading">
+      <span class="eyebrow" data-t="1">Tenet 1 · Lab 01 · 45 min</span>
+      <h2 class="lab-title">All data sources and computing services are resources</h2>
+      <p class="lab-tenet">NIST SP 800-207 2.1 Tenet 1 — "An enterprise considers all of its data sources and computing services as resources."</p>
+    </div>
+    <button type="button" class="lab-check" data-lab="1" aria-pressed="false">
+      <span class="check-box"><svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg></span>
+      <span class="lab-check-text">Mark complete</span>
+    </button>
+  </div>
+
+  <div class="lab-flow" data-t="1" aria-label="Lab 1 flow">
+    <div class="fstep"><span class="fs-num">01</span><span class="fs-title">Define schema</span><span class="fs-meta">zta.resource · data-class · owner</span></div>
+    <div class="fstep"><span class="fs-num">02</span><span class="fs-title">Back-fill labels</span><span class="fs-meta">frontend · api · db</span></div>
+    <div class="fstep"><span class="fs-num">03</span><span class="fs-title">Admission gate</span><span class="fs-meta">Gatekeeper constraint</span></div>
+    <div class="fstep"><span class="fs-num">04</span><span class="fs-title">Produce inventory</span><span class="fs-meta">CDM stand-in · JSON</span></div>
+    <div class="fstep"><span class="fs-num">05</span><span class="fs-title">Break it</span><span class="fs-meta">unlabelled pod → denied</span></div>
   </div>
 
   <dl class="nist-map">
@@ -1240,11 +1969,25 @@ EOF
 <!-- ============================================================== -->
 <!-- LAB 2 — TENET 2 · SECURED COMMUNICATIONS                        -->
 <!-- ============================================================== -->
-<section id="lab-2" class="lab">
+<section id="lab-2" class="lab" data-tenet="2">
   <div class="lab-header">
-    <span class="eyebrow">Lab 02 · 60 min</span>
-    <h2 class="lab-title">All communication is secured regardless of network location</h2>
-    <p class="lab-tenet">NIST SP 800-207 2.1 Tenet 2 — "All communication is secured regardless of network location."</p>
+    <div class="lab-heading">
+      <span class="eyebrow" data-t="2">Tenet 2 · Lab 02 · 60 min</span>
+      <h2 class="lab-title">All communication is secured regardless of network location</h2>
+      <p class="lab-tenet">NIST SP 800-207 2.1 Tenet 2 — "All communication is secured regardless of network location."</p>
+    </div>
+    <button type="button" class="lab-check" data-lab="2" aria-pressed="false">
+      <span class="check-box"><svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg></span>
+      <span class="lab-check-text">Mark complete</span>
+    </button>
+  </div>
+
+  <div class="lab-flow" data-t="2" aria-label="Lab 2 flow">
+    <div class="fstep"><span class="fs-num">01</span><span class="fs-title">Baseline</span><span class="fs-meta">PERMISSIVE mTLS</span></div>
+    <div class="fstep"><span class="fs-num">02</span><span class="fs-title">Flip to STRICT</span><span class="fs-meta">PeerAuthentication</span></div>
+    <div class="fstep"><span class="fs-num">03</span><span class="fs-title">Prove with tcpdump</span><span class="fs-meta">no plaintext on the wire</span></div>
+    <div class="fstep"><span class="fs-num">04</span><span class="fs-title">Deny plaintext</span><span class="fs-meta">in-cluster curl → 403</span></div>
+    <div class="fstep"><span class="fs-num">05</span><span class="fs-title">SPIRE SVIDs</span><span class="fs-meta">5-min rotation verified</span></div>
   </div>
 
   <dl class="nist-map">
@@ -1453,11 +2196,25 @@ kubectl --context docker-desktop -n bookstore-api delete peerauthentication down
 <!-- ============================================================== -->
 <!-- LAB 3 — TENET 3 · PER-SESSION                                   -->
 <!-- ============================================================== -->
-<section id="lab-3" class="lab">
+<section id="lab-3" class="lab" data-tenet="3">
   <div class="lab-header">
-    <span class="eyebrow">Lab 03 · 75 min</span>
-    <h2 class="lab-title">Access to individual enterprise resources is granted on a per-session basis</h2>
-    <p class="lab-tenet">NIST SP 800-207 2.1 Tenet 3 — "Access to individual enterprise resources is granted on a per-session basis."</p>
+    <div class="lab-heading">
+      <span class="eyebrow" data-t="3">Tenet 3 · Lab 03 · 75 min</span>
+      <h2 class="lab-title">Access to individual enterprise resources is granted on a per-session basis</h2>
+      <p class="lab-tenet">NIST SP 800-207 2.1 Tenet 3 — "Access to individual enterprise resources is granted on a per-session basis."</p>
+    </div>
+    <button type="button" class="lab-check" data-lab="3" aria-pressed="false">
+      <span class="check-box"><svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg></span>
+      <span class="lab-check-text">Mark complete</span>
+    </button>
+  </div>
+
+  <div class="lab-flow" data-t="3" aria-label="Lab 3 flow">
+    <div class="fstep"><span class="fs-num">01</span><span class="fs-title">Short tokens</span><span class="fs-meta">Keycloak · 5-min JWT</span></div>
+    <div class="fstep"><span class="fs-num">02</span><span class="fs-title">Short SVIDs</span><span class="fs-meta">SPIRE · 5-min X.509</span></div>
+    <div class="fstep"><span class="fs-num">03</span><span class="fs-title">Bind to session</span><span class="fs-meta">aud + DPoP-style cnf</span></div>
+    <div class="fstep"><span class="fs-num">04</span><span class="fs-title">Observe rotation</span><span class="fs-meta">watch certs flip live</span></div>
+    <div class="fstep"><span class="fs-num">05</span><span class="fs-title">Expire & retry</span><span class="fs-meta">stale token → 401</span></div>
   </div>
 
   <dl class="nist-map">
@@ -1712,11 +2469,66 @@ curl -s -o /dev/null -w '%{http_code}\n' \
 <!-- ============================================================== -->
 <!-- LAB 4 — TENET 4 · DYNAMIC POLICY                                -->
 <!-- ============================================================== -->
-<section id="lab-4" class="lab">
+<section id="lab-4" class="lab" data-tenet="4">
   <div class="lab-header">
-    <span class="eyebrow">Lab 04 · 90 min</span>
-    <h2 class="lab-title">Access is determined by dynamic policy</h2>
-    <p class="lab-tenet">NIST SP 800-207 2.1 Tenet 4 — "Access to resources is determined by dynamic policy including the observable state of client identity, application/service, and the requesting asset — and may include other behavioural and environmental attributes."</p>
+    <div class="lab-heading">
+      <span class="eyebrow" data-t="4">Tenet 4 · Lab 04 · 90 min</span>
+      <h2 class="lab-title">Access is determined by dynamic policy</h2>
+      <p class="lab-tenet">NIST SP 800-207 2.1 Tenet 4 — "Access to resources is determined by dynamic policy including the observable state of client identity, application/service, and the requesting asset — and may include other behavioural and environmental attributes."</p>
+    </div>
+    <button type="button" class="lab-check" data-lab="4" aria-pressed="false">
+      <span class="check-box"><svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg></span>
+      <span class="lab-check-text">Mark complete</span>
+    </button>
+  </div>
+
+  <div class="lab-flow" data-t="4" aria-label="Lab 4 flow">
+    <div class="fstep"><span class="fs-num">01</span><span class="fs-title">Author Rego</span><span class="fs-meta">identity · posture · path</span></div>
+    <div class="fstep"><span class="fs-num">02</span><span class="fs-title">Wire ext_authz</span><span class="fs-meta">Envoy → OPA</span></div>
+    <div class="fstep"><span class="fs-num">03</span><span class="fs-title">Inject posture</span><span class="fs-meta">x-device-posture header</span></div>
+    <div class="fstep"><span class="fs-num">04</span><span class="fs-title">Trust algorithm</span><span class="fs-meta">criteria → score</span></div>
+    <div class="fstep"><span class="fs-num">05</span><span class="fs-title">Step-up</span><span class="fs-meta">suspect + POST → 403</span></div>
+  </div>
+
+  <!-- Interactive Trust Score widget -->
+  <div class="trust-widget" id="trust-widget" role="region" aria-label="Interactive trust-score calculator">
+    <div>
+      <h4>Interactive — build your own Trust Algorithm</h4>
+      <p class="tw-intro">Drag each signal to match a realistic request. The engine combines them — identity authenticity weighs most, then device posture, then behaviour and location. At <strong>&lt; 40</strong> the PE denies; <strong>40–70</strong> triggers step-up auth; <strong>≥ 70</strong> allows the session.</p>
+
+      <div class="trust-signal">
+        <div class="ts-label"><span>Identity authenticity <em>(MFA · strong)</em></span><span id="ts-id-v">80</span></div>
+        <input type="range" min="0" max="100" value="80" id="ts-id" data-w="0.35" aria-label="Identity authenticity">
+      </div>
+      <div class="trust-signal">
+        <div class="ts-label"><span>Device posture <em>(CDM hygiene)</em></span><span id="ts-dev-v">70</span></div>
+        <input type="range" min="0" max="100" value="70" id="ts-dev" data-w="0.25" aria-label="Device posture">
+      </div>
+      <div class="trust-signal">
+        <div class="ts-label"><span>Behaviour <em>(UEBA deviation)</em></span><span id="ts-beh-v">60</span></div>
+        <input type="range" min="0" max="100" value="60" id="ts-beh" data-w="0.20" aria-label="Behaviour">
+      </div>
+      <div class="trust-signal">
+        <div class="ts-label"><span>Network / location <em>(geo · ASN)</em></span><span id="ts-net-v">55</span></div>
+        <input type="range" min="0" max="100" value="55" id="ts-net" data-w="0.10" aria-label="Network location">
+      </div>
+      <div class="trust-signal">
+        <div class="ts-label"><span>Data sensitivity (inverted) <em>(5 → restricted)</em></span><span id="ts-dat-v">3</span></div>
+        <input type="range" min="1" max="5" value="3" id="ts-dat" data-w="0.10" aria-label="Data sensitivity">
+      </div>
+    </div>
+
+    <div class="trust-score" aria-live="polite">
+      <svg class="ts-ring" viewBox="0 0 160 160">
+        <circle class="bg" cx="80" cy="80" r="62"/>
+        <circle class="fg" id="ts-ring-fg" cx="80" cy="80" r="62"
+                stroke="#047857"
+                stroke-dasharray="390"
+                stroke-dashoffset="110"/>
+      </svg>
+      <div class="ts-value"><span id="ts-score">72</span><small>trust_score</small></div>
+      <div class="ts-verdict allow" id="ts-verdict">Allow</div>
+    </div>
   </div>
 
   <dl class="nist-map">
@@ -2026,11 +2838,25 @@ curl -s -o /dev/null -w '%{http_code}\n' -X POST \
 <!-- ============================================================== -->
 <!-- LAB 5 — TENET 5 · POSTURE MONITORING                            -->
 <!-- ============================================================== -->
-<section id="lab-5" class="lab">
+<section id="lab-5" class="lab" data-tenet="5">
   <div class="lab-header">
-    <span class="eyebrow">Lab 05 · 75 min</span>
-    <h2 class="lab-title">The enterprise monitors and measures the integrity and security posture of all owned and associated assets</h2>
-    <p class="lab-tenet">NIST SP 800-207 2.1 Tenet 5 — "The enterprise monitors and measures the integrity and security posture of all owned and associated assets."</p>
+    <div class="lab-heading">
+      <span class="eyebrow" data-t="5">Tenet 5 · Lab 05 · 75 min</span>
+      <h2 class="lab-title">The enterprise monitors and measures the integrity and security posture of all owned and associated assets</h2>
+      <p class="lab-tenet">NIST SP 800-207 2.1 Tenet 5 — "The enterprise monitors and measures the integrity and security posture of all owned and associated assets."</p>
+    </div>
+    <button type="button" class="lab-check" data-lab="5" aria-pressed="false">
+      <span class="check-box"><svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg></span>
+      <span class="lab-check-text">Mark complete</span>
+    </button>
+  </div>
+
+  <div class="lab-flow" data-t="5" aria-label="Lab 5 flow">
+    <div class="fstep"><span class="fs-num">01</span><span class="fs-title">Deploy Falco</span><span class="fs-meta">modern_ebpf driver</span></div>
+    <div class="fstep"><span class="fs-num">02</span><span class="fs-title">Rule: sensitive read</span><span class="fs-meta">/etc/shadow · secrets</span></div>
+    <div class="fstep"><span class="fs-num">03</span><span class="fs-title">Emit → OPA data</span><span class="fs-meta">posture=suspect</span></div>
+    <div class="fstep"><span class="fs-num">04</span><span class="fs-title">Close loop</span><span class="fs-meta">subsequent req → deny</span></div>
+    <div class="fstep"><span class="fs-num">05</span><span class="fs-title">Remediate</span><span class="fs-meta">reset annotation</span></div>
   </div>
 
   <dl class="nist-map">
@@ -2324,11 +3150,25 @@ helm --kube-context docker-desktop upgrade falco falcosecurity/falco -n zta-runt
 <!-- ============================================================== -->
 <!-- LAB 6 — TENET 6 · STRICT ENFORCEMENT                            -->
 <!-- ============================================================== -->
-<section id="lab-6" class="lab">
+<section id="lab-6" class="lab" data-tenet="6">
   <div class="lab-header">
-    <span class="eyebrow">Lab 06 · 90 min</span>
-    <h2 class="lab-title">All resource authentication and authorization are dynamic and strictly enforced before access is allowed</h2>
-    <p class="lab-tenet">NIST SP 800-207 2.1 Tenet 6 — "All resource authentication and authorization are dynamic and strictly enforced before access is allowed."</p>
+    <div class="lab-heading">
+      <span class="eyebrow" data-t="6">Tenet 6 · Lab 06 · 90 min</span>
+      <h2 class="lab-title">All resource authentication and authorization are dynamic and strictly enforced before access is allowed</h2>
+      <p class="lab-tenet">NIST SP 800-207 2.1 Tenet 6 — "All resource authentication and authorization are dynamic and strictly enforced before access is allowed."</p>
+    </div>
+    <button type="button" class="lab-check" data-lab="6" aria-pressed="false">
+      <span class="check-box"><svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg></span>
+      <span class="lab-check-text">Mark complete</span>
+    </button>
+  </div>
+
+  <div class="lab-flow" data-t="6" aria-label="Lab 6 flow">
+    <div class="fstep"><span class="fs-num">01</span><span class="fs-title">Sign bundle</span><span class="fs-meta">cosign-like · Ed25519</span></div>
+    <div class="fstep"><span class="fs-num">02</span><span class="fs-title">Gate PE loading</span><span class="fs-meta">reject unsigned</span></div>
+    <div class="fstep"><span class="fs-num">03</span><span class="fs-title">Fail-closed default</span><span class="fs-meta">deny when PE unreachable</span></div>
+    <div class="fstep"><span class="fs-num">04</span><span class="fs-title">Break the loop</span><span class="fs-meta">kill OPA → requests 503</span></div>
+    <div class="fstep"><span class="fs-num">05</span><span class="fs-title">Restore & verify</span><span class="fs-meta">decision-id trace</span></div>
   </div>
 
   <dl class="nist-map">
@@ -2673,11 +3513,25 @@ curl -s http://$(kubectl --context docker-desktop -n zta-policy get svc opa -o j
 <!-- ============================================================== -->
 <!-- LAB 7 — TENET 7 · TELEMETRY LOOP                                -->
 <!-- ============================================================== -->
-<section id="lab-7" class="lab">
+<section id="lab-7" class="lab" data-tenet="7">
   <div class="lab-header">
-    <span class="eyebrow">Lab 07 · 90 min</span>
-    <h2 class="lab-title">Collect as much information as possible and use it to improve posture</h2>
-    <p class="lab-tenet">NIST SP 800-207 2.1 Tenet 7 — "The enterprise collects as much information as possible about the current state of assets, network infrastructure, and communications and uses it to improve its security posture."</p>
+    <div class="lab-heading">
+      <span class="eyebrow" data-t="7">Tenet 7 · Lab 07 · 90 min</span>
+      <h2 class="lab-title">Collect as much information as possible and use it to improve posture</h2>
+      <p class="lab-tenet">NIST SP 800-207 2.1 Tenet 7 — "The enterprise collects as much information as possible about the current state of assets, network infrastructure, and communications and uses it to improve its security posture."</p>
+    </div>
+    <button type="button" class="lab-check" data-lab="7" aria-pressed="false">
+      <span class="check-box"><svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg></span>
+      <span class="lab-check-text">Mark complete</span>
+    </button>
+  </div>
+
+  <div class="lab-flow" data-t="7" aria-label="Lab 7 flow">
+    <div class="fstep"><span class="fs-num">01</span><span class="fs-title">Emit decisions</span><span class="fs-meta">OPA decision logs</span></div>
+    <div class="fstep"><span class="fs-num">02</span><span class="fs-title">Collect traces</span><span class="fs-meta">OTel · Tempo</span></div>
+    <div class="fstep"><span class="fs-num">03</span><span class="fs-title">Ship to SIEM</span><span class="fs-meta">Loki (Splunk analog)</span></div>
+    <div class="fstep"><span class="fs-num">04</span><span class="fs-title">SLO dashboard</span><span class="fs-meta">allow · deny · latency</span></div>
+    <div class="fstep"><span class="fs-num">05</span><span class="fs-title">Feed back to PE</span><span class="fs-meta">telemetry → policy</span></div>
   </div>
 
   <dl class="nist-map">
@@ -3547,6 +4401,147 @@ echo "Hard teardown requested; background namespace finalisation may take a minu
       var id = link.getAttribute('href').slice(1);
       var el = document.getElementById(id);
       if (el) observer.observe(el);
+    });
+  }
+
+  // ============================================================
+  // Lab progress tracker — localStorage persisted
+  // ============================================================
+  var STORE_KEY = 'zta-homelab.progress.v1';
+  function loadState() {
+    try { return JSON.parse(localStorage.getItem(STORE_KEY) || '{}') || {}; }
+    catch (e) { return {}; }
+  }
+  function saveState(s) {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); } catch (e) {}
+  }
+  function countDone(s) {
+    var n = 0;
+    for (var k in s) if (s[k]) n++;
+    return n;
+  }
+  function renderProgress(s) {
+    var count = countDone(s);
+    var countEl = document.getElementById('progress-count');
+    var fillEl = document.getElementById('progress-fill');
+    if (countEl) countEl.textContent = count;
+    if (fillEl) fillEl.style.width = (count / 7 * 100) + '%';
+    document.querySelectorAll('.lab-check').forEach(function(btn) {
+      var lab = btn.getAttribute('data-lab');
+      var txt = btn.querySelector('.lab-check-text');
+      if (s[lab]) {
+        btn.classList.add('done');
+        btn.setAttribute('aria-pressed', 'true');
+        if (txt) txt.textContent = 'Completed';
+      } else {
+        btn.classList.remove('done');
+        btn.setAttribute('aria-pressed', 'false');
+        if (txt) txt.textContent = 'Mark complete';
+      }
+    });
+  }
+  var state = loadState();
+  renderProgress(state);
+  document.querySelectorAll('.lab-check').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var lab = btn.getAttribute('data-lab');
+      state[lab] = !state[lab];
+      saveState(state);
+      renderProgress(state);
+    });
+  });
+  var resetBtn = document.getElementById('progress-reset');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', function() {
+      state = {};
+      saveState(state);
+      renderProgress(state);
+    });
+  }
+
+  // ============================================================
+  // Trust-score interactive widget (Lab 4)
+  // ============================================================
+  var twRoot = document.getElementById('trust-widget');
+  if (twRoot) {
+    var sliders = twRoot.querySelectorAll('input[type="range"]');
+    var ring = document.getElementById('ts-ring-fg');
+    var scoreEl = document.getElementById('ts-score');
+    var verdictEl = document.getElementById('ts-verdict');
+    var CIRC = 2 * Math.PI * 62; // must match SVG r=62
+    if (ring) ring.setAttribute('stroke-dasharray', CIRC.toFixed(1));
+
+    function normalise(input) {
+      var v = parseFloat(input.value);
+      if (input.id === 'ts-dat') {
+        // Data sensitivity inverted: 1 (public) = 100 trust, 5 (restricted) = 20
+        return Math.max(0, 100 - (v - 1) * 20);
+      }
+      return v;
+    }
+    function update() {
+      var total = 0;
+      sliders.forEach(function(s) {
+        var w = parseFloat(s.getAttribute('data-w'));
+        var n = normalise(s);
+        total += n * w;
+        var outEl = document.getElementById(s.id + '-v');
+        if (outEl) outEl.textContent = s.value;
+      });
+      var score = Math.round(total);
+      if (scoreEl) scoreEl.textContent = score;
+      if (ring) {
+        var offset = CIRC * (1 - score / 100);
+        ring.setAttribute('stroke-dashoffset', offset.toFixed(1));
+        var col = '#BE123C';
+        if (score >= 70) col = '#047857';
+        else if (score >= 40) col = '#B45309';
+        ring.setAttribute('stroke', col);
+      }
+      if (verdictEl) {
+        verdictEl.classList.remove('allow', 'step-up', 'deny');
+        if (score >= 70) { verdictEl.classList.add('allow'); verdictEl.textContent = 'Allow · 200'; }
+        else if (score >= 40) { verdictEl.classList.add('step-up'); verdictEl.textContent = 'Step-up auth · 401'; }
+        else { verdictEl.classList.add('deny'); verdictEl.textContent = 'Deny · 403'; }
+      }
+    }
+    sliders.forEach(function(s) { s.addEventListener('input', update); });
+    update();
+  }
+
+  // ============================================================
+  // Hero architecture diagram — hover tooltip
+  // ============================================================
+  var heroSvg = document.getElementById('hero-svg');
+  var heroTip = document.getElementById('hero-tip');
+  if (heroSvg && heroTip) {
+    var tips = {
+      pe: { tag: 'Policy Engine · §3.1.1', body: 'Decides <strong>allow / deny / step-up</strong> for every request. This lab: <strong>OPA</strong> with Rego policies evaluated via Envoy ext_authz. Source doc 7.5.' },
+      pa: { tag: 'Policy Administrator · §3.1.1', body: 'Publishes signed policy bundles to every PE. This lab: a Styra DAS analogue — static signed bundles on a local HTTP server. Source doc 7.6.' },
+      ta: { tag: 'Trust Algorithm · §3.3', body: 'The logic that weighs identity, posture, behaviour, and context. Starts <em>criteria-based</em> in Lab 4, becomes <em>score-based</em> in the capstone.' },
+      ds: { tag: 'Data Sources · §3.1', body: 'Every fact the PE uses: identity claims, CDM hygiene, SIEM events, threat intel, UEBA drift, data-governance classifications. Source doc 7.12 – 7.14.' },
+      pol: { tag: 'Policy Source', body: 'The external anchor that constrains what policy <em>must</em> be — NIST, FAPI 2.0, DORA, PCI. Source doc 8.10.' },
+      sub: { tag: 'Subject · §2.2', body: 'A user, workload, or service attempting an action. Identified via Keycloak (humans) or SPIFFE (workloads).' },
+      pep: { tag: 'Policy Enforcement Point · §3.1.2', body: 'The <strong>gate</strong> that blocks or allows traffic. Every hop has one — Istio sidecar, Kong for FAPI, ZPA for VPN-less remote, AAM for privileged sessions.' },
+      res: { tag: 'Enterprise Resource · §2.2', body: 'What the Subject is trying to reach. The lab bookstore has three tiers: <strong>frontend · api · db</strong>.' }
+    };
+    heroSvg.querySelectorAll('g.node').forEach(function(g) {
+      function show(ev) {
+        var id = g.getAttribute('data-tip-id');
+        var t = tips[id]; if (!t) return;
+        heroTip.innerHTML = '<span class="tip-tag">' + t.tag + '</span>' + t.body;
+        var rect = heroSvg.getBoundingClientRect();
+        var bbox = g.getBoundingClientRect();
+        heroTip.style.left = (bbox.left + bbox.width / 2 - rect.left) + 'px';
+        heroTip.style.top  = (bbox.top - rect.top) + 'px';
+        heroTip.classList.add('show');
+      }
+      function hide() { heroTip.classList.remove('show'); }
+      g.addEventListener('mouseenter', show);
+      g.addEventListener('mouseleave', hide);
+      g.addEventListener('focusin', show);
+      g.addEventListener('focusout', hide);
+      g.setAttribute('tabindex', '0');
     });
   }
 })();
