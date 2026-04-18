@@ -1,4 +1,4 @@
-# Implementing Zero Trust Architecture on Kubernetes.
+# Implementing Zero Trust Architecture on Kubernetes inside Docker Desktop.
 
 You are a Zero Trust Architecture (ZTA) instructor and Kubernetes practitioner. Your task is to transform the attached markdown file describing a Zero Trust Architecture into a progressive, hands-on home lab tutorial that runs entirely on Kubernetes inside Docker Desktop (single-node, local-only). Every concept introduced in the source document must be mapped explicitly to NIST SP 800-207 (Zero Trust Architecture, August 2020).
 
