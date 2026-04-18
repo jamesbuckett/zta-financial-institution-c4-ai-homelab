@@ -4,6 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Zero Trust Architecture — Kubernetes Home Lab</title>
+<script>
+  // Apply persisted theme before first paint to avoid FOUC.
+  (function() {
+    try {
+      var stored = localStorage.getItem('zta-homelab.theme.v1');
+      var theme = stored || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    } catch (e) {}
+  })();
+</script>
 <style>
   :root {
     --bg: #FAFAFA;
@@ -764,9 +774,211 @@
 
   /* Utility: print-safe */
   @media print {
-    .lab-check, .progress-card, .trust-widget { display: none; }
+    .lab-check, .progress-card, .trust-widget, .theme-toggle { display: none; }
     .tenet-grid, .hero-arch { break-inside: avoid; }
   }
+
+  /* =============================================================
+     Theme toggle (sidebar brand area)
+     ============================================================= */
+  .brand { justify-content: space-between; }
+  .brand-left { display: flex; align-items: center; gap: var(--space-3); }
+  .theme-toggle {
+    appearance: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    width: 30px; height: 30px;
+    display: grid; place-items: center;
+    border-radius: var(--radius);
+    cursor: pointer;
+    padding: 0;
+    transition: color 180ms ease, border-color 180ms ease, background 180ms ease, transform 220ms ease;
+  }
+  .theme-toggle:hover { color: var(--ink); border-color: var(--ink); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .theme-toggle:active { transform: scale(0.94); }
+  .theme-toggle svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; transition: transform 260ms cubic-bezier(.4,0,.2,1); }
+  .theme-toggle .sun-ico { display: none; }
+  .theme-toggle .moon-ico { display: block; }
+  [data-theme="dark"] .theme-toggle .sun-ico { display: block; }
+  [data-theme="dark"] .theme-toggle .moon-ico { display: none; }
+  .theme-toggle:hover svg { transform: rotate(-12deg); }
+  [data-theme="dark"] .theme-toggle:hover svg { transform: rotate(12deg); }
+
+  /* =============================================================
+     Glossary
+     ============================================================= */
+  .glossary-nav {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin: var(--space-4) 0 var(--space-6);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--border);
+  }
+  .glossary-nav a {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 11px;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-size: 11.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--surface);
+    font-weight: 600;
+  }
+  .glossary-nav a:hover { color: var(--ink); border-color: var(--ink); }
+  .glossary-nav a .gn-count { font-family: var(--mono); color: var(--muted-2); font-size: 10px; font-weight: 500; letter-spacing: 0; }
+  .gloss-group { margin: var(--space-6) 0 var(--space-5); }
+  .gloss-group h3 {
+    display: flex; align-items: baseline; gap: var(--space-3);
+    font-size: 15px; font-weight: 600;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+    margin: var(--space-6) 0 var(--space-4);
+  }
+  .gloss-group h3 .gg-count { font-family: var(--mono); font-size: 11px; color: var(--muted-2); font-weight: 500; letter-spacing: 0.02em; }
+  .gloss-group[data-cat="components"] h3 { border-bottom-color: var(--t4); }
+  .gloss-group[data-cat="identity"] h3 { border-bottom-color: var(--t2); }
+  .gloss-group[data-cat="policy"] h3 { border-bottom-color: var(--t3); }
+  .gloss-group[data-cat="k8s"] h3 { border-bottom-color: var(--t1); }
+  .gloss-group[data-cat="telemetry"] h3 { border-bottom-color: var(--t7); }
+  .gloss-group[data-cat="compliance"] h3 { border-bottom-color: var(--t6); }
+  .gloss-group[data-cat="concepts"] h3 { border-bottom-color: var(--t5); }
+  .gloss-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .gloss-item {
+    background: var(--surface);
+    padding: var(--space-4) var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .gloss-term {
+    display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: -0.005em;
+  }
+  .gloss-term .gloss-abbr {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    padding: 1px 6px;
+    border-radius: 2px;
+    color: var(--muted);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+  }
+  .gloss-def { font-size: 13px; line-height: 1.55; color: var(--ink-2); margin: 0; }
+  .gloss-ref {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+  .gloss-ref::before { content: "→ "; color: var(--muted-2); }
+
+  /* =============================================================
+     Dark mode — overrides via [data-theme="dark"]
+     Warm dark palette that preserves the amber accent character.
+     ============================================================= */
+  [data-theme="dark"] {
+    --bg: #0E0E10;
+    --surface: #17171A;
+    --surface-2: #1E1E22;
+    --ink: #F4F4F5;
+    --ink-2: #D4D4D8;
+    --muted: #A1A1AA;
+    --muted-2: #71717A;
+    --border: #2A2A2F;
+    --border-2: #222227;
+    --accent: #FBBF24;
+    --accent-ink: #FCD34D;
+    --accent-tint: #2F2107;
+    --accent-wash: #1C1304;
+    --code-bg: #121216;
+    --code-border: #2A2A2F;
+    --code-ink: #E4E4E7;
+    --ok: #34D399;
+    --warn: #FBBF24;
+    --bad: #F87171;
+    --shadow-sm: 0 1px 0 rgba(0, 0, 0, 0.5);
+    /* Tenet tints and washes flip to dark panels */
+    --t1: #2DD4BF; --t1-tint: #0C2E2C; --t1-wash: #0A1E1D;
+    --t2: #60A5FA; --t2-tint: #0F2742; --t2-wash: #0B1B2E;
+    --t3: #A5B4FC; --t3-tint: #1D1B4D; --t3-wash: #161536;
+    --t4: #FBBF24; --t4-tint: #2F2107; --t4-wash: #1C1304;
+    --t5: #C4B5FD; --t5-tint: #251457; --t5-wash: #1B0F42;
+    --t6: #FDA4AF; --t6-tint: #3A0E22; --t6-wash: #280A18;
+    --t7: #6EE7B7; --t7-tint: #0A3124; --t7-wash: #082518;
+  }
+
+  /* Elements that had hardcoded light hex — remap for dark */
+  [data-theme="dark"] .code-head { background: #1A1A1F; }
+  [data-theme="dark"] .code-block.terminal .code-head { background: #16161A; }
+  [data-theme="dark"] th { background: #1A1A1F; }
+  [data-theme="dark"] tr:hover td { background: #1E1E22; }
+  [data-theme="dark"] .callout.caveat { background: #1C1C20; }
+  [data-theme="dark"] .callout.danger { background: #2A1213; }
+  [data-theme="dark"] .badge.secondary { background: #26262A; color: var(--ink-2); border-color: #2E2E33; }
+  [data-theme="dark"] .lab-check.done { background: #062E1F; }
+  [data-theme="dark"] .tenet-card.active { background: linear-gradient(180deg, var(--surface) 0%, #1D1D21 100%); }
+  [data-theme="dark"] .hero-arch::before {
+    background-image:
+      linear-gradient(to right, rgba(10,10,10,0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(10,10,10,0.06) 1px, transparent 1px);
+  }
+  [data-theme="dark"] .kbd { background: #1E1E22; }
+  [data-theme="dark"] .hero-tip { background: #F4F4F5; color: #0A0A0A; }
+  [data-theme="dark"] .hero-tip::after { border-top-color: #F4F4F5; }
+  [data-theme="dark"] .hero-tip strong { color: #78350F; }
+  [data-theme="dark"] .hero-tip .tip-tag { color: #B45309; }
+
+  /* Diagrams + hero-arch: keep a light panel in dark mode so the
+     inline SVGs (which use hardcoded light palette) stay legible. */
+  [data-theme="dark"] figure.diagram,
+  [data-theme="dark"] .hero-arch {
+    background:
+      radial-gradient(ellipse at top right, #FFFBEB 0%, transparent 55%),
+      radial-gradient(ellipse at bottom left, #F0FDFA 0%, transparent 50%),
+      #FAFAFA;
+    border-color: #2A2A2F;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+  }
+  [data-theme="dark"] figure.diagram { background: #FAFAFA; }
+  [data-theme="dark"] figure.diagram figcaption { color: #6B7280; }
+  [data-theme="dark"] .hero-arch-head h3 { color: #0A0A0A; }
+  [data-theme="dark"] .hero-arch-head .hero-sub { color: #6B7280; }
+  [data-theme="dark"] .hero-legend { color: #6B7280; }
+  [data-theme="dark"] .hero-legend .lg-swatch.res { background: #FFFFFF; border-color: #0A0A0A; }
+  [data-theme="dark"] .hero-legend .lg-swatch.req { background: #0A0A0A; }
+
+  /* ASCII blocks — keep light-panel for monospace diagram readability */
+  [data-theme="dark"] pre.ascii { background: #F7F7F5; color: #1F2937; border-color: #2A2A2F; }
+
+  /* NIST map cards and other surfaces lean into var(--surface) flip */
+  [data-theme="dark"] .nist-map { background: var(--surface); }
+
+  /* Trust widget — restore the warm amber gradient on dark */
+  [data-theme="dark"] .trust-widget {
+    background: linear-gradient(180deg, var(--surface) 0%, var(--accent-wash) 100%);
+  }
+
+  /* Scrollbar polish in dark mode */
+  [data-theme="dark"] aside.toc::-webkit-scrollbar { width: 8px; }
+  [data-theme="dark"] aside.toc::-webkit-scrollbar-track { background: var(--bg); }
+  [data-theme="dark"] aside.toc::-webkit-scrollbar-thumb { background: #2A2A2F; border-radius: 4px; }
+  [data-theme="dark"] aside.toc::-webkit-scrollbar-thumb:hover { background: #3A3A40; }
 </style>
 </head>
 <body>
@@ -774,8 +986,14 @@
 
 <aside class="toc" aria-label="Table of contents">
   <div class="brand">
-    <div class="brand-mark">ZT</div>
-    <div class="brand-name">ZTA · Home Lab</div>
+    <div class="brand-left">
+      <div class="brand-mark">ZT</div>
+      <div class="brand-name">ZTA · Home Lab</div>
+    </div>
+    <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+      <svg class="moon-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="sun-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+    </button>
   </div>
 
   <div class="toc-title">Sections</div>
@@ -806,6 +1024,7 @@
   <ul class="toc-list">
     <li><a href="#capstone">Capstone Lab</a></li>
     <li><a href="#appendix">Mapping Appendix</a></li>
+    <li><a href="#glossary">Glossary</a></li>
     <li><a href="#cleanup">Cleanup &amp; Next Steps</a></li>
   </ul>
 </aside>
@@ -4278,6 +4497,242 @@ kubectl --context docker-desktop -n zta-policy logs deploy/opa --tail=6 \
 </section>
 
 <!-- ============================================================== -->
+<!-- GLOSSARY                                                         -->
+<!-- ============================================================== -->
+<section id="glossary">
+<h2>Glossary</h2>
+<p class="lede">A compact reference for the acronyms and concepts that appear across the seven labs. Grouped by role in the architecture, not alphabetically — the categories mirror how the pieces fit together in NIST SP 800-207.</p>
+
+<nav class="glossary-nav" aria-label="Glossary categories">
+  <a href="#gloss-components">Components <span class="gn-count">07</span></a>
+  <a href="#gloss-identity">Identity &amp; Crypto <span class="gn-count">07</span></a>
+  <a href="#gloss-policy">Policy &amp; Enforcement <span class="gn-count">06</span></a>
+  <a href="#gloss-k8s">Kubernetes &amp; Mesh <span class="gn-count">05</span></a>
+  <a href="#gloss-telemetry">Telemetry <span class="gn-count">06</span></a>
+  <a href="#gloss-compliance">Compliance <span class="gn-count">05</span></a>
+  <a href="#gloss-concepts">ZT Concepts <span class="gn-count">06</span></a>
+</nav>
+
+<div class="gloss-group" data-cat="components" id="gloss-components">
+  <h3>NIST SP 800-207 logical components <span class="gg-count">7 terms</span></h3>
+  <div class="gloss-list">
+    <div class="gloss-item">
+      <div class="gloss-term">Policy Engine <span class="gloss-abbr">PE</span></div>
+      <p class="gloss-def">The decision maker. Evaluates every request against policy and returns allow, deny, or step-up. In this lab: OPA with Rego policies reached through Envoy ext_authz.</p>
+      <div class="gloss-ref">NIST SP 800-207 §3.1.1</div>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">Policy Administrator <span class="gloss-abbr">PA</span></div>
+      <p class="gloss-def">The distribution plane. Publishes signed, versioned policy bundles to every Policy Engine and revokes sessions. Home-lab analogue: a signed-bundle HTTP endpoint polled by OPA.</p>
+      <div class="gloss-ref">NIST SP 800-207 §3.1.1</div>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">Policy Enforcement Point <span class="gloss-abbr">PEP</span></div>
+      <p class="gloss-def">The gate. Physically blocks or permits the traffic on behalf of the PE. Every hop has one — Istio sidecars, Kong for FAPI, ZPA for remote access, AAM for privileged sessions.</p>
+      <div class="gloss-ref">NIST SP 800-207 §3.1.2</div>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">Trust Algorithm <span class="gloss-abbr">TA</span></div>
+      <p class="gloss-def">The logic inside the PE that weighs identity, posture, behaviour, and context. Starts criteria-based (hard rules) and evolves to score-based (weighted signals) as telemetry matures.</p>
+      <div class="gloss-ref">NIST SP 800-207 §3.3</div>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">Subject</div>
+      <p class="gloss-def">The requester — a human user, a workload, or a service account. Identified through Keycloak (humans) or SPIFFE (workloads).</p>
+      <div class="gloss-ref">NIST SP 800-207 §2.2</div>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">Enterprise Resource</div>
+      <p class="gloss-def">The protected asset — a service, dataset, API, or device. In the lab the demo <code>bookstore</code> exposes three tiers: frontend, api, and db.</p>
+      <div class="gloss-ref">NIST SP 800-207 §2.2</div>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">Data Sources</div>
+      <p class="gloss-def">The facts the PE draws on at decision time: identity claims, CDM device hygiene, SIEM events, threat intel, UEBA drift scores, data-governance tags.</p>
+      <div class="gloss-ref">NIST SP 800-207 §3.1</div>
+    </div>
+  </div>
+</div>
+
+<div class="gloss-group" data-cat="identity" id="gloss-identity">
+  <h3>Identity &amp; workload attestation <span class="gg-count">7 terms</span></h3>
+  <div class="gloss-list">
+    <div class="gloss-item">
+      <div class="gloss-term">OpenID Connect <span class="gloss-abbr">OIDC</span></div>
+      <p class="gloss-def">Identity layer over OAuth 2.0. Produces signed ID tokens that carry user claims. Keycloak is the OIDC provider for human identities in every lab.</p>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">Mutual TLS <span class="gloss-abbr">mTLS</span></div>
+      <p class="gloss-def">Both client and server present X.509 certificates. In the mesh this is automatic — Istio rotates certs every 24 hours via <code>cert-manager</code>.</p>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">SPIFFE / SPIRE</div>
+      <p class="gloss-def">The open standard for issuing workload identities. A SPIFFE ID like <code>spiffe://home.lab/ns/bookstore/sa/api</code> is embedded in a short-lived SVID certificate.</p>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">SVID</div>
+      <p class="gloss-def">SPIFFE Verifiable Identity Document — the X.509 or JWT credential that proves a workload is who it claims to be. Rotates in minutes, not days.</p>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">WebAuthn / passkey</div>
+      <p class="gloss-def">Phishing-resistant second factor. Private key is bound to the device; the server only stores the public key. Used for privileged sessions and break-glass in Labs 3 and 4.</p>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">DPoP</div>
+      <p class="gloss-def">Demonstration of Proof-of-Possession. Binds an access token to a client key pair so stolen tokens are not replayable. Required by FAPI 2.0.</p>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">JWT</div>
+      <p class="gloss-def">JSON Web Token — signed JSON payload. Tokens carry subject, audience, expiry, and a claim set that the PE evaluates.</p>
+    </div>
+  </div>
+</div>
+
+<div class="gloss-group" data-cat="policy" id="gloss-policy">
+  <h3>Policy &amp; enforcement <span class="gg-count">6 terms</span></h3>
+  <div class="gloss-list">
+    <div class="gloss-item">
+      <div class="gloss-term">Open Policy Agent <span class="gloss-abbr">OPA</span></div>
+      <p class="gloss-def">General-purpose policy engine. Policies are written in Rego and distributed as signed bundles. Stand-in for the PE in every lab.</p>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">Rego</div>
+      <p class="gloss-def">OPA's declarative policy language. Labs use Rego for request-level authorization (Lab 4) and trust-score aggregation (capstone).</p>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">Cedar</div>
+      <p class="gloss-def">AWS-originated policy language with a stricter schema model. Called out in the source architecture as a Rego alternative for policy-as-data teams.</p>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">Gatekeeper</div>
+      <p class="gloss-def">Kubernetes-native OPA admission controller. Blocks non-conforming manifests at apply time — the platform-layer PEP in Lab 6.</p>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">ext_authz</div>
+      <p class="gloss-def">Envoy's external authorization filter. Every request pauses while Envoy asks the PE for a verdict. Sub-millisecond when OPA runs as a sidecar.</p>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">Attribute-Based Access Control <span class="gloss-abbr">ABAC</span></div>
+      <p class="gloss-def">Access decided from attributes of the subject, resource, action, and environment — not from fixed roles. The architectural default in Lab 4.</p>
+    </div>
+  </div>
+</div>
+
+<div class="gloss-group" data-cat="k8s" id="gloss-k8s">
+  <h3>Kubernetes &amp; service mesh <span class="gg-count">5 terms</span></h3>
+  <div class="gloss-list">
+    <div class="gloss-item">
+      <div class="gloss-term">Namespace</div>
+      <p class="gloss-def">Kubernetes' lightweight tenancy boundary. The lab uses one namespace per control-plane component plus <code>bookstore</code> for the workload.</p>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">Istio</div>
+      <p class="gloss-def">Service mesh providing automatic mTLS, ingress/egress gateways, and the Envoy sidecars that serve as in-mesh PEPs.</p>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">Sidecar</div>
+      <p class="gloss-def">A helper container colocated with the workload pod. Envoy sidecars intercept every byte in and out of the app — the per-pod PEP.</p>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">Admission Controller</div>
+      <p class="gloss-def">Webhook the API server consults before persisting a manifest. Gatekeeper plugs in here to enforce posture, labels, and supply-chain provenance.</p>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">NetworkPolicy</div>
+      <p class="gloss-def">Kubernetes' L3/L4 allow-list. Default-deny is assumed from Lab 1 onward; everything explicit flows through the mesh.</p>
+    </div>
+  </div>
+</div>
+
+<div class="gloss-group" data-cat="telemetry" id="gloss-telemetry">
+  <h3>Telemetry &amp; detection <span class="gg-count">6 terms</span></h3>
+  <div class="gloss-list">
+    <div class="gloss-item">
+      <div class="gloss-term">Continuous Diagnostics &amp; Mitigation <span class="gloss-abbr">CDM</span></div>
+      <p class="gloss-def">The running inventory of device and workload hygiene — patch level, config drift, agent health — fed back into the PE as posture input.</p>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">Security Information &amp; Event Management <span class="gloss-abbr">SIEM</span></div>
+      <p class="gloss-def">Aggregates and correlates security logs. Signals like "impossible travel" or "credential reuse" surface here and feed the TA.</p>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">User/Entity Behaviour Analytics <span class="gloss-abbr">UEBA</span></div>
+      <p class="gloss-def">Baselines normal behaviour and emits a drift score when a subject deviates. One of the score-based inputs in Lab 4 and the capstone.</p>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">OpenTelemetry Protocol <span class="gloss-abbr">OTLP</span></div>
+      <p class="gloss-def">Vendor-neutral wire format for traces, metrics, and logs. The mesh, OPA, and the app all emit OTLP to a single collector.</p>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">Falco</div>
+      <p class="gloss-def">Runtime security monitor that reads syscalls and flags suspicious process, file, and network activity — the runtime detection layer in Lab 5.</p>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">Service Level Objective <span class="gloss-abbr">SLO</span></div>
+      <p class="gloss-def">Measurable target for a quality attribute (e.g. decision latency P99 &lt; 10 ms, 99.995% availability). Burn-rate alerts wake oncall when the budget is at risk.</p>
+    </div>
+  </div>
+</div>
+
+<div class="gloss-group" data-cat="compliance" id="gloss-compliance">
+  <h3>Compliance frameworks <span class="gg-count">5 terms</span></h3>
+  <div class="gloss-list">
+    <div class="gloss-item">
+      <div class="gloss-term">NIST SP 800-207</div>
+      <p class="gloss-def">The Zero Trust Architecture publication. Defines the seven tenets, the logical components, and the deployment variants. Every tenet in this lab anchors to its paragraph-level sections.</p>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">FAPI 2.0</div>
+      <p class="gloss-def">OpenID Foundation's hardened OAuth profile — mandatory DPoP, PAR, mTLS, and strong client authentication. The external-API security baseline in the source doc.</p>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">Digital Operational Resilience Act <span class="gloss-abbr">DORA</span></div>
+      <p class="gloss-def">EU regulation on ICT risk for financial institutions. Drives the telemetry retention, incident reporting, and supply-chain controls threaded through Labs 5–7.</p>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">Payment Card Industry DSS <span class="gloss-abbr">PCI DSS</span></div>
+      <p class="gloss-def">Cardholder-data protection standard. Relevant to cryptographic controls (Lab 2), segmentation (Lab 6), and audit logging (Lab 7).</p>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">CISA Zero Trust Maturity Model <span class="gloss-abbr">ZTMM</span></div>
+      <p class="gloss-def">CISA's five-pillar maturity framework — complements 800-207 by scoring where an organisation sits on each pillar from Traditional to Optimal.</p>
+    </div>
+  </div>
+</div>
+
+<div class="gloss-group" data-cat="concepts" id="gloss-concepts">
+  <h3>Zero Trust concepts <span class="gg-count">6 terms</span></h3>
+  <div class="gloss-list">
+    <div class="gloss-item">
+      <div class="gloss-term">Implicit Trust Zone</div>
+      <p class="gloss-def">A region of the network — a VLAN, VPN, or subnet — where traffic is assumed trusted because of where it came from. Zero Trust's defining move is to remove them.</p>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">Dynamic Policy</div>
+      <p class="gloss-def">Policy whose verdict changes as context changes — time, device posture, behaviour, risk. The subject of Lab 4; contrasted with static ACL-style rules.</p>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">Step-up Authentication</div>
+      <p class="gloss-def">Mid-session escalation — re-prompt for a passkey, a WebAuthn challenge, or an out-of-band approval — when the score drops into a caution band.</p>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">Least Privilege</div>
+      <p class="gloss-def">Grant the minimum access needed, scoped to the session. Permissions expire with the session; they are not held forever.</p>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">Break-glass</div>
+      <p class="gloss-def">The auditable, hard-to-fake path that allows urgent override — e.g. a two-person rule with WebAuthn. Described in Lab 6 and exercised in the capstone.</p>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">BeyondCorp</div>
+      <p class="gloss-def">Google's foundational Zero Trust deployment — perimeter-less, device-and-user-aware, per-request authorized. A precursor to the SP 800-207 framing.</p>
+    </div>
+  </div>
+</div>
+
+</section>
+
+<!-- ============================================================== -->
 <!-- CLEANUP + NEXT STEPS                                            -->
 <!-- ============================================================== -->
 <section id="cleanup">
@@ -4360,6 +4815,43 @@ echo "Hard teardown requested; background namespace finalisation may take a minu
 
 <script>
 (function() {
+  // ============================================================
+  // Theme toggle — persists to localStorage, respects OS default
+  // ============================================================
+  var THEME_KEY = 'zta-homelab.theme.v1';
+  var themeBtn = document.getElementById('theme-toggle');
+  function currentTheme() {
+    return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  }
+  function applyTheme(t) {
+    if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    else document.documentElement.removeAttribute('data-theme');
+    if (themeBtn) {
+      themeBtn.setAttribute('aria-pressed', t === 'dark' ? 'true' : 'false');
+      themeBtn.setAttribute('title', t === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+    }
+  }
+  applyTheme(currentTheme());
+  if (themeBtn) {
+    themeBtn.addEventListener('click', function() {
+      var next = currentTheme() === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
+      try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+    });
+  }
+  // Follow OS preference if the user never explicitly chose.
+  if (window.matchMedia) {
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    var listener = function(e) {
+      try {
+        if (localStorage.getItem(THEME_KEY)) return;
+      } catch (err) {}
+      applyTheme(e.matches ? 'dark' : 'light');
+    };
+    if (mq.addEventListener) mq.addEventListener('change', listener);
+    else if (mq.addListener) mq.addListener(listener);
+  }
+
   // Copy-to-clipboard on code blocks
   document.querySelectorAll('.copy-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
