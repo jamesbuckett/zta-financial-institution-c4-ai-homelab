@@ -3,7 +3,101 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zero Trust Architecture — Kubernetes Home Lab</title>
+<title>Zero Trust on Kubernetes — NIST 800-207 Hands-On Home Lab</title>
+
+<!--
+  SEO / share-preview metadata.
+  TODO before publishing: replace the two placeholder URLs below with the real
+  hosting domain (canonical + og:url), and point og:image at a 1200×630 PNG
+  export of the hero architecture diagram.
+-->
+<meta name="description" content="A NIST SP 800-207 Zero Trust Architecture tutorial you can run on Docker Desktop. Seven hands-on Kubernetes labs — one per tenet — with Istio, SPIRE, OPA, and Keycloak.">
+<meta name="author" content="James Buckett">
+<meta name="keywords" content="Zero Trust, NIST SP 800-207, Kubernetes, Istio, SPIRE, OPA, Keycloak, Docker Desktop, tutorial, home lab, PEP, policy engine, SPIFFE, FAPI 2.0">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<link rel="canonical" href="https://REPLACE-WITH-YOUR-DOMAIN/">
+
+<!-- Open Graph (LinkedIn / Facebook share preview) -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="ZTA Home Lab">
+<meta property="og:title" content="Zero Trust on Kubernetes — NIST 800-207 Hands-On Home Lab">
+<meta property="og:description" content="Deploy a working, NIST SP 800-207-aligned Zero Trust Architecture on your laptop. Seven labs, one per tenet, with runnable manifests, validation commands, and a break-it exercise.">
+<meta property="og:url" content="https://REPLACE-WITH-YOUR-DOMAIN/">
+<meta property="og:locale" content="en_GB">
+<!-- TODO: add og:image at 1200x630 once a preview image is generated -->
+<!-- <meta property="og:image" content="https://REPLACE-WITH-YOUR-DOMAIN/og-image.png"> -->
+<!-- <meta property="og:image:width" content="1200"> -->
+<!-- <meta property="og:image:height" content="630"> -->
+<!-- <meta property="og:image:alt" content="NIST SP 800-207 Zero Trust architecture — Policy Engine, PEPs, and data sources."> -->
+
+<!-- Twitter / X card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:creator" content="@jamesbuckett">
+<meta name="twitter:title" content="Zero Trust on Kubernetes — NIST 800-207 Hands-On Home Lab">
+<meta name="twitter:description" content="Seven hands-on labs that deploy a NIST 800-207 Zero Trust Architecture on Docker Desktop Kubernetes.">
+
+<!-- Inline SVG favicon (avoids external fetch, keeps single-file constraint) -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23FAFAFA'/%3E%3Crect x='6' y='6' width='52' height='52' fill='none' stroke='%230A0A0A' stroke-width='3'/%3E%3Ctext x='32' y='42' text-anchor='middle' font-family='-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif' font-size='28' font-weight='700' fill='%23B45309'%3EZ%3C/text%3E%3C/svg%3E">
+
+<!-- Structured data (TechArticle + HowTo). See https://schema.org/TechArticle -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "TechArticle",
+      "@id": "#article",
+      "headline": "Zero Trust Architecture on a Kubernetes Home Lab",
+      "name": "Zero Trust on Kubernetes — NIST 800-207 Hands-On Home Lab",
+      "description": "A NIST SP 800-207 Zero Trust Architecture tutorial you can run on Docker Desktop. Seven hands-on Kubernetes labs — one per tenet — with Istio, SPIRE, OPA, and Keycloak.",
+      "inLanguage": "en",
+      "datePublished": "2026-04-17",
+      "dateModified": "2026-04-19",
+      "proficiencyLevel": "Intermediate",
+      "about": [
+        { "@type": "Thing", "name": "Zero Trust Architecture" },
+        { "@type": "Thing", "name": "NIST Special Publication 800-207" },
+        { "@type": "Thing", "name": "Kubernetes" }
+      ],
+      "keywords": "Zero Trust, NIST SP 800-207, Kubernetes, Istio, SPIRE, OPA, Keycloak, Policy Engine, PEP, SPIFFE, FAPI 2.0",
+      "author": {
+        "@type": "Person",
+        "name": "James Buckett",
+        "jobTitle": "Product Manager",
+        "sameAs": [
+          "https://www.linkedin.com/in/jamesbuckett",
+          "https://github.com/jamesbuckett",
+          "https://twitter.com/jamesbuckett"
+        ]
+      },
+      "mainEntityOfPage": { "@type": "WebPage", "@id": "https://REPLACE-WITH-YOUR-DOMAIN/" }
+    },
+    {
+      "@type": "HowTo",
+      "@id": "#howto",
+      "name": "Build a NIST SP 800-207 Zero Trust Architecture on Docker Desktop Kubernetes",
+      "description": "Seven sequential labs that implement each NIST SP 800-207 tenet on a single-node Kubernetes cluster, followed by an end-to-end capstone.",
+      "totalTime": "PT8H",
+      "supply": [
+        { "@type": "HowToSupply", "name": "Docker Desktop 4.30+ with Kubernetes enabled" },
+        { "@type": "HowToSupply", "name": "6 CPU / 8 GB RAM / 60 GB disk (10 GB RAM recommended)" },
+        { "@type": "HowToSupply", "name": "kubectl 1.29+, helm 3.14+, kustomize 5.0+, istioctl 1.22+, jq, yq, openssl" }
+      ],
+      "step": [
+        { "@type": "HowToStep", "position": 1, "name": "Lab 1 — Resources",          "url": "#lab-1",    "text": "Inventory every pod, service, and volume as a resource; apply a label schema; enforce it at admission." },
+        { "@type": "HowToStep", "position": 2, "name": "Lab 2 — Secured Comms",      "url": "#lab-2",    "text": "Encrypt and authenticate every hop with Istio mTLS and SPIFFE/SPIRE workload identity." },
+        { "@type": "HowToStep", "position": 3, "name": "Lab 3 — Per-Session",        "url": "#lab-3",    "text": "Issue short-lived, session-scoped tokens through Keycloak and enforce per-request re-evaluation." },
+        { "@type": "HowToStep", "position": 4, "name": "Lab 4 — Dynamic Policy",     "url": "#lab-4",    "text": "Build a Trust Algorithm in OPA that combines identity, posture, and behaviour into a trust score." },
+        { "@type": "HowToStep", "position": 5, "name": "Lab 5 — Posture Monitoring", "url": "#lab-5",    "text": "Continuously measure device and workload integrity with Falco and a CDM reconciler." },
+        { "@type": "HowToStep", "position": 6, "name": "Lab 6 — Strict Enforcement", "url": "#lab-6",    "text": "Fail-closed admission with signed OPA bundles and Gatekeeper constraints." },
+        { "@type": "HowToStep", "position": 7, "name": "Lab 7 — Telemetry Loop",     "url": "#lab-7",    "text": "Turn every allow, deny, and step-up into a signal — feed it back into tomorrow's policy." },
+        { "@type": "HowToStep", "position": 8, "name": "Capstone — end-to-end trace","url": "#capstone", "text": "Compose all seven tenets in a single request trace from external user to data tier." }
+      ]
+    }
+  ]
+}
+</script>
+
 <script>
   // Apply persisted theme before first paint to avoid FOUC.
   (function() {
@@ -198,6 +292,185 @@
   }
   .byline .by-icon:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .byline .by-icon svg { width: 14px; height: 14px; display: block; }
+
+  /* Trust line — provenance signal under the byline */
+  .trust-line {
+    margin: 0 0 var(--space-4);
+    padding-left: var(--space-3);
+    border-left: 2px solid var(--border);
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--muted);
+    max-width: 68ch;
+  }
+  .trust-line strong { color: var(--ink-2); font-weight: 500; }
+
+  /* Hero CTA row — primary + two secondary */
+  .hero-cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: var(--space-5) 0 var(--space-4);
+  }
+  .hero-cta .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    border: 1px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid var(--ink);
+    transition: background 180ms ease, color 180ms ease, transform 180ms ease, border-color 180ms ease;
+  }
+  .hero-cta .btn:hover {
+    background: var(--ink);
+    color: var(--bg);
+    transform: translateY(-1px);
+  }
+  .hero-cta .btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .hero-cta .btn.primary {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+  .hero-cta .btn.primary:hover {
+    background: var(--accent-ink);
+    border-color: var(--accent-ink);
+  }
+  .hero-cta .btn svg {
+    width: 14px; height: 14px;
+    stroke: currentColor; stroke-width: 2;
+    fill: none; stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* Outcomes block — what the reader will have built */
+  .outcomes {
+    margin: var(--space-5) 0 var(--space-6);
+    padding: var(--space-4) var(--space-5) var(--space-4) var(--space-5);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    background: var(--surface);
+    border-radius: var(--radius);
+  }
+  .outcomes-label {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: var(--space-2);
+  }
+  .outcomes ul {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 14.5px;
+    line-height: 1.55;
+  }
+  .outcomes li { margin-bottom: var(--space-1); color: var(--ink-2); }
+  .outcomes li:last-child { margin-bottom: 0; }
+  .outcomes li strong { color: var(--ink); font-weight: 600; }
+
+  /* Citation / repo block — collapsible details */
+  .cite-block {
+    margin: 0 0 var(--space-6);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    font-size: 13px;
+  }
+  .cite-block summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 10px 14px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: 0.01em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 180ms ease;
+  }
+  .cite-block summary::-webkit-details-marker { display: none; }
+  .cite-block summary::before {
+    content: "";
+    width: 8px; height: 8px;
+    border-right: 1.5px solid var(--muted);
+    border-bottom: 1.5px solid var(--muted);
+    transform: rotate(-45deg);
+    transition: transform 180ms ease;
+  }
+  .cite-block[open] summary::before { transform: rotate(45deg); }
+  .cite-block summary:hover { background: var(--surface-2); }
+  .cite-block .cite-body {
+    padding: 0 14px var(--space-4);
+    border-top: 1px solid var(--border);
+    color: var(--ink-2);
+  }
+  .cite-block .cite-body p { margin: var(--space-3) 0 var(--space-2); color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; }
+  .cite-block .cite-body pre {
+    margin: 0 0 var(--space-3);
+    padding: 10px 12px;
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    border-radius: 3px;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--code-ink);
+    white-space: pre-wrap;
+    overflow-x: auto;
+  }
+
+  /* How-to-read note — reading protocol */
+  .handbook-how {
+    margin: var(--space-4) 0 var(--space-6);
+    padding: var(--space-3) var(--space-4);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--ink-2);
+  }
+  .handbook-how strong { color: var(--ink); }
+
+  /* Lab subsection heading — semantic h3 styled as an eyebrow/label.
+     Replaces the prior <h4> pattern so screen-reader navigation by
+     heading level no longer skips from h2 to h4. */
+  h3.lab-sub {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin: var(--space-5) 0 var(--space-2);
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  /* Footer additions — feedback link + micro-trust row */
+  footer.site-foot .foot-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin-top: var(--space-2);
+    font-size: 12px;
+    color: var(--muted);
+  }
+  footer.site-foot .foot-links a {
+    color: var(--muted);
+    border-bottom: 1px solid transparent;
+  }
+  footer.site-foot .foot-links a:hover { color: var(--accent); border-bottom-color: var(--accent); }
 
   /* Eyebrow */
   .eyebrow {
@@ -1075,7 +1348,7 @@
 <main>
 
 <header>
-  <span class="eyebrow">ZTA-2026-001 · Practitioner Handbook</span>
+  <span class="eyebrow">Practitioner Handbook · Docker Desktop · ~8 hrs total</span>
   <h1>Zero Trust Architecture on a Kubernetes Home Lab</h1>
   <div class="byline" aria-label="About the author">
     <span class="by-author">By James Buckett</span>
@@ -1102,11 +1375,57 @@
       </a>
     </span>
   </div>
-  <p class="lede">A progressive, hands-on tutorial that walks the <em>ZTA-2026-001</em> ARB submission — a NIST SP 800-207-aligned architecture for a global bank — into a single-node Docker Desktop Kubernetes cluster. Seven labs, one per 800-207 tenet, each with runnable manifests, validation commands, and a break-it exercise.</p>
+  <p class="trust-line">Derived from an ARB submission (<strong>ZTA-2026-001</strong>) produced for a global bank's Security Solutions Architecture team and reconstructed on open-source components. Anchored paragraph-by-paragraph to <strong>NIST SP 800-207 (August 2020)</strong>.</p>
+
+  <p class="lede">Deploy a working, NIST SP 800-207-aligned Zero Trust Architecture on your laptop. Seven labs take you from an empty Docker Desktop cluster to a signed-policy, fail-closed, telemetry-backed bookstore — each lab builds one 800-207 tenet, with runnable manifests, validation commands, and a <em>break-it</em> exercise. Written for Kubernetes practitioners who are new to Zero Trust.</p>
+
+  <div class="outcomes" aria-label="What you will have built by the end">
+    <span class="outcomes-label">By the end, you will have</span>
+    <ul>
+      <li>A running single-node cluster with <strong>Istio, SPIRE, OPA, Gatekeeper, Falco, and Keycloak</strong>, wired into the NIST 800-207 PE/PA/PEP model</li>
+      <li>A <strong>Trust Algorithm</strong> that computes a <code>trust_score</code> and allows, step-ups, or denies requests against a sample banking API</li>
+      <li>A <strong>Grafana dashboard</strong> that traces every decision, keyed by <code>decision_id</code>, from ingress all the way to the data tier</li>
+    </ul>
+  </div>
+
+  <nav class="hero-cta" aria-label="Primary actions">
+    <a class="btn primary" href="#lab-1">
+      Start Lab 1
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+    </a>
+    <a class="btn" href="#overview">
+      Skim the 7 tenets
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </a>
+    <a class="btn" href="https://github.com/jamesbuckett" target="_blank" rel="noopener noreferrer">
+      View on GitHub
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>
+    </a>
+  </nav>
+
+  <details class="cite-block">
+    <summary>How to cite this handbook</summary>
+    <div class="cite-body">
+      <p>APA</p>
+<pre>Buckett, J. (2026). Zero Trust Architecture on a Kubernetes Home Lab
+(ZTA-2026-001, Practitioner Handbook v1.0). Retrieved from
+https://REPLACE-WITH-YOUR-DOMAIN/</pre>
+      <p>BibTeX</p>
+<pre>@misc{buckett2026ztahomelab,
+  author       = {Buckett, James},
+  title        = {Zero Trust Architecture on a Kubernetes Home Lab},
+  howpublished = {Practitioner handbook, derived from ZTA-2026-001},
+  year         = {2026},
+  note         = {Anchored to NIST SP 800-207 (August 2020)},
+  url          = {https://REPLACE-WITH-YOUR-DOMAIN/}
+}</pre>
+    </div>
+  </details>
+
   <div class="doc-meta">
     <div><span>Environment</span><strong>Docker Desktop · Kubernetes 1.29+</strong></div>
     <div><span>Audience</span><strong>Intermediate K8s practitioners, ZTA-new</strong></div>
-    <div><span>Runtime</span><strong>45–90 min per lab</strong></div>
+    <div><span>Runtime</span><strong>45–90 min per lab · ~8 hrs total</strong></div>
     <div><span>Framework</span><strong>NIST SP 800-207 (Aug 2020)</strong></div>
   </div>
 </header>
@@ -1290,7 +1609,11 @@
 </figure>
 
 <h3>The Seven Tenets of Zero Trust — your learning arc</h3>
-<p>Each lab in this handbook targets exactly one tenet of NIST SP 800-207 §2.1. Click a tile to jump to its lab.</p>
+<p>Each lab targets exactly one tenet of NIST SP 800-207 §2.1. Read in order if you're new to Zero Trust; jump straight to a tenet if you already run OPA and Istio in production.</p>
+
+<aside class="handbook-how">
+  <strong>How to use this handbook.</strong> The seven labs build on each other — later labs assume the labels, mesh, and identity from earlier ones. If you skip ahead, the <em>Capstone</em> at the end will point you back to anything you haven't deployed. Each lab ends with a <em>break-it</em> exercise and a <em>reflection</em> block: do both. The dashboard you build in Lab 7 is what makes every earlier lab measurable.
+</aside>
 
 <div class="tenet-grid" role="list" aria-label="Seven tenets of Zero Trust">
   <a class="tenet-card" role="listitem" data-t="1" href="#lab-1">
@@ -1371,10 +1694,32 @@
   </a>
 </div>
 
-<p>The source document, <em>ZTA-2026-001</em>, is a C4 × NIST SP 800-207 architecture prepared by a global bank's Security Solutions Architecture team. It proposes a distributed Policy Engine (OPA/Cedar), a policy-as-code Policy Administrator (Styra DAS + GitOps), and a heterogeneous fleet of Policy Enforcement Points (Kong FAPI, Istio, Zscaler ZPA, CyberArk, Broadcom AAM, Netskope, an in-house AI Gateway). Workload identity is SPIFFE/SPIRE; workforce identity is Microsoft Entra ID federated with Okta; customers sit on ForgeRock CIAM with FAPI 2.0 and DPoP-bound tokens. Signals flow from CDM (Wiz, Tanium), threat intel, SIEM (Splunk + Snowflake), UEBA, fraud/AML (Featurespace) and data-access policy (Immuta) into a Trust Algorithm that emits a continuous <code>trust_score</code>. This tutorial reconstructs the essential shape of that architecture on a laptop — using only open-source projects — so that each 800-207 tenet becomes a thing the reader can deploy, break, observe, and repair.</p>
+<p>The source document, <em>ZTA-2026-001</em>, is a C4 × NIST SP 800-207 architecture prepared by a global bank's Security Solutions Architecture team. In 800-207 terms it defines a <strong>distributed Policy Engine</strong>, a <strong>policy-as-code Policy Administrator</strong>, and a heterogeneous fleet of <strong>Policy Enforcement Points</strong> sitting in front of every resource. A <strong>Trust Algorithm</strong> pulls signals from CDM, SIEM, threat intel, UEBA, fraud/AML, and data-access policy to emit a continuous <code>trust_score</code>. This handbook reconstructs the essential shape of that architecture on a laptop — using only open-source projects — so that each 800-207 tenet becomes a thing you can deploy, break, observe, and repair.</p>
+
+<details class="cite-block">
+  <summary>The full production stack it's modelled on</summary>
+  <div class="cite-body">
+    <p>Policy plane</p>
+<pre>Policy Engine ....... OPA / Cedar
+Policy Administrator  Styra DAS + GitOps
+PEPs ................ Kong FAPI · Istio · Zscaler ZPA · CyberArk ·
+                      Broadcom AAM · Netskope · in-house AI Gateway</pre>
+    <p>Identity</p>
+<pre>Workload identity ... SPIFFE / SPIRE
+Workforce identity .. Microsoft Entra ID federated with Okta
+Customer identity ... ForgeRock CIAM (FAPI 2.0, DPoP-bound tokens)</pre>
+    <p>Signal sources</p>
+<pre>CDM ................. Wiz · Tanium
+SIEM ................ Splunk + Snowflake
+Fraud / AML ......... Featurespace
+Data-access policy .. Immuta</pre>
+    <p class="footnote" style="text-transform:none; letter-spacing:0; font-weight:normal; font-size:12.5px; color: var(--muted);">The labs below use open-source analogues — OPA for the PE, a local signed-bundle server for the PA, Istio / Kong / custom ext-authz for the PEPs — but the decision shape is identical.</p>
+  </div>
+</details>
 
 <h3>Mapping: Source Sections → NIST SP 800-207</h3>
 <p>Every major section of the source document maps to at least one tenet of 800-207 2.1, a logical component of 3.1, and a deployment variant of 3.2. The table below is the index; the full per-paragraph matrix is in the <a href="#appendix">Mapping Appendix</a>.</p>
+<p class="handbook-how"><strong>Reading the cross-references.</strong> Throughout this handbook, "<em>source 7.14</em>" points to a section of the underlying ZTA-2026-001 architecture document; "<em>§3.1.2</em>" points to NIST SP 800-207 itself. Everything on the left of the table maps to everything on the right.</p>
 
 <div class="table-wrap">
 <table>
@@ -2057,7 +2402,7 @@ curl -s -H 'Host: bookstore.local' http://localhost/api/headers | jq '.headers |
     <dt>Source </dt><dd>4 (C4 L2 — Enterprise Resources), 7 (Component catalogue), 8.8 (data classification)</dd>
   </dl>
 
-  <h4>Learning objectives</h4>
+  <h3 class="lab-sub">Learning objectives</h3>
   <ul>
     <li>Enumerate every pod, service, and persistent volume in the cluster as a discrete <em>resource</em> per 800-207 3.1.</li>
     <li>Apply a consistent label schema (<code>zta.resource</code>, <code>zta.data-class</code>, <code>zta.tier-role</code>, <code>zta.owner</code>) that later labs will key off.</li>
@@ -2066,10 +2411,10 @@ curl -s -H 'Host: bookstore.local' http://localhost/api/headers | jq '.headers |
     <li>Distinguish <em>subjects</em>, <em>resources</em>, and <em>assets</em> — the three entities 800-207 2 separates.</li>
   </ul>
 
-  <h4>Concept primer</h4>
+  <h3 class="lab-sub">Concept primer</h3>
   <p>The source document catalogues ~20 named components (7) and places them inside four logical layers (Data Sources, Control Plane, PEPs, Enterprise Resources) at C4 L2 (4). NIST 800-207 calls <em>all</em> of these — databases, APIs, services, even agents — <strong>resources</strong>, and Tenet 1 begins by insisting that the enterprise inventory them all and treat them as equally worthy of protection irrespective of whether they run on <code>z/OS</code>, EKS, or a laptop. In this lab the cluster plays the role of the bank's estate at miniature scale: the bookstore's <code>frontend</code>, <code>api</code>, and <code>db</code> are the "Subjects · Assets · Resources" box in the source diagram; the Istio sidecars are not resources, they are PEPs; OPA is the PE. The label schema you apply below becomes the primary key for <em>every</em> later lab's policy — policies will select resources by label, not by name, so that adding a new workload automatically inherits the correct enforcement without policy edits. This is the 800-207 3.4.1 <em>Trust Algorithm</em> input schema, rendered in Kubernetes-native form.</p>
 
-  <h4>Step-by-step</h4>
+  <h3 class="lab-sub">Step-by-step</h3>
 
   <p><span class="step-num">01</span>Define the label schema as a ConfigMap so it is discoverable and versioned.</p>
   <div class="code-block">
@@ -2196,7 +2541,7 @@ EXPOSURE:.metadata.labels.zta\.exposure'
 </code></pre>
   </div>
 
-  <h4>Validation</h4>
+  <h3 class="lab-sub">Validation</h3>
   <div class="code-block terminal">
     <div class="code-head"><span class="lang">Bash</span><span class="path">validate Lab 1</span><button class="copy-btn">Copy</button></div>
 <pre><code>bash labs/01-resources/inventory.sh
@@ -2217,7 +2562,7 @@ kubectl --context docker-desktop get k8srequiredztalabels -o json \
 </code></pre>
   </div>
 
-  <h4>Break-it exercise</h4>
+  <h3 class="lab-sub">Break-it exercise</h3>
   <p>Attempt to deploy a new workload into <code>bookstore-api</code> missing the required labels. The admission-time PEP must refuse it.</p>
 
   <div class="code-block terminal">
@@ -2245,7 +2590,7 @@ EOF
 
   <p>Now repair: add the labels and re-apply. The deployment succeeds. Delete the repaired deployment before moving on — it is not used in later labs.</p>
 
-  <h4>Reflection questions</h4>
+  <h3 class="lab-sub">Reflection questions</h3>
   <ol>
     <li>The source document lists an <em>AI Gateway PEP</em> (4, 9.7) that protects LLM traffic. Is the LLM itself a resource, a PEP, or both? Justify against 800-207 2.1 T1 and 3.2.</li>
     <li>Gatekeeper ran admission-time. Why is that not sufficient, and which later tenets (name them) close the remaining gap at request-time and run-time?</li>
@@ -2284,7 +2629,7 @@ EOF
     <dt>Source </dt><dd>4 (Istio mesh + SPIFFE), 7.8 (Istio), 8.5 (telemetry), 8.7 (API security)</dd>
   </dl>
 
-  <h4>Learning objectives</h4>
+  <h3 class="lab-sub">Learning objectives</h3>
   <ul>
     <li>Flip mesh-wide <code>PeerAuthentication</code> from the Istio default (PERMISSIVE) to STRICT mTLS.</li>
     <li>Prove east-west encryption empirically with <code>tcpdump</code> inside a debug pod — not by trusting the control plane's word.</li>
@@ -2292,10 +2637,10 @@ EOF
     <li>Map the observed behaviour to source 4 and 8.7 and to 800-207 2.1 T2 and 3.4.2 (implicit trust zone minimisation).</li>
   </ul>
 
-  <h4>Concept primer</h4>
+  <h3 class="lab-sub">Concept primer</h3>
   <p>The source document's 3 Context warns that <em>no network segment, including the corporate LAN, is trusted by default</em>, and 4 places Istio at every east-west hop with SPIFFE SVIDs rotated every 60 minutes. NIST 800-207 2.1 T2 is categorical: it does not matter whether traffic is "internal" or "external"; the same authentication and encryption obligations apply. The subtle point is that T2 does not by itself demand mTLS — it demands the <em>strongest possible</em> method — but in practice a modern mesh delivers mTLS cheaply enough that it is the default. What T2 rules out is the older defence-in-depth fallacy that perimeter firewalls can justify plaintext inside. The proof in this lab is deliberately adversarial: rather than reading the Istio control plane's claim that mTLS is on, you sniff a live packet from an untrusted-looking pod in an unrelated namespace. The bytes are opaque or not; there is no middle ground.</p>
 
-  <h4>Step-by-step</h4>
+  <h3 class="lab-sub">Step-by-step</h3>
 
   <p><span class="step-num">01</span>Apply the mesh-wide STRICT <code>PeerAuthentication</code>. Per-workload policies can still relax this, but nothing does by default.</p>
 
@@ -2426,7 +2771,7 @@ grep -E 'GET |Host: |User-Agent' /tmp/capture.txt || echo 'no plaintext HTTP'
 </code></pre>
   </div>
 
-  <h4>Validation</h4>
+  <h3 class="lab-sub">Validation</h3>
   <div class="code-block terminal">
     <div class="code-head"><span class="lang">Bash</span><span class="path">validate Lab 2</span><button class="copy-btn">Copy</button></div>
 <pre><code># 1. STRICT mesh-wide:
@@ -2448,7 +2793,7 @@ kubectl --context docker-desktop -n bookstore-frontend exec \
 </code></pre>
   </div>
 
-  <h4>Break-it exercise</h4>
+  <h3 class="lab-sub">Break-it exercise</h3>
   <p>Downgrade the <code>bookstore-api</code> namespace to PERMISSIVE and observe that the plaintext client from step 4 <em>succeeds</em>. This is exactly the risk that T2 prohibits.</p>
 
   <div class="code-block terminal">
@@ -2472,7 +2817,7 @@ kubectl --context docker-desktop -n bookstore-api delete peerauthentication down
 </code></pre>
   </div>
 
-  <h4>Reflection questions</h4>
+  <h3 class="lab-sub">Reflection questions</h3>
   <ol>
     <li>The source 5 Flow A step 8 references SPIFFE IDs <code>spiffe://bank/retail/payments-api</code> and <code>spiffe://bank/retail/payments-service</code>. In your cluster, which header embedded these identities and which sidecar produced it?</li>
     <li>Istio's <code>PeerAuthentication</code> and <code>AuthorizationPolicy</code> ran at different OSI layers. Which 800-207 logical components (3.1) did each instantiate?</li>
@@ -2511,7 +2856,7 @@ kubectl --context docker-desktop -n bookstore-api delete peerauthentication down
     <dt>Source </dt><dd>1 (DPoP-bound tokens, 60-min SVIDs), 5 Flow A (5-min token), 7.1, 7.4, 8.2</dd>
   </dl>
 
-  <h4>Learning objectives</h4>
+  <h3 class="lab-sub">Learning objectives</h3>
   <ul>
     <li>Configure Keycloak to issue 5-minute OAuth2 access tokens with a realm-specific audience.</li>
     <li>Configure SPIRE to issue 5-minute X.509 SVIDs and observe rotation in real time.</li>
@@ -2519,10 +2864,10 @@ kubectl --context docker-desktop -n bookstore-api delete peerauthentication down
     <li>Contrast per-session (T3) with per-request dynamic evaluation (T4, covered next).</li>
   </ul>
 
-  <h4>Concept primer</h4>
+  <h3 class="lab-sub">Concept primer</h3>
   <p>800-207 2.1 T3 specifies that access is <em>session-bound</em>, not granted as an open-ended grant that can be replayed forever. Two session artefacts dominate practice: the human-session OAuth2/OIDC access token, bound to a subject (and optionally a key via DPoP or mTLS per the source 1 and 8.7), and the workload-session SPIFFE SVID, bound to a workload identity. The source document picks five-minute Keycloak/ForgeRock tokens and fifteen-minute SPIFFE SVIDs — short enough that theft is time-boxed, long enough that re-authentication cost is bearable. In this lab you set both to five minutes and watch them roll. T3 does not, by itself, guarantee that any given request inside a session is authorised (that is T4 and T6); it guarantees only that the session cannot outlive its intended lifetime, and that resumption requires a fresh proof. Crucially, "session" here is per-resource — a token good for the frontend is not good for the API unless its audience claim matches. That per-resource scoping is what the phrase "individual enterprise resources" in the tenet text insists on.</p>
 
-  <h4>Step-by-step</h4>
+  <h3 class="lab-sub">Step-by-step</h3>
 
   <p><span class="step-num">01</span>Bootstrap a Keycloak realm <code>zta-bookstore</code> with a 5-minute access-token lifespan, a confidential client <code>bookstore-api</code>, and a test user <code>alice / alice</code>.</p>
 
@@ -2677,7 +3022,7 @@ data:
 </code></pre>
   </div>
 
-  <h4>Validation</h4>
+  <h3 class="lab-sub">Validation</h3>
   <div class="code-block terminal">
     <div class="code-head"><span class="lang">Bash</span><span class="path">validate Lab 3</span><button class="copy-btn">Copy</button></div>
 <pre><code># Token lifespan == 300 s:
@@ -2700,7 +3045,7 @@ kubectl --context docker-desktop -n spire exec $SS -- \
 </code></pre>
   </div>
 
-  <h4>Break-it exercise</h4>
+  <h3 class="lab-sub">Break-it exercise</h3>
   <p>Re-use an expired token and see the API gateway refuse it. This demonstrates why replay windows matter.</p>
 
   <div class="code-block terminal">
@@ -2745,7 +3090,7 @@ curl -s -o /dev/null -w '%{http_code}\n' \
 </code></pre>
   </div>
 
-  <h4>Reflection questions</h4>
+  <h3 class="lab-sub">Reflection questions</h3>
   <ol>
     <li>The source 1 says CIAM tokens are DPoP-bound and workforce tokens are Entra-issued. Which property of DPoP makes the difference between "valid token" and "valid session for this client"? Which 800-207 tenet does that strengthen — T3, T6, or both?</li>
     <li>SPIRE SVIDs rotate silently every ~TTL/2 without the workload being aware. In what circumstances would you accept a longer TTL, and how does that decision trade against 800-207 2.1 T3 and the 3.4 Trust Algorithm?</li>
@@ -2780,7 +3125,7 @@ curl -s -o /dev/null -w '%{http_code}\n' \
   <!-- Interactive Trust Score widget -->
   <div class="trust-widget" id="trust-widget" role="region" aria-label="Interactive trust-score calculator">
     <div>
-      <h4>Interactive — build your own Trust Algorithm</h4>
+      <h3 class="lab-sub">Interactive — build your own Trust Algorithm</h3>
       <p class="tw-intro">Drag each signal to match a realistic request. The engine combines them — identity authenticity weighs most, then device posture, then behaviour and location. At <strong>&lt; 40</strong> the PE denies; <strong>40–70</strong> triggers step-up auth; <strong>≥ 70</strong> allows the session.</p>
 
       <div class="trust-signal">
@@ -2825,7 +3170,7 @@ curl -s -o /dev/null -w '%{http_code}\n' \
     <dt>Source </dt><dd>4 (OPA + AuthZEN), 5 Flow A (Rego evaluation with risk signal), 6 (Rego code), 8.5 (decision log)</dd>
   </dl>
 
-  <h4>Learning objectives</h4>
+  <h3 class="lab-sub">Learning objectives</h3>
   <ul>
     <li>Author a Rego policy that reads subject identity (Keycloak JWT), workload identity (SPIFFE ID), request attributes (path, method), and a <em>device posture</em> signal injected as a header.</li>
     <li>Wire OPA to Envoy via the <code>envoy.ext_authz</code> gRPC filter so that every API request is evaluated.</li>
@@ -2833,10 +3178,10 @@ curl -s -o /dev/null -w '%{http_code}\n' \
     <li>Read the OPA decision log and recognise the evidence artefact that the source 8.5 calls the <code>decision_id</code>.</li>
   </ul>
 
-  <h4>Concept primer</h4>
+  <h3 class="lab-sub">Concept primer</h3>
   <p>The source 6 shows a Rego policy that evaluates four inputs — <code>subject</code>, <code>resource</code>, <code>action</code>, <code>context</code> — plus an <code>env</code> carrying the signed policy-bundle hash. 800-207 2.1 T4 says exactly this: a request is not permitted solely because its credentials are valid; the authorisation calculus must reach into the <em>observable state</em> of client, app, and asset, and may use behavioural attributes (UEBA, fraud/AML scores in the source 9). In this lab we implement a trimmed-down version: JWT claims stand in for CIAM identity, the SPIFFE peer identity on the sidecar stands in for workload identity, and a <code>x-device-posture</code> header stands in for the Tanium/Wiz CDM signal. The posture values <code>trusted | suspect | tampered</code> change outcomes per method — a <code>GET</code> from a <code>suspect</code> device is permitted, but any <code>POST</code> requires <code>trusted</code>. The policy is <strong>fail-closed</strong> (default deny) and <strong>self-auditing</strong> (every evaluation emits a decision log) — two properties the source 6 calls out explicitly.</p>
 
-  <h4>Step-by-step</h4>
+  <h3 class="lab-sub">Step-by-step</h3>
 
   <p><span class="step-num">01</span>Author the Rego policy. Save it under the repo and load it into OPA as a ConfigMap.</p>
 
@@ -3072,7 +3417,7 @@ done
 </code></pre>
   </div>
 
-  <h4>Validation</h4>
+  <h3 class="lab-sub">Validation</h3>
   <div class="code-block terminal">
     <div class="code-head"><span class="lang">Bash</span><span class="path">validate Lab 4</span><button class="copy-btn">Copy</button></div>
 <pre><code># Exactly one allow on POST: only posture=trusted
@@ -3089,7 +3434,7 @@ istioctl --context docker-desktop pc listeners \
 </code></pre>
   </div>
 
-  <h4>Break-it exercise</h4>
+  <h3 class="lab-sub">Break-it exercise</h3>
   <p>Loosen the Rego to treat <code>unknown</code> posture as allowed. Observe that attackers can now simply omit the header. Revert.</p>
 
   <div class="code-block terminal">
@@ -3114,7 +3459,7 @@ curl -s -o /dev/null -w '%{http_code}\n' -X POST \
 </code></pre>
   </div>
 
-  <h4>Reflection questions</h4>
+  <h3 class="lab-sub">Reflection questions</h3>
   <ol>
     <li>The source 6 policy is <em>fail-closed</em> by default. Write the one line of your Rego that enforces this, and explain the STRIDE risk (8.10) it mitigates.</li>
     <li>The posture header in this lab is trivially spoofable from outside the mesh. In a real deployment, what source 4 component would sign the posture claim, and where in the request flow would the PEP verify the signature?</li>
@@ -3153,7 +3498,7 @@ curl -s -o /dev/null -w '%{http_code}\n' -X POST \
     <dt>Source </dt><dd>4 (CDM box), 7.14 (Wiz + Tanium), 8.10 (threat model)</dd>
   </dl>
 
-  <h4>Learning objectives</h4>
+  <h3 class="lab-sub">Learning objectives</h3>
   <ul>
     <li>Deploy Falco with the <em>modern_ebpf</em> driver as the runtime integrity monitor.</li>
     <li>Build a minimal CDM stand-in — a webhook that consumes Falco events and mutates a Kubernetes annotation used by policy.</li>
@@ -3161,10 +3506,10 @@ curl -s -o /dev/null -w '%{http_code}\n' -X POST \
     <li>Close the detection-to-enforcement loop inside 30 seconds, end-to-end.</li>
   </ul>
 
-  <h4>Concept primer</h4>
+  <h3 class="lab-sub">Concept primer</h3>
   <p>The source 4 diagram places CDM (Tanium for endpoints, Wiz for cloud) as a Data Source feeding the Policy Engine; 7.14 insists this is not a reporting dashboard but a real-time <em>signal</em>. NIST 800-207 2.1 T5 says the enterprise measures integrity of <em>all</em> owned assets — pods included. In a real bank, Wiz surfaces CVEs and drift; Tanium surfaces endpoint tampering. In this lab Falco plays the runtime-integrity role: eBPF-kernel syscall inspection detects "a shell ran in a container" and emits a structured event. A small Go/Python webhook — running in <code>zta-runtime-security</code> — receives the event, looks up the owning pod, and patches its ServiceAccount's annotation <code>zta.posture</code>. Your Envoy sidecar can then project that annotation onto outbound requests via a header (the simplest plumbing), or — in more mature deployments — the CDM signal flows over a signed Kafka channel into the PE directly. Either way, the <em>Trust Algorithm</em> (3.4.1) is no longer static.</p>
 
-  <h4>Step-by-step</h4>
+  <h3 class="lab-sub">Step-by-step</h3>
 
   <p><span class="step-num">01</span>Confirm Falco is running and tail its structured output.</p>
 
@@ -3385,7 +3730,7 @@ kubectl --context docker-desktop -n bookstore-api get pod -l app=api \
 </code></pre>
   </div>
 
-  <h4>Validation</h4>
+  <h3 class="lab-sub">Validation</h3>
   <div class="code-block terminal">
     <div class="code-head"><span class="lang">Bash</span><span class="path">validate Lab 5</span><button class="copy-btn">Copy</button></div>
 <pre><code># Within 60–90 s the reconciler bounces the pod; the new pod's env picks up 'tampered'.
@@ -3410,7 +3755,7 @@ kubectl --context docker-desktop -n zta-policy logs deploy/opa --tail=5 \
 </code></pre>
   </div>
 
-  <h4>Break-it exercise</h4>
+  <h3 class="lab-sub">Break-it exercise</h3>
   <p>Disable the webhook subscriber in Falcosidekick and repeat the shell-in-container event. The annotation no longer changes; the policy stays at <code>trusted</code>. This is what a CDM outage looks like — and why source 8.5 mandates WORM retention: detection that never reaches the PE is invisible forever unless it is also logged.</p>
 
   <div class="code-block terminal">
@@ -3426,7 +3771,7 @@ helm --kube-context docker-desktop upgrade falco falcosecurity/falco -n zta-runt
 </code></pre>
   </div>
 
-  <h4>Reflection questions</h4>
+  <h3 class="lab-sub">Reflection questions</h3>
   <ol>
     <li>Source 7.14 names Wiz and Tanium as CDM sources. Which classes of event can Falco detect that Wiz typically cannot, and which detections belong to Wiz rather than Falco?</li>
     <li>The reconciler introduces seconds of latency between detection and enforcement. Against the source 8.10 STRIDE list, which adversary technique becomes easier during that window?</li>
@@ -3465,7 +3810,7 @@ helm --kube-context docker-desktop upgrade falco falcosecurity/falco -n zta-runt
     <dt>Source </dt><dd>4 (control-plane placement), 5 Flow A end-to-end, 7.5–7.6, 8.10 (policy-plane threat model)</dd>
   </dl>
 
-  <h4>Learning objectives</h4>
+  <h3 class="lab-sub">Learning objectives</h3>
   <ul>
     <li>Stand up a minimal Policy Administrator: a signed-bundle HTTP server that publishes OPA bundles over HTTPS.</li>
     <li>Configure OPA PEs to verify bundle signatures and reject unsigned or unknown-signer bundles — the <code>trusted_bundles</code> pattern from source 6.</li>
@@ -3473,10 +3818,10 @@ helm --kube-context docker-desktop upgrade falco falcosecurity/falco -n zta-runt
     <li>Read the sequence diagram and locate every 800-207 3.1 component participating.</li>
   </ul>
 
-  <h4>Concept primer</h4>
+  <h3 class="lab-sub">Concept primer</h3>
   <p>Tenets 1–5 describe what is watched and how; Tenet 6 is the thesis statement — <em>no request succeeds without a fresh, dynamic, authoritative authorisation</em>, and that authorisation is enforced at the resource, not merely requested. The source 4 makes the policy plane Tier-0 for exactly this reason. In production the PA compiles Rego, runs <code>opa test</code>, signs the bundle with cosign, publishes it to an immutable bucket, and signs a manifest of <em>trusted bundles</em> the PE uses to reject anything else. In a home lab we shrink this to: a Deployment that runs <code>opa build --signing-alg RS256 --signing-key key.pem</code>, an HTTPS service that serves the resulting tarball, and an OPA configuration that includes the public key under <code>keys</code> and the bundle name under <code>signing.keyid</code>. The PEP side is already in place from Lab 4. The lab's value is seeing the loop close at request time: the <em>same</em> request, run twice, gets two different decisions because the posture input — signal, bundle, or policy — changed between calls.</p>
 
-  <h4>Sequence diagram</h4>
+  <h3 class="lab-sub">Sequence diagram</h3>
   <figure class="diagram" aria-label="PE–PA–PEP sequence diagram">
 <svg viewBox="0 0 820 360" xmlns="http://www.w3.org/2000/svg" role="img">
   <defs>
@@ -3562,7 +3907,7 @@ helm --kube-context docker-desktop upgrade falco falcosecurity/falco -n zta-runt
 <figcaption>PE → PA → PEP loop. Same request, two decisions, determined by a dynamic posture signal.</figcaption>
 </figure>
 
-  <h4>Step-by-step</h4>
+  <h3 class="lab-sub">Step-by-step</h3>
 
   <p><span class="step-num">01</span>Generate a bundle-signing key pair.</p>
   <div class="code-block terminal">
@@ -3748,7 +4093,7 @@ curl -s -o /dev/null -w 'round2=%{http_code}\n' \
 </code></pre>
   </div>
 
-  <h4>Validation</h4>
+  <h3 class="lab-sub">Validation</h3>
   <div class="code-block terminal">
     <div class="code-head"><span class="lang">Bash</span><span class="path">validate Lab 6</span><button class="copy-btn">Copy</button></div>
 <pre><code># 1. Bundle signature verification is enforced (see bundle load above).
@@ -3763,7 +4108,7 @@ kubectl --context docker-desktop -n zta-policy logs deploy/opa --tail=30 \
 </code></pre>
   </div>
 
-  <h4>Break-it exercise</h4>
+  <h3 class="lab-sub">Break-it exercise</h3>
   <p>Ship an <em>unsigned</em> bundle and verify the PE refuses it. This is the <code>untrusted-bundle</code> defence from source 6 made concrete.</p>
 
   <div class="code-block terminal">
@@ -3789,7 +4134,7 @@ curl -s http://$(kubectl --context docker-desktop -n zta-policy get svc opa -o j
 </code></pre>
   </div>
 
-  <h4>Reflection questions</h4>
+  <h3 class="lab-sub">Reflection questions</h3>
   <ol>
     <li>The source 8.10 "Elevation via policy regression" mitigation names <em>signed CI</em>, <em>staged rollout</em>, and <em>automated rollback on allow-rate anomaly</em>. Which of these did this lab implement, and which would you add next?</li>
     <li>If the PA itself is compromised, signed bundles still protect the PE — but only up to a point. What source 8.10 control covers the residual risk?</li>
@@ -3828,17 +4173,17 @@ curl -s http://$(kubectl --context docker-desktop -n zta-policy get svc opa -o j
     <dt>Source </dt><dd>7.12 (Splunk + Snowflake), 7.13 (OTel + Grafana), 8.5 (logging), 8.6 (observability SLOs)</dd>
   </dl>
 
-  <h4>Learning objectives</h4>
+  <h3 class="lab-sub">Learning objectives</h3>
   <ul>
     <li>Wire Prometheus metrics, Loki logs (OPA decision log), and Tempo traces (Istio) into a single Grafana workspace.</li>
     <li>Build one dashboard showing allow/deny/step-up rates, decision latency P50/P99, and deny reasons broken down by cause — the telemetry SLOs from source 8.6.</li>
     <li>Use the dashboard to detect an unusual pattern and refine the Lab 4 policy in response — the closing step in 800-207 T7's "use it to improve its security posture."</li>
   </ul>
 
-  <h4>Concept primer</h4>
+  <h3 class="lab-sub">Concept primer</h3>
   <p>T7 is often read as "collect lots of logs." The source 8.6 is more exact: SLOs are <em>quantitative</em>, telemetry feeds the Trust Algorithm, and observed allow-rate regressions are themselves an input to policy release gates. In this lab you hold up a magnifying glass to the cluster: Prometheus scrapes OPA's metrics endpoint for decision counters and latency histograms; the Loki Grafana Agent tails OPA pod logs, parses each line as JSON, and indexes on <code>decision_id</code>, <code>reason</code>, <code>allow</code>; Tempo receives OpenTelemetry traces from the Istio sidecars via the Zipkin endpoint. One Grafana dashboard stitches them together — a classic golden-signals view but with the decision itself as the first-class object. The <em>improvement</em> step is the point: you will notice that too many denies with reason <code>no-matching-allow</code> come from one API path, and you will tighten the Rego to give the operator a clearer error.</p>
 
-  <h4>Step-by-step</h4>
+  <h3 class="lab-sub">Step-by-step</h3>
 
   <p><span class="step-num">01</span>Expose OPA's Prometheus metrics endpoint and add a <code>ServiceMonitor</code> so kube-prometheus scrapes it.</p>
 
@@ -4064,7 +4409,7 @@ echo "load mix complete"
 
   <p>Republish the bundle (Lab 6 PA rebuilds it on ConfigMap change — rollout restart <code>pa</code>). Repeat the load mix; the deny-reasons bar chart should now distinguish <code>missing-token</code> from <code>no-matching-allow</code>, which is the T7 feedback loop closing.</p>
 
-  <h4>Validation</h4>
+  <h3 class="lab-sub">Validation</h3>
   <div class="code-block terminal">
     <div class="code-head"><span class="lang">Bash</span><span class="path">validate Lab 7</span><button class="copy-btn">Copy</button></div>
 <pre><code># 1. Prometheus scrapes OPA:
@@ -4089,7 +4434,7 @@ curl -s 'http://localhost:3200/api/search?tags=service.name=istio-ingressgateway
 </code></pre>
   </div>
 
-  <h4>Break-it exercise</h4>
+  <h3 class="lab-sub">Break-it exercise</h3>
   <p>Drop OPA's decision-log console sink. Repeat the load. Observe the dashboard goes silent on reasons while latency and counters continue — the policy decisions are still enforced but no longer <em>auditable</em>, which the source 8.5 calls a SOX 404 violation. Restore.</p>
 
   <div class="code-block terminal">
@@ -4111,7 +4456,7 @@ kubectl --context docker-desktop -n zta-policy rollout restart deploy/opa
 </code></pre>
   </div>
 
-  <h4>Reflection questions</h4>
+  <h3 class="lab-sub">Reflection questions</h3>
   <ol>
     <li>Source 8.6 sets PE availability at 99.995% and decision latency P99 &lt; 10 ms. Which of those SLOs is your dashboard showing, and which would you add a burn-rate alert for first?</li>
     <li>The refined policy produced a new deny reason, <code>missing-token</code>. Which tenet does the <em>act of refinement</em> satisfy — T4, T7, or both — and why?</li>
@@ -4876,6 +5221,12 @@ echo "Hard teardown requested; background namespace finalisation may take a minu
 <footer class="site-foot">
   <div>ZTA Home Lab · derived from ZTA-2026-001 · anchored to NIST SP 800-207 (Aug 2020) · tutorial v1.0 · 2026-04-17</div>
   <div>Runs entirely on Docker Desktop Kubernetes · all components open source · no cloud resources required</div>
+  <nav class="foot-links" aria-label="Footer links">
+    <a href="https://github.com/jamesbuckett" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+    <a href="https://github.com/jamesbuckett" target="_blank" rel="noopener noreferrer">Found a broken manifest? Open an issue</a>
+    <a href="https://www.linkedin.com/in/jamesbuckett" target="_blank" rel="noopener noreferrer">Share feedback on LinkedIn</a>
+    <a href="#overview">Back to top</a>
+  </nav>
 </footer>
 
 </main>
