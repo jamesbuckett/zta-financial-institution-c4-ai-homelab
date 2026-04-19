@@ -1698,31 +1698,6 @@ Data-access policy .. Immuta</pre>
   </div>
 </details>
 
-<h3>Mapping: Source Sections → NIST SP 800-207</h3>
-<p>Every major section of the source document maps to at least one tenet of 800-207 2.1, a logical component of 3.1, and a deployment variant of 3.2. The table below is the index; the full per-paragraph matrix is in the <a href="#appendix">Mapping Appendix</a>.</p>
-<p class="handbook-how"><strong>Reading the cross-references.</strong> Throughout this handbook, "<em>source 7.14</em>" points to a section of the underlying ZTA-2026-001 architecture document; "<em>§3.1.2</em>" points to NIST SP 800-207 itself. Everything on the left of the table maps to everything on the right.</p>
-
-<div class="table-wrap">
-<table>
-  <thead>
-    <tr><th style="width:26%">Source Section</th><th>800-207 Tenet(s)</th><th>Logical Component(s) 3.1</th><th>Deployment Variant 3.2</th></tr>
-  </thead>
-  <tbody>
-    <tr><td>1 Executive summary</td><td>T1–T7 (all)</td><td>PE, PA, PEP, Trust Algorithm (3.3)</td><td>Hybrid (enclave + resource-portal + device-agent/gateway)</td></tr>
-    <tr><td>2 Assumptions &amp; scope</td><td>T1, T2</td><td>Resources, data-source taxonomy</td><td>Resource-portal (3.2.3) for mainframe facade</td></tr>
-    <tr><td>3 Context (C4 L1)</td><td>T2, T4</td><td>Subject / Enterprise Resource boundary</td><td>Device-agent/gateway (3.2.1) for workforce</td></tr>
-    <tr><td>4 Container (C4 L2)</td><td>T3, T4, T6</td><td>PE fleet, PA, PEPs, Data Sources, Trust Algorithm</td><td>Hybrid — multi-PEP class</td></tr>
-    <tr><td>5 Component (C4 L3, flows)</td><td>T3, T4, T6, T7</td><td>PE↔PEP decision loop, Identity DS, CDM, risk DS</td><td>Resource-portal (API PEP), Enclave (SWIFT)</td></tr>
-    <tr><td>6 Code (Rego sample)</td><td>T4, T6</td><td>PE decision logic; fail-closed default</td><td>All variants — same PE contract</td></tr>
-    <tr><td>7 Component catalogue</td><td>T1–T7</td><td>Every 3.1 component by name</td><td>All four 3.2 variants</td></tr>
-    <tr><td>8 Cross-cutting concerns</td><td>T2, T3, T5, T7</td><td>PKI, secrets, SIEM, observability</td><td>Enclave (3.2.2) for payments; sandboxing (3.2.4) for AI</td></tr>
-    <tr><td>9 AI / ML use-case catalogue</td><td>T4, T5, T7</td><td>Trust Algorithm signals; AI Gateway PEP</td><td>Application sandboxing (3.2.4)</td></tr>
-    <tr><td>10 Summary table</td><td>T1–T7</td><td>Component-to-role mapping</td><td>All variants</td></tr>
-    <tr><td>11 Open questions / PoCs</td><td>T6, T7</td><td>PE/PA failure modes, policy-plane hardening</td><td>All variants (resilience concern)</td></tr>
-  </tbody>
-</table>
-</div>
-
 <p class="footnote">Tenet abbreviations throughout: <span class="badge tenet">T1</span> resources, <span class="badge tenet">T2</span> secured comms, <span class="badge tenet">T3</span> per-session, <span class="badge tenet">T4</span> dynamic policy, <span class="badge tenet">T5</span> posture monitoring, <span class="badge tenet">T6</span> strict enforcement, <span class="badge tenet">T7</span> telemetry. See 800-207 2.1.</p>
 </section>
 
