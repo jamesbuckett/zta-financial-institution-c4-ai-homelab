@@ -2170,19 +2170,31 @@ spec:
 </div>
 
 <div class="code-block terminal">
-  <div class="code-head"><span class="lang">Bash</span><span class="path">bootstrap/06-gatekeeper.sh + 07-falco.sh + 08-observability.sh</span><button class="copy-btn">Copy</button></div>
+  <div class="code-head"><span class="lang">Bash</span><span class="path">bootstrap/06-gatekeeper.sh</span><button class="copy-btn">Copy</button></div>
 <pre><code>#!/usr/bin/env bash
 set -euo pipefail
 CTX=docker-desktop
 
 # OPA Gatekeeper — admission-time policy PEP
 helm repo add gatekeeper https://open-policy-agent.github.io/gatekeeper/charts
+helm repo update
 helm --kube-context $CTX upgrade --install gatekeeper gatekeeper/gatekeeper \
   --namespace gatekeeper-system --create-namespace \
   --version 3.17.1 --wait
 
+echo "Gatekeeper installed."
+</code></pre>
+</div>
+
+<div class="code-block terminal">
+  <div class="code-head"><span class="lang">Bash</span><span class="path">bootstrap/07-falco.sh</span><button class="copy-btn">Copy</button></div>
+<pre><code>#!/usr/bin/env bash
+set -euo pipefail
+CTX=docker-desktop
+
 # Falco — runtime integrity monitor (Tenet 5)
 helm repo add falcosecurity https://falcosecurity.github.io/charts
+helm repo update
 helm --kube-context $CTX upgrade --install falco falcosecurity/falco \
   --namespace zta-runtime-security \
   --version 4.8.1 \
@@ -2192,20 +2204,34 @@ helm --kube-context $CTX upgrade --install falco falcosecurity/falco \
   --set falcosidekick.webui.enabled=true \
   --wait
 
+echo "Falco installed (modern_ebpf driver)."
+</code></pre>
+</div>
+
+<div class="code-block terminal">
+  <div class="code-head"><span class="lang">Bash</span><span class="path">bootstrap/08-observability.sh</span><button class="copy-btn">Copy</button></div>
+<pre><code>#!/usr/bin/env bash
+set -euo pipefail
+CTX=docker-desktop
+
 # Observability stack — kube-prometheus-stack + Loki + Tempo (Tenet 7)
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo add grafana https://grafana.github.io/helm-charts
+helm repo update
+
 helm --kube-context $CTX upgrade --install kube-prom prometheus-community/kube-prometheus-stack \
   --namespace zta-observability --version 62.3.0 \
   --set grafana.adminPassword=admin --wait
+
 helm --kube-context $CTX upgrade --install loki grafana/loki \
   --namespace zta-observability --version 6.10.0 \
   --set deploymentMode=SingleBinary --set singleBinary.replicas=1 \
   --set loki.auth_enabled=false --wait
+
 helm --kube-context $CTX upgrade --install tempo grafana/tempo \
   --namespace zta-observability --version 1.10.1 --wait
 
-echo "Bootstrap stage 2 complete."
+echo "Observability stack installed (Prometheus, Grafana, Loki, Tempo)."
 </code></pre>
 </div>
 
