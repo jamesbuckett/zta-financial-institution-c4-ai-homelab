@@ -2249,6 +2249,8 @@ echo "Falco installed (modern_ebpf driver)."
 </code></pre>
 </div>
 
+<p><strong>Helm chart:</strong> <code>set prometheus-node-exporter.hostRootFsMount.enabled=false</code> — the bundled <code>node-exporter</code> DaemonSet tries to bind-mount the host root filesystem to scrape <code>/proc</code>, <code>/sys</code>, and <code>/rootfs</code>. On Docker Desktop's Linux-in-VM kernel that mount fails and the pods crash-loop. Disabling the host-root mount loses a handful of host-level filesystem metrics but keeps every cluster-scoped signal (CPU, memory, pods, API-server) — acceptable for a single-node lab.</p>
+
 <div class="code-block terminal">
   <div class="code-head"><span class="lang">Bash</span><span class="path">bootstrap/08-observability.sh</span><button class="copy-btn">Copy</button></div>
 <pre><code>#!/usr/bin/env bash
@@ -2262,7 +2264,9 @@ helm repo update
 
 helm --kube-context $CTX upgrade --install kube-prom prometheus-community/kube-prometheus-stack \
   --namespace zta-observability --version 62.3.0 \
-  --set grafana.adminPassword=admin --wait
+  --set grafana.adminPassword=admin \
+  --set prometheus-node-exporter.hostRootFsMount.enabled=false \
+  --wait
 
 helm --kube-context $CTX upgrade --install loki grafana/loki \
   --namespace zta-observability --version 6.10.0 \
