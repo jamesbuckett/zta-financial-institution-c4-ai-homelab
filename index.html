@@ -1759,6 +1759,67 @@ Data-access policy .. Immuta</pre>
 </code></pre>
 </div>
 
+<p>Run the script below from your home directory (or wherever you keep projects) to scaffold the tree in one shot. It creates every directory and an empty placeholder for each file referenced in this tutorial — safe to re-run, nothing is overwritten.</p>
+
+<div class="code-block terminal">
+  <div class="code-head"><span class="lang">Bash</span><span class="path">scaffold-repo.sh</span><button class="copy-btn">Copy</button></div>
+<pre><code>#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="${1:-$HOME/zta-homelab}"
+mkdir -p "$ROOT"
+cd "$ROOT"
+
+# Bootstrap directory and placeholder files
+mkdir -p bootstrap
+touch bootstrap/00-namespaces.yaml \
+      bootstrap/01-cert-manager.sh \
+      bootstrap/02-istio.sh \
+      bootstrap/03-spire.yaml \
+      bootstrap/04-keycloak.yaml \
+      bootstrap/05-opa.yaml \
+      bootstrap/06-gatekeeper.sh \
+      bootstrap/07-falco.sh \
+      bootstrap/08-observability.sh \
+      bootstrap/09-bookstore.yaml
+
+# Make the bootstrap shell scripts executable
+chmod +x bootstrap/*.sh
+
+# Lab directories (one per 800-207 tenet)
+mkdir -p labs/01-resources \
+         labs/02-secured-comms \
+         labs/03-per-session \
+         labs/04-dynamic-policy \
+         labs/05-posture-monitoring \
+         labs/06-strict-enforcement \
+         labs/07-telemetry-loop
+
+# Capstone and teardown
+mkdir -p capstone
+touch teardown.sh
+chmod +x teardown.sh
+
+echo "Scaffolded Zero Trust home-lab repo at: $ROOT"
+tree -L 2 "$ROOT" 2>/dev/null || find "$ROOT" -maxdepth 2 -print
+</code></pre>
+</div>
+
+<div class="code-block terminal">
+  <div class="code-head"><span class="lang">Bash</span><span class="path">run it</span><button class="copy-btn">Copy</button></div>
+<pre><code>chmod +x scaffold-repo.sh
+./scaffold-repo.sh ~/zta-homelab
+
+# Expected (abridged):
+# Scaffolded Zero Trust home-lab repo at: /Users/you/zta-homelab
+# /Users/you/zta-homelab
+# ├── bootstrap
+# ├── capstone
+# ├── labs
+# └── teardown.sh
+</code></pre>
+</div>
+
 <h3>2.3 Bootstrap — namespaces</h3>
 <p>Ten namespaces isolate the lab's control plane, data plane, observability, and workloads. Labels are declared now so later labs can reference them.</p>
 
