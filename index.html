@@ -86,7 +86,7 @@
       "supply": [
         { "@type": "HowToSupply", "name": "Docker Desktop 4.30+ with Kubernetes enabled" },
         { "@type": "HowToSupply", "name": "6 CPU / 8 GB RAM / 60 GB disk (10 GB RAM recommended)" },
-        { "@type": "HowToSupply", "name": "kubectl 1.29+, helm 3.14+, kustomize 5.0+, istioctl 1.22+, jq, yq, openssl" }
+        { "@type": "HowToSupply", "name": "kubectl 1.29+, helm 3.14+, kustomize 5.0+, istioctl 1.28+, jq, yq, openssl" }
       ],
       "step": [
         { "@type": "HowToStep", "position": 1, "name": "Lab 1 — Resources",          "url": "#lab-1",    "text": "Inventory every pod, service, and volume as a resource; apply a label schema; enforce it at admission." },
@@ -1715,7 +1715,7 @@ Data-access policy .. Immuta</pre>
 <ul>
   <li><strong>Docker Desktop 4.30+</strong> (macOS, Windows with WSL2, or Linux) with built-in Kubernetes enabled. <em>Settings → Kubernetes → Enable Kubernetes.</em></li>
   <li><strong>Resources:</strong> at minimum <strong>6 CPU / 8 GB RAM / 60 GB disk</strong>. Istio + SPIRE + Falco + Keycloak + Grafana stack is chatty. 10 GB is more comfortable.</li>
-  <li><strong>CLI tools:</strong> <code>kubectl</code> ≥ 1.29, <code>helm</code> ≥ 3.14, <code>kustomize</code> ≥ 5.0, <code>istioctl</code> ≥ 1.22, <code>jq</code>, <code>yq</code>, <code>openssl</code>.</li>
+  <li><strong>CLI tools:</strong> <code>kubectl</code> ≥ 1.29, <code>helm</code> ≥ 3.14, <code>kustomize</code> ≥ 5.0, <code>istioctl</code> ≥ 1.28, <code>jq</code>, <code>yq</code>, <code>openssl</code>.</li>
   <li><strong>Kubernetes context:</strong> <code>docker-desktop</code>. Every command in this tutorial is prefixed with <code>--context docker-desktop</code> or assumes you have set it as the current context.</li>
   <li><strong>Host entries</strong> for ingress: add <code>127.0.0.1 bookstore.local keycloak.local grafana.local</code> to <code>/etc/hosts</code> (macOS/Linux) or <code>C:\Windows\System32\drivers\etc\hosts</code> (Windows).</li>
 </ul>
@@ -1736,7 +1736,7 @@ Data-access policy .. Immuta</pre>
   <dt>kubectl</dt><dd>≥ 1.29 — Kubernetes API client; must match the server's minor version ± 1.</dd>
   <dt>helm</dt><dd>≥ 3.14 — chart renderer for cert-manager, Falco, kube-prometheus-stack, Loki, Tempo.</dd>
   <dt>kustomize</dt><dd>≥ 5.0 — overlay patcher for the bookstore workload manifests.</dd>
-  <dt>istioctl</dt><dd>≥ 1.22 — installs the mesh in §2.4 and introspects Envoy config in every lab.</dd>
+  <dt>istioctl</dt><dd>≥ 1.28 — installs the mesh in §2.5 and introspects Envoy config in every lab. Istio 1.26 and earlier are EOL; 1.29 is the current upstream recommendation.</dd>
   <dt>jq</dt><dd>≥ 1.7 — JSON slicer for <code>kubectl get -o json</code> and OPA decision logs.</dd>
   <dt>yq</dt><dd>≥ 4.40 (Mike Farah) — YAML equivalent of jq; used by the scaffold and teardown scripts.</dd>
   <dt>openssl</dt><dd>≥ 3.0 — inspects PeerAuthentication and SPIFFE SVID certificates in Lab 2.</dd>
@@ -1791,7 +1791,7 @@ curl -fsSL "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/h
 sudo mv ./kustomize "${BIN}/kustomize"
 
 # istioctl — download, extract, promote.
-ISTIO_VERSION="1.22.3"
+ISTIO_VERSION="1.29.2"
 curl -fsSL "https://github.com/istio/istio/releases/download/${ISTIO_VERSION}/istio-${ISTIO_VERSION}-linux-${ARCH}.tar.gz" \
   | tar -xz -C /tmp
 sudo install "/tmp/istio-${ISTIO_VERSION}/bin/istioctl" "${BIN}/istioctl"
@@ -1834,7 +1834,7 @@ istioctl version --remote=$false ; jq --version ; yq --version ; openssl version
   <ul>
     <li><strong>Two yq's exist.</strong> Ubuntu's <code>apt install yq</code> pulls the <em>Python</em> implementation, which uses a different syntax. Always install the Go version from <code>mikefarah/yq</code> — the scaffold and teardown scripts assume it.</li>
     <li><strong>kubectl skew.</strong> A client more than one minor version ahead of the server works for most operations but fails on newer resources (e.g. <code>ValidatingAdmissionPolicy</code>). Match the Docker Desktop Kubernetes minor where you can.</li>
-    <li><strong>istioctl version ↔ control plane version.</strong> Lab 2 pins <code>ISTIO_VERSION=1.22.3</code>. Your <code>istioctl</code> binary must be the same major/minor; upgrading the control plane with a mismatched CLI silently installs the CLI's version.</li>
+    <li><strong>istioctl version ↔ control plane version.</strong> Lab 2 pins <code>ISTIO_VERSION=1.29.2</code> (current upstream-supported minor; 1.26 and earlier are EOL). Your <code>istioctl</code> binary must be the same major/minor; upgrading the control plane with a mismatched CLI silently installs the CLI's version.</li>
     <li><strong>LibreSSL on macOS.</strong> The <code>openssl</code> shipped with macOS is LibreSSL and misses flags we use in Lab 2 (<code>-verify_return_error</code>, newer <code>-subj</code> parsing). Homebrew's <code>openssl@3</code> fixes this — make sure <code>$(brew --prefix openssl@3)/bin</code> is earlier in <code>PATH</code> than <code>/usr/bin</code>.</li>
   </ul>
 </div>
@@ -2056,7 +2056,7 @@ echo "cert-manager ready."
 <pre><code>#!/usr/bin/env bash
 set -euo pipefail
 CTX=docker-desktop
-ISTIO_VERSION=1.22.3
+ISTIO_VERSION=1.29.2
 
 # Install via istioctl with the 'default' profile — adequate for the lab.
 # Sidecar mode (not ambient) for clearest pedagogical mapping to PEP.
