@@ -2288,7 +2288,10 @@ spec:
     spec:
       containers:
       - name: opa
-        image: openpolicyagent/opa:0.68.0-envoy
+        # Image is resolved per host architecture by the apply wrapper below.
+        # amd64  -> openpolicyagent/opa:0.68.0-envoy
+        # arm64  -> openpolicyagent/opa:0.68.0-envoy-rootless   (multi-arch manifest)
+        image: ${OPA_ENVOY_IMAGE}
         args:
         - "run"
         - "--server"
@@ -2315,6 +2318,42 @@ spec:
   ports:
   - { name: http, port: 8181, targetPort: 8181 }
   - { name: grpc, port: 9191, targetPort: 9191 }
+</code></pre>
+</div>
+
+<p class="footnote" style="text-transform:none; letter-spacing:0; font-weight:normal; font-size:12.5px; color: var(--muted);">The OPA image is parameterised because the default <code>openpolicyagent/opa:&lt;ver&gt;-envoy</code> tag ships an amd64-only binary (<code>opa_envoy_linux_amd64</code>) and fails with <code>exec format error</code> on arm64 hosts (Apple Silicon, ARM Windows, Raspberry Pi). The wrapper below detects <code>uname -m</code> and picks the matching multi-arch variant before applying.</p>
+
+<div class="code-block terminal">
+  <div class="code-head"><span class="lang">Bash</span><span class="path">bootstrap/05-opa.sh  (arch-aware apply wrapper)</span><button class="copy-btn">Copy</button></div>
+<pre><code>#!/usr/bin/env bash
+set -euo pipefail
+CTX=docker-desktop
+
+# Resolve the OPA+Envoy image for the host architecture.
+# openpolicyagent/opa:0.68.0-envoy            -> amd64 only
+# openpolicyagent/opa:0.68.0-envoy-rootless   -> multi-arch (amd64 + arm64)
+case "$(uname -m)" in
+  x86_64|amd64)
+    export OPA_ENVOY_IMAGE="openpolicyagent/opa:0.68.0-envoy"
+    ;;
+  aarch64|arm64)
+    export OPA_ENVOY_IMAGE="openpolicyagent/opa:0.68.0-envoy-rootless"
+    ;;
+  *)
+    echo "Unsupported architecture: $(uname -m)" >&2
+    exit 1
+    ;;
+esac
+
+echo "Using OPA image: ${OPA_ENVOY_IMAGE}"
+
+# envsubst only expands the OPA_ENVOY_IMAGE placeholder — any other
+# literal ${...} in the YAML (there aren't any here) is left untouched.
+envsubst '${OPA_ENVOY_IMAGE}' \
+  < bootstrap/05-opa.yaml \
+  | kubectl --context $CTX apply -f -
+
+kubectl --context $CTX -n zta-policy rollout status deploy/opa --timeout=120s
 </code></pre>
 </div>
 
