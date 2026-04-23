@@ -1974,6 +1974,34 @@ echo "Istio ${ISTIO_VERSION} installed; sidecar injection enabled on zta-* and b
 kind: ServiceAccount
 metadata: { name: spire-server, namespace: spire }
 ---
+# Empty bundle ConfigMap — SPIRE's k8sbundle notifier patches this in place
+# with the current trust-domain bundle. It must exist before the server starts.
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: spire-bundle, namespace: spire }
+---
+# RBAC for the k8sbundle notifier: spire-server patches the spire-bundle CM
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata: { name: spire-server-configmap, namespace: spire }
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["spire-bundle"]
+    verbs: ["get", "list", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata: { name: spire-server-configmap, namespace: spire }
+subjects:
+  - kind: ServiceAccount
+    name: spire-server
+    namespace: spire
+roleRef:
+  kind: Role
+  name: spire-server-configmap
+  apiGroup: rbac.authorization.k8s.io
+---
 apiVersion: v1
 kind: ConfigMap
 metadata: { name: spire-server, namespace: spire }
@@ -2041,7 +2069,18 @@ spec:
 </code></pre>
 </div>
 
-<p class="footnote">The SPIRE agent <code>DaemonSet</code>, RBAC, and registration entries (one per bookstore tier) are in the companion file. Defaults chosen: trust domain <code>zta.homelab</code>, SVID TTL <strong>5 minutes</strong> — deliberately short so that Lab 3 can demonstrate rotation in real time.</p>
+<p class="footnote">The SPIRE agent <code>DaemonSet</code>, its RBAC, and registration entries (one per bookstore tier) are in the companion file. The server-side bits above — <code>spire-bundle</code> ConfigMap and the <code>spire-server-configmap</code> Role/RoleBinding — are required for the <code>k8sbundle</code> notifier to publish the trust bundle. Defaults chosen: trust domain <code>zta.homelab</code>, SVID TTL <strong>5 minutes</strong> — deliberately short so that Lab 3 can demonstrate rotation in real time.</p>
+
+<p>After applying the manifest you can confirm the notifier is populating the bundle:</p>
+
+<div class="code-block terminal">
+  <div class="code-head"><span class="lang">Bash</span><span class="path">verify spire-bundle</span><button class="copy-btn">Copy</button></div>
+<pre><code>kubectl --context docker-desktop get configmap spire-bundle -n spire -o yaml
+
+# Expected: a 'data.bundle.crt' field appears within ~30s of spire-server becoming Ready,
+# containing one or more PEM CERTIFICATE blocks.
+</code></pre>
+</div>
 
 <h3>2.5 Bootstrap — Keycloak, OPA, Gatekeeper, Falco, observability, bookstore</h3>
 
