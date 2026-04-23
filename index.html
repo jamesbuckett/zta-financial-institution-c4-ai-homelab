@@ -2087,7 +2087,7 @@ metadata:
 
 <div class="code-block terminal">
   <div class="code-head"><span class="lang">Bash</span><span class="path">apply namespaces</span><button class="copy-btn">Copy</button></div>
-<pre><code>kubectl --context docker-desktop apply -f ./bootstrap/00-namespaces.yaml
+<pre><code>kubectl --context docker-desktop apply -f 00-namespaces.yaml
 
 # Expected:
 # namespace/zta-system created
@@ -2141,7 +2141,7 @@ echo "cert-manager ready."
 
 <div class="code-block terminal">
   <div class="code-head"><span class="lang">Bash</span><span class="path">run cert-manager bootstrap</span><button class="copy-btn">Copy</button></div>
-<pre><code>./bootstrap/01-cert-manager.sh
+<pre><code>./01-cert-manager.sh
 
 # Expected (tail):
 # deployment.apps/cert-manager condition met
@@ -2179,7 +2179,7 @@ echo "Istio ${ISTIO_VERSION} installed; sidecar injection enabled on zta-* and b
 
 <div class="code-block terminal">
   <div class="code-head"><span class="lang">Bash</span><span class="path">run istio bootstrap</span><button class="copy-btn">Copy</button></div>
-<pre><code>./bootstrap/02-istio.sh
+<pre><code>./02-istio.sh
 
 # Expected (tail):
 # ✔ Istio core installed
@@ -2299,7 +2299,7 @@ spec:
 
 <div class="code-block terminal">
   <div class="code-head"><span class="lang">Bash</span><span class="path">apply spire</span><button class="copy-btn">Copy</button></div>
-<pre><code>kubectl --context docker-desktop apply -f ./bootstrap/03-spire.yaml
+<pre><code>kubectl --context docker-desktop apply -f 03-spire.yaml
 
 # Expected:
 # serviceaccount/spire-server created
