@@ -923,6 +923,84 @@
   .lab-flow[data-t="6"] .fstep .fs-num { color: var(--t6); }
   .lab-flow[data-t="7"] .fstep .fs-num { color: var(--t7); }
 
+  /* Lab architecture preview diagram — a visual "what you'll build" per lab */
+  .lab-diagram {
+    margin: var(--space-5) 0 var(--space-4);
+    padding: var(--space-4) var(--space-5) var(--space-4);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left-width: 3px;
+    border-radius: var(--radius);
+  }
+  .lab-diagram .ld-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--border);
+  }
+  .lab-diagram .ld-title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -0.005em;
+    color: var(--ink);
+  }
+  .lab-diagram .ld-sub {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .lab-diagram .ld-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 300px;
+  }
+  .lab-diagram .ld-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px dashed var(--border);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+    line-height: 1.4;
+  }
+  .lab-diagram .ld-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .lab-diagram .ld-legend i {
+    width: 20px;
+    height: 0;
+    border-top: 2px solid currentColor;
+    display: inline-block;
+    opacity: 0.85;
+  }
+  .lab-diagram .ld-legend i.dashed { border-top-style: dashed; }
+  .lab-diagram .ld-legend i.deny { color: #BE123C; }
+  .lab-diagram[data-t="1"] { border-left-color: var(--t1); }
+  .lab-diagram[data-t="2"] { border-left-color: var(--t2); }
+  .lab-diagram[data-t="3"] { border-left-color: var(--t3); }
+  .lab-diagram[data-t="4"] { border-left-color: var(--t4); }
+  .lab-diagram[data-t="5"] { border-left-color: var(--t5); }
+  .lab-diagram[data-t="6"] { border-left-color: var(--t6); }
+  .lab-diagram[data-t="7"] { border-left-color: var(--t7); }
+  .lab-diagram[data-t="1"] .ld-sub { color: var(--t1); }
+  .lab-diagram[data-t="2"] .ld-sub { color: var(--t2); }
+  .lab-diagram[data-t="3"] .ld-sub { color: var(--t3); }
+  .lab-diagram[data-t="4"] .ld-sub { color: var(--t4); }
+  .lab-diagram[data-t="5"] .ld-sub { color: var(--t5); }
+  .lab-diagram[data-t="6"] .ld-sub { color: var(--t6); }
+  .lab-diagram[data-t="7"] .ld-sub { color: var(--t7); }
+
   /* Tenet accent stripe on lab section heading */
   .lab[data-tenet="1"] { border-top-color: var(--t1); }
   .lab[data-tenet="2"] { border-top-color: var(--t2); }
@@ -1278,6 +1356,16 @@
   }
   [data-theme="dark"] figure.diagram { background: #FAFAFA; }
   [data-theme="dark"] figure.diagram figcaption { color: #6B7280; }
+  [data-theme="dark"] .lab-diagram {
+    background: #FAFAFA;
+    border-color: #2A2A2F;
+  }
+  [data-theme="dark"] .lab-diagram .ld-head { border-bottom-color: #E5E7EB; }
+  [data-theme="dark"] .lab-diagram .ld-title { color: #0A0A0A; }
+  [data-theme="dark"] .lab-diagram .ld-legend {
+    color: #6B7280;
+    border-top-color: #E5E7EB;
+  }
   [data-theme="dark"] .hero-arch-head h3 { color: #0A0A0A; }
   [data-theme="dark"] .hero-arch-head .hero-sub { color: #6B7280; }
   [data-theme="dark"] .hero-legend { color: #6B7280; }
@@ -2052,6 +2140,19 @@ echo "cert-manager ready."
 </div>
 
 <div class="code-block terminal">
+  <div class="code-head"><span class="lang">Bash</span><span class="path">run cert-manager bootstrap</span><button class="copy-btn">Copy</button></div>
+<pre><code>./bootstrap/01-cert-manager.sh
+
+# Expected (tail):
+# deployment.apps/cert-manager condition met
+# deployment.apps/cert-manager-webhook condition met
+# deployment.apps/cert-manager-cainjector condition met
+# clusterissuer.cert-manager.io/zta-selfsigned created
+# cert-manager ready.
+</code></pre>
+</div>
+
+<div class="code-block terminal">
   <div class="code-head"><span class="lang">Bash</span><span class="path">bootstrap/02-istio.sh</span><button class="copy-btn">Copy</button></div>
 <pre><code>#!/usr/bin/env bash
 set -euo pipefail
@@ -2073,6 +2174,21 @@ kubectl --context $CTX -n istio-system wait --for=condition=Available \
 
 # Mesh-wide mTLS defaults to PERMISSIVE out-of-box; Lab 2 flips to STRICT.
 echo "Istio ${ISTIO_VERSION} installed; sidecar injection enabled on zta-* and bookstore-* namespaces."
+</code></pre>
+</div>
+
+<div class="code-block terminal">
+  <div class="code-head"><span class="lang">Bash</span><span class="path">run istio bootstrap</span><button class="copy-btn">Copy</button></div>
+<pre><code>./bootstrap/02-istio.sh
+
+# Expected (tail):
+# ✔ Istio core installed
+# ✔ Istiod installed
+# ✔ Ingress gateways installed
+# ✔ Installation complete
+# deployment.apps/istiod condition met
+# deployment.apps/istio-ingressgateway condition met
+# Istio 1.29.2 installed; sidecar injection enabled on zta-* and bookstore-* namespaces.
 </code></pre>
 </div>
 
@@ -2181,6 +2297,21 @@ spec:
 
 <p class="footnote">The SPIRE agent <code>DaemonSet</code>, its RBAC, and registration entries (one per bookstore tier) are in the companion file. The server-side bits above — <code>spire-bundle</code> ConfigMap and the <code>spire-server-configmap</code> Role/RoleBinding — are required for the <code>k8sbundle</code> notifier to publish the trust bundle. Defaults chosen: trust domain <code>zta.homelab</code>, SVID TTL <strong>5 minutes</strong> — deliberately short so that Lab 3 can demonstrate rotation in real time.</p>
 
+<div class="code-block terminal">
+  <div class="code-head"><span class="lang">Bash</span><span class="path">apply spire</span><button class="copy-btn">Copy</button></div>
+<pre><code>kubectl --context docker-desktop apply -f ./bootstrap/03-spire.yaml
+
+# Expected:
+# serviceaccount/spire-server created
+# configmap/spire-bundle created
+# role.rbac.authorization.k8s.io/spire-server-configmap created
+# rolebinding.rbac.authorization.k8s.io/spire-server-configmap created
+# configmap/spire-server created
+# statefulset.apps/spire-server created
+# service/spire-server created
+</code></pre>
+</div>
+
 <p>After applying the manifest you can confirm the notifier is populating the bundle:</p>
 
 <div class="code-block terminal">
@@ -2248,6 +2379,18 @@ spec:
   http:
   - route:
     - destination: { host: keycloak.zta-identity.svc.cluster.local, port: { number: 8080 } }
+</code></pre>
+</div>
+
+<div class="code-block terminal">
+  <div class="code-head"><span class="lang">Bash</span><span class="path">apply keycloak</span><button class="copy-btn">Copy</button></div>
+<pre><code>kubectl --context docker-desktop apply -f ./bootstrap/04-keycloak.yaml
+
+# Expected:
+# deployment.apps/keycloak created
+# service/keycloak created
+# gateway.networking.istio.io/keycloak-gw created
+# virtualservice.networking.istio.io/keycloak-vs created
 </code></pre>
 </div>
 
@@ -2319,6 +2462,17 @@ spec:
 <p class="footnote" style="text-transform:none; letter-spacing:0; font-weight:normal; font-size:12.5px; color: var(--muted);">A note on the image tag: the widely referenced <code>openpolicyagent/opa:0.68.0-envoy</code> tag is amd64 only, so its bundled <code>opa_envoy_linux_amd64</code> binary fails with <code>exec format error</code> on arm64 hosts (Apple Silicon, ARM Windows, Raspberry Pi). The numbered <code>-envoy-&lt;N&gt;-static</code> variants (<code>-envoy-12-static</code> at time of writing) are published as multi-arch manifests covering both amd64 and arm64, so the same YAML works on every Docker Desktop platform with no substitution step. Bump the build-number suffix to pick up a newer base-image rebuild of the same OPA version.</p>
 
 <div class="code-block terminal">
+  <div class="code-head"><span class="lang">Bash</span><span class="path">apply opa</span><button class="copy-btn">Copy</button></div>
+<pre><code>kubectl --context docker-desktop apply -f ./bootstrap/05-opa.yaml
+
+# Expected:
+# configmap/opa-config created
+# deployment.apps/opa created
+# service/opa created
+</code></pre>
+</div>
+
+<div class="code-block terminal">
   <div class="code-head"><span class="lang">Bash</span><span class="path">bootstrap/06-gatekeeper.sh</span><button class="copy-btn">Copy</button></div>
 <pre><code>#!/usr/bin/env bash
 set -euo pipefail
@@ -2332,6 +2486,19 @@ helm --kube-context $CTX upgrade --install gatekeeper gatekeeper/gatekeeper \
   --version 3.17.1 --wait
 
 echo "Gatekeeper installed."
+</code></pre>
+</div>
+
+<div class="code-block terminal">
+  <div class="code-head"><span class="lang">Bash</span><span class="path">run gatekeeper bootstrap</span><button class="copy-btn">Copy</button></div>
+<pre><code>./bootstrap/06-gatekeeper.sh
+
+# Expected (tail):
+# Release "gatekeeper" does not exist. Installing it now.
+# NAME: gatekeeper
+# STATUS: deployed
+# NAMESPACE: gatekeeper-system
+# Gatekeeper installed.
 </code></pre>
 </div>
 
@@ -2355,6 +2522,19 @@ helm --kube-context $CTX upgrade --install falco falcosecurity/falco \
   --wait
 
 echo "Falco installed (modern_ebpf driver)."
+</code></pre>
+</div>
+
+<div class="code-block terminal">
+  <div class="code-head"><span class="lang">Bash</span><span class="path">run falco bootstrap</span><button class="copy-btn">Copy</button></div>
+<pre><code>./bootstrap/07-falco.sh
+
+# Expected (tail):
+# Release "falco" does not exist. Installing it now.
+# NAME: falco
+# STATUS: deployed
+# NAMESPACE: zta-runtime-security
+# Falco installed (modern_ebpf driver).
 </code></pre>
 </div>
 
@@ -2386,6 +2566,22 @@ helm --kube-context $CTX upgrade --install tempo grafana/tempo \
   --namespace zta-observability --version 1.10.1 --wait
 
 echo "Observability stack installed (Prometheus, Grafana, Loki, Tempo)."
+</code></pre>
+</div>
+
+<div class="code-block terminal">
+  <div class="code-head"><span class="lang">Bash</span><span class="path">run observability bootstrap</span><button class="copy-btn">Copy</button></div>
+<pre><code>./bootstrap/08-observability.sh
+
+# Expected (tail):
+# NAME: kube-prom
+# STATUS: deployed
+# NAMESPACE: zta-observability
+# NAME: loki
+# STATUS: deployed
+# NAME: tempo
+# STATUS: deployed
+# Observability stack installed (Prometheus, Grafana, Loki, Tempo).
 </code></pre>
 </div>
 
@@ -2538,6 +2734,24 @@ spec:
 </code></pre>
 </div>
 
+<div class="code-block terminal">
+  <div class="code-head"><span class="lang">Bash</span><span class="path">apply bookstore</span><button class="copy-btn">Copy</button></div>
+<pre><code>kubectl --context docker-desktop apply -f ./bootstrap/09-bookstore.yaml
+
+# Expected:
+# configmap/frontend-html created
+# deployment.apps/frontend created
+# service/frontend created
+# deployment.apps/api created
+# service/api created
+# secret/db-creds created
+# statefulset.apps/db created
+# service/db created
+# gateway.networking.istio.io/bookstore-gw created
+# virtualservice.networking.istio.io/bookstore-vs created
+</code></pre>
+</div>
+
 <h3>2.7 Run the bootstrap</h3>
 <p>The preceding sections show the contents of each <code>bootstrap/</code> file. Populate those files (copy from the blocks above), then execute them in numeric order from the repo root. Each step is idempotent — re-running a single line is the recovery path if something fails mid-way.</p>
 
@@ -2627,6 +2841,97 @@ curl -s -H 'Host: bookstore.local' http://localhost/api/headers | jq '.headers |
       <span class="lab-check-text">Mark complete</span>
     </button>
   </div>
+
+  <figure class="lab-diagram" data-t="1" aria-label="Lab 1 architecture preview">
+    <div class="ld-head">
+      <h3 class="ld-title">What you'll build — every workload is a labeled resource, enforced at admission</h3>
+      <span class="ld-sub">Tenet 1 · §3.1</span>
+    </div>
+    <svg class="ld-svg" viewBox="0 0 820 230" role="img" aria-labelledby="ld1-t ld1-d" xmlns="http://www.w3.org/2000/svg">
+      <title id="ld1-t">Lab 1 architecture — labeled workloads pass Gatekeeper admission and populate a CDM-style inventory</title>
+      <desc id="ld1-d">A labeled Deployment is admitted by Gatekeeper and recorded in an inventory; an unlabeled pod is denied at admission.</desc>
+      <defs>
+        <marker id="ld1-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#0F766E"/></marker>
+        <marker id="ld1-no" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#BE123C"/></marker>
+        <marker id="ld1-mu" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#9CA3AF"/></marker>
+      </defs>
+      <!-- Labelled deployment -->
+      <g>
+        <rect x="20" y="25" width="170" height="86" rx="4" fill="#F0FDFA" stroke="#0F766E" stroke-width="1.1"/>
+        <text x="105" y="45" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="12" font-weight="700" fill="#0F766E">Labelled Deployment</text>
+        <text x="105" y="60" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9.5" fill="#065F5B" letter-spacing="0.4">frontend · api · db</text>
+        <rect x="28" y="70" width="72" height="14" rx="2" fill="#CCFBF1"/>
+        <text x="64" y="80" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#0F766E">zta.resource</text>
+        <rect x="104" y="70" width="80" height="14" rx="2" fill="#CCFBF1"/>
+        <text x="144" y="80" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#0F766E">data-class</text>
+        <rect x="28" y="88" width="60" height="14" rx="2" fill="#CCFBF1"/>
+        <text x="58" y="98" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#0F766E">owner</text>
+        <rect x="92" y="88" width="92" height="14" rx="2" fill="#CCFBF1"/>
+        <text x="138" y="98" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#0F766E">tier-role</text>
+      </g>
+      <!-- Unlabelled pod -->
+      <g>
+        <rect x="20" y="130" width="170" height="68" rx="4" fill="#FAFAFA" stroke="#9CA3AF" stroke-width="1" stroke-dasharray="4 3"/>
+        <text x="105" y="154" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="12" font-weight="700" fill="#6B7280">Unlabelled pod</text>
+        <text x="105" y="171" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9.5" fill="#9CA3AF" letter-spacing="0.4">zta.* missing</text>
+        <text x="105" y="188" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#9CA3AF">break-it: kubectl run nginx</text>
+      </g>
+      <!-- Gatekeeper -->
+      <g>
+        <rect x="230" y="30" width="200" height="170" rx="5" fill="#F0FDFA" stroke="#0F766E" stroke-width="1.6"/>
+        <rect x="230" y="30" width="5" height="170" fill="#0F766E"/>
+        <text x="333" y="55" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="14" font-weight="700" fill="#0F766E">Gatekeeper</text>
+        <text x="333" y="72" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="10.5" fill="#065F5B">Admission PEP · §3.1.2</text>
+        <line x1="246" y1="84" x2="420" y2="84" stroke="#BAE6E0" stroke-width="1"/>
+        <text x="333" y="104" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="11" font-weight="600" fill="#065F5B">ConstraintTemplate</text>
+        <text x="333" y="120" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9.5" fill="#0F766E" letter-spacing="0.3">K8sRequiredZtaLabels</text>
+        <rect x="248" y="134" width="170" height="52" rx="3" fill="#FFFFFF" stroke="#CCFBF1" stroke-width="1"/>
+        <text x="333" y="152" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="10" fill="#6B7280">required labels</text>
+        <text x="333" y="170" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9.5" fill="#0F766E">resource · data-class · owner</text>
+      </g>
+      <!-- Admitted -->
+      <g>
+        <rect x="470" y="32" width="160" height="74" rx="4" fill="#F0FDFA" stroke="#0F766E" stroke-width="1.1"/>
+        <text x="550" y="54" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="12" font-weight="700" fill="#0F766E">Admitted → runs</text>
+        <text x="550" y="70" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="10" fill="#065F5B">workload scheduled</text>
+        <rect x="486" y="80" width="128" height="16" rx="2" fill="#CCFBF1"/>
+        <text x="550" y="91" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#0F766E">labels persisted · queryable</text>
+      </g>
+      <!-- Denied -->
+      <g>
+        <rect x="470" y="130" width="160" height="68" rx="4" fill="#FFF1F2" stroke="#BE123C" stroke-width="1.1"/>
+        <text x="550" y="152" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="12" font-weight="700" fill="#BE123C">Denied at admission</text>
+        <text x="550" y="170" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="10" fill="#9F1239">403 · ZTA labels missing</text>
+        <text x="550" y="188" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="9.5" fill="#BE123C">Tenet 1 · break-it exercise</text>
+      </g>
+      <!-- CDM inventory -->
+      <g>
+        <rect x="670" y="32" width="130" height="166" rx="4" fill="#FFFFFF" stroke="#0F766E" stroke-width="1.2"/>
+        <text x="735" y="54" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="12" font-weight="700" fill="#0F766E">Inventory</text>
+        <text x="735" y="70" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9.5" fill="#065F5B" letter-spacing="0.3">CDM stand-in</text>
+        <line x1="682" y1="80" x2="788" y2="80" stroke="#CCFBF1" stroke-width="1"/>
+        <g font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#065F5B">
+          <rect x="682" y="88" width="106" height="16" rx="1.5" fill="#F0FDFA"/><text x="688" y="99">frontend · public</text>
+          <rect x="682" y="108" width="106" height="16" rx="1.5" fill="#F0FDFA"/><text x="688" y="119">api · confidential</text>
+          <rect x="682" y="128" width="106" height="16" rx="1.5" fill="#F0FDFA"/><text x="688" y="139">db · restricted</text>
+          <rect x="682" y="148" width="106" height="16" rx="1.5" fill="#F0FDFA"/><text x="688" y="159">keycloak · ctrl-plane</text>
+          <rect x="682" y="168" width="106" height="16" rx="1.5" fill="#F0FDFA"/><text x="688" y="179">opa · ctrl-plane</text>
+        </g>
+      </g>
+      <!-- Arrows -->
+      <path d="M 190 66 L 230 80" fill="none" stroke="#0F766E" stroke-width="1.4" marker-end="url(#ld1-ok)"/>
+      <path d="M 190 165 L 230 155" fill="none" stroke="#9CA3AF" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#ld1-mu)"/>
+      <path d="M 430 85 L 470 68" fill="none" stroke="#0F766E" stroke-width="1.4" marker-end="url(#ld1-ok)"/>
+      <path d="M 430 155 L 470 160" fill="none" stroke="#BE123C" stroke-width="1.4" marker-end="url(#ld1-no)"/>
+      <path d="M 630 68 L 670 68" fill="none" stroke="#0F766E" stroke-width="1.4" marker-end="url(#ld1-ok)"/>
+    </svg>
+    <div class="ld-legend" aria-hidden="true">
+      <span><i style="color:#0F766E"></i> admit · compliant</span>
+      <span><i class="dashed" style="color:#9CA3AF"></i> non-compliant input</span>
+      <span><i class="deny"></i> denied · 403</span>
+      <span style="margin-left:auto">outputs: API-queryable labels · <code>kubectl</code>-driven inventory</span>
+    </div>
+  </figure>
 
   <div class="lab-flow" data-t="1" aria-label="Lab 1 flow">
     <div class="fstep"><span class="fs-num">01</span><span class="fs-title">Define schema</span><span class="fs-meta">zta.resource · data-class · owner</span></div>
@@ -2855,6 +3160,87 @@ EOF
     </button>
   </div>
 
+  <figure class="lab-diagram" data-t="2" aria-label="Lab 2 architecture preview">
+    <div class="ld-head">
+      <h3 class="ld-title">What you'll build — every hop mTLS-authenticated with SPIFFE identities</h3>
+      <span class="ld-sub">Tenet 2 · §3.1.2</span>
+    </div>
+    <svg class="ld-svg" viewBox="0 0 820 260" role="img" aria-labelledby="ld2-t ld2-d" xmlns="http://www.w3.org/2000/svg">
+      <title id="ld2-t">Lab 2 architecture — SPIRE issues SVIDs to Envoy sidecars that enforce STRICT mTLS between workloads</title>
+      <desc id="ld2-d">Two workloads each run an Envoy sidecar; both sidecars receive short-lived X.509 SVIDs from SPIRE and negotiate mTLS. Plaintext attempts are rejected.</desc>
+      <defs>
+        <marker id="ld2-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#0369A1"/></marker>
+        <marker id="ld2-ok-s" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M10,0 L0,5 L10,10 z" fill="#0369A1"/></marker>
+        <marker id="ld2-no" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#BE123C"/></marker>
+      </defs>
+      <!-- Control-plane band -->
+      <rect x="20" y="14" width="780" height="68" rx="5" fill="#EFF6FF" stroke="#CFDBEA" stroke-width="1"/>
+      <text x="34" y="32" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="10" font-weight="700" fill="#0369A1" letter-spacing="1.2">CONTROL PLANE · §3.1</text>
+      <!-- SPIRE server -->
+      <g>
+        <rect x="310" y="26" width="200" height="48" rx="4" fill="#DBEAFE" stroke="#0369A1" stroke-width="1.4"/>
+        <text x="410" y="46" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="13" font-weight="700" fill="#0369A1">SPIRE Server</text>
+        <text x="410" y="62" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9.5" fill="#075985">trust-domain zta.homelab · SVID TTL 5m</text>
+      </g>
+      <!-- Data-plane band -->
+      <rect x="20" y="94" width="780" height="130" rx="5" fill="#F7F7F5" stroke="#E7E5E0" stroke-width="1"/>
+      <text x="34" y="112" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="10" font-weight="700" fill="#6B7280" letter-spacing="1.2">DATA PLANE · §3.1.2</text>
+      <!-- Workload A -->
+      <g>
+        <rect x="40" y="122" width="290" height="90" rx="5" fill="#FFFFFF" stroke="#0369A1" stroke-width="1.4"/>
+        <text x="185" y="140" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="11" font-weight="700" fill="#0369A1">bookstore-frontend pod</text>
+        <!-- app container -->
+        <rect x="54" y="148" width="110" height="54" rx="3" fill="#F7F7F5" stroke="#E5E7EB" stroke-width="1"/>
+        <text x="109" y="168" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="11" font-weight="600" fill="#1F2937">nginx</text>
+        <text x="109" y="184" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#6B7280">app</text>
+        <text x="109" y="197" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="8.5" fill="#9CA3AF">:80 localhost</text>
+        <!-- sidecar -->
+        <rect x="176" y="148" width="140" height="54" rx="3" fill="#EFF6FF" stroke="#0369A1" stroke-width="1.1"/>
+        <text x="246" y="166" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="11" font-weight="600" fill="#0369A1">istio-proxy</text>
+        <text x="246" y="180" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="8.5" fill="#075985">envoy sidecar</text>
+        <rect x="186" y="186" width="120" height="12" rx="1.5" fill="#DBEAFE"/>
+        <text x="246" y="196" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="8" fill="#0369A1">SVID · spiffe://…/frontend</text>
+      </g>
+      <!-- Workload B -->
+      <g>
+        <rect x="490" y="122" width="290" height="90" rx="5" fill="#FFFFFF" stroke="#0369A1" stroke-width="1.4"/>
+        <text x="635" y="140" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="11" font-weight="700" fill="#0369A1">bookstore-api pod</text>
+        <!-- sidecar -->
+        <rect x="504" y="148" width="140" height="54" rx="3" fill="#EFF6FF" stroke="#0369A1" stroke-width="1.1"/>
+        <text x="574" y="166" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="11" font-weight="600" fill="#0369A1">istio-proxy</text>
+        <text x="574" y="180" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="8.5" fill="#075985">envoy sidecar</text>
+        <rect x="514" y="186" width="120" height="12" rx="1.5" fill="#DBEAFE"/>
+        <text x="574" y="196" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="8" fill="#0369A1">SVID · spiffe://…/api</text>
+        <!-- app -->
+        <rect x="656" y="148" width="110" height="54" rx="3" fill="#F7F7F5" stroke="#E5E7EB" stroke-width="1"/>
+        <text x="711" y="168" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="11" font-weight="600" fill="#1F2937">httpbin</text>
+        <text x="711" y="184" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#6B7280">app</text>
+        <text x="711" y="197" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="8.5" fill="#9CA3AF">:8080 localhost</text>
+      </g>
+      <!-- SVID issuance: dashed lines from SPIRE down to sidecars -->
+      <path d="M 360 74 C 340 100 280 120 246 148" fill="none" stroke="#0369A1" stroke-width="1.1" stroke-dasharray="4 3"/>
+      <path d="M 460 74 C 480 100 540 120 574 148" fill="none" stroke="#0369A1" stroke-width="1.1" stroke-dasharray="4 3"/>
+      <text x="305" y="112" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#0369A1" font-style="italic">X.509 SVID</text>
+      <text x="515" y="112" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#0369A1" font-style="italic">X.509 SVID</text>
+      <!-- mTLS link -->
+      <path d="M 320 175 L 486 175" fill="none" stroke="#0369A1" stroke-width="2" marker-start="url(#ld2-ok-s)" marker-end="url(#ld2-ok)"/>
+      <rect x="370" y="160" width="66" height="20" rx="3" fill="#FFFFFF" stroke="#0369A1" stroke-width="1"/>
+      <text x="403" y="174" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="11" font-weight="700" fill="#0369A1">mTLS</text>
+      <!-- Plaintext denied banner -->
+      <g>
+        <rect x="170" y="232" width="480" height="24" rx="3" fill="#FFF1F2" stroke="#BE123C" stroke-width="1"/>
+        <text x="185" y="248" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="10.5" font-weight="700" fill="#BE123C">plaintext</text>
+        <text x="235" y="248" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="10" fill="#9F1239">curl http://api → PeerAuthentication STRICT → 403</text>
+      </g>
+    </svg>
+    <div class="ld-legend" aria-hidden="true">
+      <span><i style="color:#0369A1"></i> mTLS traffic · encrypted + authenticated</span>
+      <span><i class="dashed" style="color:#0369A1"></i> SVID issuance · SPIRE Workload API</span>
+      <span><i class="deny"></i> plaintext denied by PeerAuthentication STRICT</span>
+      <span style="margin-left:auto">rotation proof: SVIDs refresh every 5 min</span>
+    </div>
+  </figure>
+
   <div class="lab-flow" data-t="2" aria-label="Lab 2 flow">
     <div class="fstep"><span class="fs-num">01</span><span class="fs-title">Baseline</span><span class="fs-meta">PERMISSIVE mTLS</span></div>
     <div class="fstep"><span class="fs-num">02</span><span class="fs-title">Flip to STRICT</span><span class="fs-meta">PeerAuthentication</span></div>
@@ -3081,6 +3467,94 @@ kubectl --context docker-desktop -n bookstore-api delete peerauthentication down
       <span class="lab-check-text">Mark complete</span>
     </button>
   </div>
+
+  <figure class="lab-diagram" data-t="3" aria-label="Lab 3 architecture preview">
+    <div class="ld-head">
+      <h3 class="ld-title">What you'll build — per-request JWT validation over 5-minute Keycloak tokens</h3>
+      <span class="ld-sub">Tenet 3 · §3.1</span>
+    </div>
+    <svg class="ld-svg" viewBox="0 0 820 240" role="img" aria-labelledby="ld3-t ld3-d" xmlns="http://www.w3.org/2000/svg">
+      <title id="ld3-t">Lab 3 architecture — Keycloak issues short-lived JWTs that Istio validates on every API request</title>
+      <desc id="ld3-d">A user logs in at Keycloak and receives a 5-minute JWT; every subsequent API request is re-validated by Istio RequestAuthentication; expired tokens loop back for re-auth.</desc>
+      <defs>
+        <marker id="ld3-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4338CA"/></marker>
+        <marker id="ld3-no" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#BE123C"/></marker>
+      </defs>
+      <!-- User -->
+      <g>
+        <rect x="20" y="84" width="86" height="60" rx="4" fill="#FFFFFF" stroke="#4338CA" stroke-width="1.1"/>
+        <circle cx="63" cy="102" r="7" fill="none" stroke="#4338CA" stroke-width="1.2"/>
+        <path d="M 50 130 Q 63 118 76 130" fill="none" stroke="#4338CA" stroke-width="1.2"/>
+        <text x="63" y="140" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#312E81">alice</text>
+      </g>
+      <!-- Keycloak -->
+      <g>
+        <rect x="140" y="40" width="170" height="150" rx="5" fill="#EEF2FF" stroke="#4338CA" stroke-width="1.5"/>
+        <rect x="140" y="40" width="5" height="150" fill="#4338CA"/>
+        <text x="225" y="62" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="14" font-weight="700" fill="#4338CA">Keycloak</text>
+        <text x="225" y="78" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="10.5" fill="#312E81">OIDC IdP · §3.1</text>
+        <line x1="156" y1="88" x2="306" y2="88" stroke="#C7D2FE" stroke-width="1"/>
+        <g font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#4338CA">
+          <rect x="156" y="96" width="138" height="16" rx="2" fill="#E0E7FF"/><text x="225" y="107" text-anchor="middle">realm · zta-bookstore</text>
+          <rect x="156" y="118" width="138" height="16" rx="2" fill="#E0E7FF"/><text x="225" y="129" text-anchor="middle">client · bookstore-api</text>
+          <rect x="156" y="140" width="138" height="16" rx="2" fill="#E0E7FF"/><text x="225" y="151" text-anchor="middle">user · alice / alice</text>
+          <rect x="156" y="162" width="138" height="16" rx="2" fill="#E0E7FF"/><text x="225" y="173" text-anchor="middle">access-token TTL · 5m</text>
+        </g>
+      </g>
+      <!-- JWT card -->
+      <g>
+        <rect x="340" y="70" width="150" height="100" rx="4" fill="#FFFFFF" stroke="#4338CA" stroke-width="1.3"/>
+        <text x="415" y="89" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="12" font-weight="700" fill="#4338CA">JWT · Bearer</text>
+        <line x1="356" y1="96" x2="474" y2="96" stroke="#C7D2FE" stroke-width="1"/>
+        <g font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#4338CA">
+          <text x="358" y="111">iss:  keycloak.local</text>
+          <text x="358" y="125">aud:  bookstore-api</text>
+          <text x="358" y="139">sub:  alice</text>
+          <text x="358" y="153">iat:  T0</text>
+        </g>
+        <rect x="356" y="158" width="118" height="14" rx="2" fill="#FEF3C7"/>
+        <text x="415" y="168" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#B45309">exp: T0 + 5m ⏱</text>
+      </g>
+      <!-- Istio RequestAuthentication -->
+      <g>
+        <rect x="520" y="40" width="170" height="150" rx="5" fill="#EEF2FF" stroke="#4338CA" stroke-width="1.5"/>
+        <rect x="520" y="40" width="5" height="150" fill="#4338CA"/>
+        <text x="605" y="62" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="13" font-weight="700" fill="#4338CA">Istio RequestAuth</text>
+        <text x="605" y="78" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="10.5" fill="#312E81">PEP · §3.1.2</text>
+        <line x1="536" y1="88" x2="686" y2="88" stroke="#C7D2FE" stroke-width="1"/>
+        <text x="605" y="106" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="10" fill="#312E81">every request →</text>
+        <g font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9.5" fill="#4338CA">
+          <rect x="540" y="116" width="130" height="16" rx="2" fill="#E0E7FF"/><text x="547" y="127">✓ signature (JWKS)</text>
+          <rect x="540" y="136" width="130" height="16" rx="2" fill="#E0E7FF"/><text x="547" y="147">✓ audience bookstore</text>
+          <rect x="540" y="156" width="130" height="16" rx="2" fill="#E0E7FF"/><text x="547" y="167">✓ exp still future</text>
+        </g>
+      </g>
+      <!-- API -->
+      <g>
+        <rect x="720" y="84" width="80" height="60" rx="4" fill="#FFFFFF" stroke="#4338CA" stroke-width="1.1"/>
+        <text x="760" y="108" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="12" font-weight="700" fill="#4338CA">API</text>
+        <text x="760" y="124" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#312E81">httpbin</text>
+        <text x="760" y="138" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="9" fill="#4338CA">200 OK</text>
+      </g>
+      <!-- Arrows -->
+      <path d="M 106 114 L 140 114" fill="none" stroke="#4338CA" stroke-width="1.4" marker-end="url(#ld3-ok)"/>
+      <text x="123" y="108" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="8" fill="#4338CA">login</text>
+      <path d="M 310 114 L 340 120" fill="none" stroke="#4338CA" stroke-width="1.4" marker-end="url(#ld3-ok)"/>
+      <text x="325" y="108" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="8" fill="#4338CA">issue</text>
+      <path d="M 490 120 L 520 115" fill="none" stroke="#4338CA" stroke-width="1.4" marker-end="url(#ld3-ok)"/>
+      <text x="506" y="107" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="8" fill="#4338CA">Bearer ·/req</text>
+      <path d="M 690 114 L 720 114" fill="none" stroke="#4338CA" stroke-width="1.4" marker-end="url(#ld3-ok)"/>
+      <text x="706" y="108" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="8" fill="#4338CA">allow</text>
+      <!-- Expiry loop -->
+      <path d="M 605 190 C 605 215 500 222 400 222 C 300 222 230 215 225 195" fill="none" stroke="#BE123C" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#ld3-no)"/>
+      <text x="415" y="218" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#BE123C">expired token → 401 → re-auth</text>
+    </svg>
+    <div class="ld-legend" aria-hidden="true">
+      <span><i style="color:#4338CA"></i> session / per-request path</span>
+      <span><i class="dashed deny"></i> expiry · forced re-auth</span>
+      <span style="margin-left:auto">SPIRE issues the parallel workload-identity SVIDs · same 5-min TTL</span>
+    </div>
+  </figure>
 
   <div class="lab-flow" data-t="3" aria-label="Lab 3 flow">
     <div class="fstep"><span class="fs-num">01</span><span class="fs-title">Short tokens</span><span class="fs-meta">Keycloak · 5-min JWT</span></div>
@@ -3354,6 +3828,99 @@ curl -s -o /dev/null -w '%{http_code}\n' \
       <span class="lab-check-text">Mark complete</span>
     </button>
   </div>
+
+  <figure class="lab-diagram" data-t="4" aria-label="Lab 4 architecture preview">
+    <div class="ld-head">
+      <h3 class="ld-title">What you'll build — a Trust Algorithm that combines identity, posture, and behaviour into a score</h3>
+      <span class="ld-sub">Tenet 4 · §3.3</span>
+    </div>
+    <svg class="ld-svg" viewBox="0 0 820 250" role="img" aria-labelledby="ld4-t ld4-d" xmlns="http://www.w3.org/2000/svg">
+      <title id="ld4-t">Lab 4 architecture — Envoy ext_authz calls OPA, which combines three signal rails into a score and returns Allow / Step-up / Deny</title>
+      <desc id="ld4-d">Every request passes through Envoy's ext_authz hook to OPA. OPA's Rego policy evaluates identity, device posture, and behaviour, aggregates them into a trust score, and returns one of three outcomes.</desc>
+      <defs>
+        <marker id="ld4-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#B45309"/></marker>
+        <marker id="ld4-pass" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#047857"/></marker>
+        <marker id="ld4-step" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#B45309"/></marker>
+        <marker id="ld4-no" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#BE123C"/></marker>
+      </defs>
+      <!-- Request -->
+      <g>
+        <rect x="18" y="108" width="100" height="52" rx="4" fill="#FFFFFF" stroke="#B45309" stroke-width="1.1"/>
+        <text x="68" y="128" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="12" font-weight="700" fill="#B45309">Request</text>
+        <text x="68" y="145" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#78350F">GET /api/books</text>
+      </g>
+      <!-- Envoy ext_authz -->
+      <g>
+        <rect x="146" y="92" width="120" height="82" rx="4" fill="#FFFBEB" stroke="#B45309" stroke-width="1.3"/>
+        <text x="206" y="112" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="12" font-weight="700" fill="#B45309">Envoy</text>
+        <text x="206" y="127" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="10" fill="#78350F">sidecar PEP · §3.1.2</text>
+        <rect x="156" y="135" width="100" height="14" rx="2" fill="#FEF3C7"/>
+        <text x="206" y="145" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#B45309">ext_authz · gRPC</text>
+        <rect x="156" y="153" width="100" height="14" rx="2" fill="#FEF3C7"/>
+        <text x="206" y="163" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#B45309">:9191 check()</text>
+      </g>
+      <!-- OPA Trust Algorithm (central) -->
+      <g>
+        <rect x="296" y="22" width="300" height="208" rx="6" fill="#FFFBEB" stroke="#B45309" stroke-width="1.6"/>
+        <rect x="296" y="22" width="5" height="208" fill="#B45309"/>
+        <text x="446" y="44" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="14" font-weight="700" fill="#B45309">OPA · Trust Algorithm</text>
+        <text x="446" y="60" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="10.5" fill="#78350F">Rego policy · §3.3 criteria + score</text>
+        <line x1="312" y1="70" x2="588" y2="70" stroke="#FDE68A" stroke-width="1"/>
+        <!-- Signal rails -->
+        <g font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9.5" fill="#78350F">
+          <rect x="312" y="80" width="82" height="20" rx="3" fill="#FEF3C7" stroke="#B45309" stroke-width="0.8"/>
+          <text x="353" y="93" text-anchor="middle" font-weight="700" fill="#B45309">Identity</text>
+          <rect x="400" y="80" width="188" height="20" rx="3" fill="#FFFFFF" stroke="#FDE68A" stroke-width="0.8"/>
+          <text x="410" y="93">sub=alice · role=user · iss=keycloak</text>
+
+          <rect x="312" y="108" width="82" height="20" rx="3" fill="#FEF3C7" stroke="#B45309" stroke-width="0.8"/>
+          <text x="353" y="121" text-anchor="middle" font-weight="700" fill="#B45309">Posture</text>
+          <rect x="400" y="108" width="188" height="20" rx="3" fill="#FFFFFF" stroke="#FDE68A" stroke-width="0.8"/>
+          <text x="410" y="121">x-device-posture: clean · patched</text>
+
+          <rect x="312" y="136" width="82" height="20" rx="3" fill="#FEF3C7" stroke="#B45309" stroke-width="0.8"/>
+          <text x="353" y="149" text-anchor="middle" font-weight="700" fill="#B45309">Behaviour</text>
+          <rect x="400" y="136" width="188" height="20" rx="3" fill="#FFFFFF" stroke="#FDE68A" stroke-width="0.8"/>
+          <text x="410" y="149">method=GET · rate 10/min · path /books</text>
+        </g>
+        <!-- Score bar -->
+        <text x="312" y="182" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="10.5" font-weight="700" fill="#78350F">trust score</text>
+        <rect x="312" y="190" width="276" height="14" rx="2" fill="#FFFFFF" stroke="#FDE68A" stroke-width="1"/>
+        <rect x="312" y="190" width="210" height="14" rx="2" fill="#FEF3C7"/>
+        <line x1="522" y1="186" x2="522" y2="208" stroke="#B45309" stroke-width="1.4"/>
+        <text x="596" y="201" text-anchor="end" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="10" fill="#B45309" font-weight="700">0.76</text>
+        <text x="312" y="222" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#78350F">threshold · allow &gt; 0.7 · step-up 0.4–0.7 · deny &lt; 0.4</text>
+      </g>
+      <!-- Outcomes -->
+      <g>
+        <rect x="628" y="36" width="172" height="52" rx="4" fill="#ECFDF5" stroke="#047857" stroke-width="1.2"/>
+        <text x="714" y="56" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="12" font-weight="700" fill="#047857">Allow</text>
+        <text x="714" y="74" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9.5" fill="#065F46">200 · decision logged</text>
+
+        <rect x="628" y="100" width="172" height="52" rx="4" fill="#FFFBEB" stroke="#B45309" stroke-width="1.2"/>
+        <text x="714" y="120" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="12" font-weight="700" fill="#B45309">Step-up</text>
+        <text x="714" y="138" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9.5" fill="#78350F">MFA · re-auth · 401 w/ hint</text>
+
+        <rect x="628" y="164" width="172" height="52" rx="4" fill="#FFF1F2" stroke="#BE123C" stroke-width="1.2"/>
+        <text x="714" y="184" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="12" font-weight="700" fill="#BE123C">Deny</text>
+        <text x="714" y="202" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9.5" fill="#9F1239">403 · trust-score too low</text>
+      </g>
+      <!-- Arrows -->
+      <path d="M 118 134 L 146 133" fill="none" stroke="#B45309" stroke-width="1.4" marker-end="url(#ld4-ok)"/>
+      <path d="M 266 133 L 296 130" fill="none" stroke="#B45309" stroke-width="1.4" marker-end="url(#ld4-ok)"/>
+      <text x="282" y="124" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="8" fill="#B45309">check</text>
+      <path d="M 596 105 L 628 62" fill="none" stroke="#047857" stroke-width="1.4" marker-end="url(#ld4-pass)"/>
+      <path d="M 596 126 L 628 126" fill="none" stroke="#B45309" stroke-width="1.4" marker-end="url(#ld4-step)"/>
+      <path d="M 596 160 L 628 190" fill="none" stroke="#BE123C" stroke-width="1.4" marker-end="url(#ld4-no)"/>
+    </svg>
+    <div class="ld-legend" aria-hidden="true">
+      <span><i style="color:#B45309"></i> request + policy call</span>
+      <span><i style="color:#047857"></i> allow</span>
+      <span><i style="color:#B45309"></i> step-up challenge</span>
+      <span><i class="deny"></i> deny</span>
+      <span style="margin-left:auto">score combines 3 rails · threshold editable in Rego</span>
+    </div>
+  </figure>
 
   <div class="lab-flow" data-t="4" aria-label="Lab 4 flow">
     <div class="fstep"><span class="fs-num">01</span><span class="fs-title">Author Rego</span><span class="fs-meta">identity · posture · path</span></div>
@@ -3724,6 +4291,99 @@ curl -s -o /dev/null -w '%{http_code}\n' -X POST \
     </button>
   </div>
 
+  <figure class="lab-diagram" data-t="5" aria-label="Lab 5 architecture preview">
+    <div class="ld-head">
+      <h3 class="ld-title">What you'll build — continuous posture signals from Falco feed back into the Trust Algorithm</h3>
+      <span class="ld-sub">Tenet 5 · §3.4.1</span>
+    </div>
+    <svg class="ld-svg" viewBox="0 0 820 250" role="img" aria-labelledby="ld5-t ld5-d" xmlns="http://www.w3.org/2000/svg">
+      <title id="ld5-t">Lab 5 architecture — Falco observes syscalls with eBPF, emits events, and a reconciler updates an OPA data document that the policy re-reads per request</title>
+      <desc id="ld5-d">Workload containers issue syscalls that Falco's eBPF probe watches; a suspicious-read event flows to a reconciler which writes posture=suspect into an OPA data document. The next request from that workload is downgraded.</desc>
+      <defs>
+        <marker id="ld5-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#7C3AED"/></marker>
+        <marker id="ld5-no" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#BE123C"/></marker>
+      </defs>
+      <!-- Node + containers -->
+      <g>
+        <rect x="20" y="30" width="170" height="160" rx="5" fill="#FFFFFF" stroke="#7C3AED" stroke-width="1.3"/>
+        <text x="105" y="50" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="12" font-weight="700" fill="#7C3AED">Cluster node</text>
+        <text x="105" y="66" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#5B21B6">Docker Desktop · Linux VM</text>
+        <line x1="34" y1="76" x2="176" y2="76" stroke="#DDD6FE" stroke-width="1"/>
+        <g font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9.5">
+          <rect x="34" y="86" width="142" height="24" rx="2" fill="#F5F3FF" stroke="#C4B5FD" stroke-width="0.8"/>
+          <text x="44" y="101" fill="#5B21B6">frontend</text>
+          <text x="166" y="101" text-anchor="end" fill="#9CA3AF" font-size="8.5">syscalls…</text>
+          <rect x="34" y="116" width="142" height="24" rx="2" fill="#F5F3FF" stroke="#7C3AED" stroke-width="1.1"/>
+          <text x="44" y="131" fill="#7C3AED" font-weight="700">api</text>
+          <text x="166" y="131" text-anchor="end" fill="#BE123C" font-size="8.5">open /etc/shadow ⚠</text>
+          <rect x="34" y="146" width="142" height="24" rx="2" fill="#F5F3FF" stroke="#C4B5FD" stroke-width="0.8"/>
+          <text x="44" y="161" fill="#5B21B6">db</text>
+          <text x="166" y="161" text-anchor="end" fill="#9CA3AF" font-size="8.5">syscalls…</text>
+        </g>
+      </g>
+      <!-- Falco -->
+      <g>
+        <rect x="220" y="30" width="180" height="160" rx="5" fill="#F5F3FF" stroke="#7C3AED" stroke-width="1.6"/>
+        <rect x="220" y="30" width="5" height="160" fill="#7C3AED"/>
+        <text x="310" y="54" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="14" font-weight="700" fill="#7C3AED">Falco</text>
+        <text x="310" y="70" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="10.5" fill="#5B21B6">runtime PEP · §3.4.1</text>
+        <line x1="234" y1="80" x2="386" y2="80" stroke="#DDD6FE" stroke-width="1"/>
+        <g font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9.5" fill="#5B21B6">
+          <rect x="234" y="90" width="152" height="18" rx="2" fill="#EDE9FE"/><text x="310" y="102" text-anchor="middle">driver: modern_ebpf</text>
+          <rect x="234" y="114" width="152" height="18" rx="2" fill="#EDE9FE"/><text x="310" y="126" text-anchor="middle">rule: sensitive_file_read</text>
+          <rect x="234" y="138" width="152" height="18" rx="2" fill="#EDE9FE"/><text x="310" y="150" text-anchor="middle">sink: falcosidekick → HTTP</text>
+        </g>
+        <text x="310" y="178" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="10" font-weight="700" fill="#7C3AED">emits → event JSON</text>
+      </g>
+      <!-- Reconciler -->
+      <g>
+        <rect x="430" y="30" width="170" height="160" rx="5" fill="#FFFFFF" stroke="#7C3AED" stroke-width="1.3"/>
+        <text x="515" y="50" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="12" font-weight="700" fill="#7C3AED">Posture Reconciler</text>
+        <text x="515" y="66" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#5B21B6">webhook · CDM shim</text>
+        <line x1="444" y1="76" x2="586" y2="76" stroke="#DDD6FE" stroke-width="1"/>
+        <g font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#5B21B6">
+          <text x="444" y="92">on event:</text>
+          <rect x="444" y="98" width="142" height="16" rx="2" fill="#F5F3FF"/><text x="450" y="109">workload = "api"</text>
+          <rect x="444" y="118" width="142" height="16" rx="2" fill="#F5F3FF"/><text x="450" y="129">posture  = "suspect"</text>
+          <rect x="444" y="138" width="142" height="16" rx="2" fill="#F5F3FF"/><text x="450" y="149">ttl      = 10m</text>
+          <text x="444" y="168" fill="#7C3AED">PATCH → OPA data</text>
+        </g>
+      </g>
+      <!-- OPA data doc -->
+      <g>
+        <rect x="630" y="30" width="170" height="84" rx="4" fill="#FFFBEB" stroke="#B45309" stroke-width="1.3"/>
+        <text x="715" y="50" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="12" font-weight="700" fill="#B45309">OPA data</text>
+        <text x="715" y="66" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#78350F">Trust-Algorithm input</text>
+        <rect x="640" y="74" width="150" height="32" rx="2" fill="#FFFFFF" stroke="#FDE68A"/>
+        <text x="715" y="87" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#B45309">data.posture.api</text>
+        <text x="715" y="99" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#B45309" font-weight="700">= "suspect"</text>
+      </g>
+      <!-- Deny consequence -->
+      <g>
+        <rect x="630" y="132" width="170" height="58" rx="4" fill="#FFF1F2" stroke="#BE123C" stroke-width="1.2"/>
+        <text x="715" y="152" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="12" font-weight="700" fill="#BE123C">Next request · deny</text>
+        <text x="715" y="170" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9.5" fill="#9F1239">score drops · Lab 4 policy</text>
+        <text x="715" y="184" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#9F1239">403 · posture=suspect</text>
+      </g>
+      <!-- Arrows -->
+      <path d="M 190 128 L 220 126" fill="none" stroke="#7C3AED" stroke-width="1.4" marker-end="url(#ld5-ok)"/>
+      <text x="205" y="120" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="8" fill="#7C3AED">syscalls</text>
+      <path d="M 400 128 L 430 126" fill="none" stroke="#7C3AED" stroke-width="1.4" marker-end="url(#ld5-ok)"/>
+      <text x="415" y="120" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="8" fill="#7C3AED">event</text>
+      <path d="M 600 90 L 630 72" fill="none" stroke="#7C3AED" stroke-width="1.4" marker-end="url(#ld5-ok)"/>
+      <path d="M 715 114 L 715 132" fill="none" stroke="#BE123C" stroke-width="1.4" marker-end="url(#ld5-no)"/>
+      <!-- Closed loop label -->
+      <path d="M 630 160 C 580 220 300 230 105 198" fill="none" stroke="#7C3AED" stroke-width="1.1" stroke-dasharray="4 3" marker-end="url(#ld5-ok)"/>
+      <text x="370" y="226" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#7C3AED">closed-loop · posture feeds PE per-request</text>
+    </svg>
+    <div class="ld-legend" aria-hidden="true">
+      <span><i style="color:#7C3AED"></i> observation + posture update</span>
+      <span><i class="dashed" style="color:#7C3AED"></i> continuous feedback loop</span>
+      <span><i class="deny"></i> subsequent request · downgraded</span>
+      <span style="margin-left:auto">reuses Lab 4's OPA — no new PEP</span>
+    </div>
+  </figure>
+
   <div class="lab-flow" data-t="5" aria-label="Lab 5 flow">
     <div class="fstep"><span class="fs-num">01</span><span class="fs-title">Deploy Falco</span><span class="fs-meta">modern_ebpf driver</span></div>
     <div class="fstep"><span class="fs-num">02</span><span class="fs-title">Rule: sensitive read</span><span class="fs-meta">/etc/shadow · secrets</span></div>
@@ -4035,6 +4695,104 @@ helm --kube-context docker-desktop upgrade falco falcosecurity/falco -n zta-runt
       <span class="lab-check-text">Mark complete</span>
     </button>
   </div>
+
+  <figure class="lab-diagram" data-t="6" aria-label="Lab 6 architecture preview">
+    <div class="ld-head">
+      <h3 class="ld-title">What you'll build — only signature-verified policy bundles load, and the PEP fails closed</h3>
+      <span class="ld-sub">Tenet 6 · §3.1.1</span>
+    </div>
+    <svg class="ld-svg" viewBox="0 0 820 260" role="img" aria-labelledby="ld6-t ld6-d" xmlns="http://www.w3.org/2000/svg">
+      <title id="ld6-t">Lab 6 architecture — a signed policy bundle flows from the Policy Administrator to OPA, which verifies the signature before loading; when OPA is unreachable the PEP denies by default</title>
+      <desc id="ld6-d">The Policy Administrator signs a bundle with an Ed25519 key. The bundle server publishes it. OPA pulls and verifies the signature before activating the policy. If OPA is unreachable, Envoy's ext_authz denies by default.</desc>
+      <defs>
+        <marker id="ld6-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#BE123C"/></marker>
+        <marker id="ld6-pass" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#047857"/></marker>
+      </defs>
+      <!-- Policy author / PA -->
+      <g>
+        <rect x="20" y="30" width="150" height="76" rx="4" fill="#FFFFFF" stroke="#BE123C" stroke-width="1.3"/>
+        <text x="95" y="52" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="12" font-weight="700" fill="#BE123C">Policy Admin</text>
+        <text x="95" y="68" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#9F1239">PA · §3.1.1 · GitOps</text>
+        <rect x="34" y="78" width="122" height="18" rx="2" fill="#FFE4E6"/>
+        <text x="95" y="91" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#BE123C">opa build --bundle</text>
+      </g>
+      <!-- Signing key -->
+      <g>
+        <rect x="20" y="130" width="150" height="80" rx="4" fill="#FFF1F2" stroke="#BE123C" stroke-width="1.3"/>
+        <path d="M 42 152 a 10 10 0 1 1 20 0 v 10 h -20 z" fill="none" stroke="#BE123C" stroke-width="1.4"/>
+        <rect x="36" y="160" width="32" height="20" rx="2" fill="#BE123C"/>
+        <text x="95" y="158" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="12" font-weight="700" fill="#BE123C">Ed25519 key</text>
+        <text x="95" y="174" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#9F1239">zta-bundle-key · HSM stand-in</text>
+        <text x="95" y="194" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#BE123C" font-weight="700">sign()</text>
+      </g>
+      <!-- Signed bundle -->
+      <g>
+        <rect x="200" y="70" width="140" height="110" rx="4" fill="#FFFFFF" stroke="#BE123C" stroke-width="1.3"/>
+        <text x="270" y="90" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="12" font-weight="700" fill="#BE123C">Signed bundle</text>
+        <text x="270" y="106" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#9F1239">tar.gz · JWS sig</text>
+        <line x1="214" y1="114" x2="326" y2="114" stroke="#FECACA" stroke-width="1"/>
+        <g font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#9F1239">
+          <text x="214" y="128">policy.rego</text>
+          <text x="214" y="142">data.json</text>
+          <text x="214" y="156">.manifest</text>
+          <text x="214" y="170" fill="#BE123C" font-weight="700">.signatures.json</text>
+        </g>
+      </g>
+      <!-- OPA verify -->
+      <g>
+        <rect x="370" y="30" width="220" height="190" rx="5" fill="#FFF1F2" stroke="#BE123C" stroke-width="1.6"/>
+        <rect x="370" y="30" width="5" height="190" fill="#BE123C"/>
+        <text x="480" y="54" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="14" font-weight="700" fill="#BE123C">OPA</text>
+        <text x="480" y="70" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="10.5" fill="#9F1239">PE · §3.1.1 · fail-closed</text>
+        <line x1="386" y1="80" x2="574" y2="80" stroke="#FECACA" stroke-width="1"/>
+        <g font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9.5" fill="#9F1239">
+          <rect x="386" y="90" width="188" height="20" rx="2" fill="#FFFFFF" stroke="#FECACA"/>
+          <text x="396" y="104">1 · pull bundle (poll)</text>
+          <rect x="386" y="116" width="188" height="20" rx="2" fill="#FFFFFF" stroke="#FECACA"/>
+          <text x="396" y="130">2 · verify JWS · key id</text>
+          <rect x="386" y="142" width="188" height="20" rx="2" fill="#FFFFFF" stroke="#FECACA"/>
+          <text x="396" y="156">3 · activate only if valid</text>
+        </g>
+        <rect x="386" y="172" width="188" height="38" rx="3" fill="#FFE4E6" stroke="#BE123C"/>
+        <text x="480" y="188" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9.5" fill="#BE123C" font-weight="700">unsigned / wrong-key</text>
+        <text x="480" y="202" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#9F1239">→ bundle rejected · last-good kept</text>
+      </g>
+      <!-- Envoy PEP fail-closed -->
+      <g>
+        <rect x="620" y="30" width="180" height="110" rx="5" fill="#FFFFFF" stroke="#BE123C" stroke-width="1.3"/>
+        <text x="710" y="54" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="12" font-weight="700" fill="#BE123C">Envoy · PEP</text>
+        <text x="710" y="70" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#9F1239">ext_authz · failure_mode_allow=false</text>
+        <line x1="634" y1="80" x2="786" y2="80" stroke="#FECACA" stroke-width="1"/>
+        <rect x="634" y="88" width="152" height="16" rx="2" fill="#ECFDF5"/>
+        <text x="710" y="99" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#047857">OPA reachable → apply policy</text>
+        <rect x="634" y="110" width="152" height="16" rx="2" fill="#FFE4E6"/>
+        <text x="710" y="121" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#BE123C" font-weight="700">OPA down → 503 deny-all</text>
+      </g>
+      <!-- Break-it banner -->
+      <g>
+        <rect x="620" y="156" width="180" height="64" rx="4" fill="#FFF1F2" stroke="#BE123C" stroke-width="1.2" stroke-dasharray="5 3"/>
+        <text x="710" y="176" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="11" font-weight="700" fill="#BE123C">Break-it exercise</text>
+        <text x="710" y="192" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9.5" fill="#9F1239">kubectl scale opa --replicas=0</text>
+        <text x="710" y="207" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#9F1239">every request → 503</text>
+      </g>
+      <!-- Arrows -->
+      <path d="M 170 70 L 200 100" fill="none" stroke="#BE123C" stroke-width="1.4" marker-end="url(#ld6-ok)"/>
+      <path d="M 170 170 L 200 140" fill="none" stroke="#BE123C" stroke-width="1.4" marker-end="url(#ld6-ok)"/>
+      <text x="184" y="92" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="8" fill="#BE123C">policy</text>
+      <text x="180" y="160" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="8" fill="#BE123C">sign</text>
+      <path d="M 340 120 L 370 120" fill="none" stroke="#BE123C" stroke-width="1.4" marker-end="url(#ld6-ok)"/>
+      <text x="355" y="113" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="8" fill="#BE123C">pull</text>
+      <path d="M 590 86 L 620 90" fill="none" stroke="#047857" stroke-width="1.4" marker-end="url(#ld6-pass)"/>
+      <text x="605" y="80" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="8" fill="#047857">decision</text>
+      <path d="M 590 180 L 620 185" fill="none" stroke="#BE123C" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#ld6-ok)"/>
+    </svg>
+    <div class="ld-legend" aria-hidden="true">
+      <span><i style="color:#BE123C"></i> signed policy path</span>
+      <span><i style="color:#047857"></i> allow decision</span>
+      <span><i class="dashed deny"></i> fail-closed · deny when PE gone</span>
+      <span style="margin-left:auto">no policy means no access — inverse of Lab 1's open default</span>
+    </div>
+  </figure>
 
   <div class="lab-flow" data-t="6" aria-label="Lab 6 flow">
     <div class="fstep"><span class="fs-num">01</span><span class="fs-title">Sign bundle</span><span class="fs-meta">cosign-like · Ed25519</span></div>
@@ -4398,6 +5156,115 @@ curl -s http://$(kubectl --context docker-desktop -n zta-policy get svc opa -o j
       <span class="lab-check-text">Mark complete</span>
     </button>
   </div>
+
+  <figure class="lab-diagram" data-t="7" aria-label="Lab 7 architecture preview">
+    <div class="ld-head">
+      <h3 class="ld-title">What you'll build — every allow, deny, and step-up flows into a Grafana SLO that feeds back into tomorrow's policy</h3>
+      <span class="ld-sub">Tenet 7 · §3.4.1</span>
+    </div>
+    <svg class="ld-svg" viewBox="0 0 820 260" role="img" aria-labelledby="ld7-t ld7-d" xmlns="http://www.w3.org/2000/svg">
+      <title id="ld7-t">Lab 7 architecture — decision signals fan out through OpenTelemetry to Prometheus, Loki, and Tempo, render in Grafana, and loop back to the Policy Administrator</title>
+      <desc id="ld7-d">Envoy and OPA emit metrics, logs, and traces per decision. An OTel collector routes them to Prometheus, Loki, and Tempo. Grafana renders SLO panels, and insights feed back into the next policy revision.</desc>
+      <defs>
+        <marker id="ld7-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#047857"/></marker>
+        <marker id="ld7-fb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#B45309"/></marker>
+      </defs>
+      <!-- Decision source -->
+      <g>
+        <rect x="20" y="56" width="150" height="150" rx="5" fill="#ECFDF5" stroke="#047857" stroke-width="1.5"/>
+        <rect x="20" y="56" width="5" height="150" fill="#047857"/>
+        <text x="95" y="78" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="13" font-weight="700" fill="#047857">Decision source</text>
+        <text x="95" y="93" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="10" fill="#065F46">Envoy PEP · OPA PE</text>
+        <line x1="34" y1="102" x2="156" y2="102" stroke="#A7F3D0" stroke-width="1"/>
+        <g font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9.5">
+          <rect x="34" y="112" width="122" height="18" rx="2" fill="#D1FAE5"/>
+          <text x="95" y="124" text-anchor="middle" fill="#047857">allow · 200</text>
+          <rect x="34" y="134" width="122" height="18" rx="2" fill="#FFFBEB"/>
+          <text x="95" y="146" text-anchor="middle" fill="#B45309">step-up · 401</text>
+          <rect x="34" y="156" width="122" height="18" rx="2" fill="#FFE4E6"/>
+          <text x="95" y="168" text-anchor="middle" fill="#BE123C">deny · 403</text>
+        </g>
+        <text x="95" y="192" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#065F46">decision-id · trace-id · dur</text>
+      </g>
+      <!-- OTel collector -->
+      <g>
+        <rect x="200" y="78" width="130" height="104" rx="4" fill="#FFFFFF" stroke="#047857" stroke-width="1.3"/>
+        <text x="265" y="100" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="12" font-weight="700" fill="#047857">OTel</text>
+        <text x="265" y="116" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#065F46">collector · fan-out</text>
+        <line x1="214" y1="124" x2="316" y2="124" stroke="#A7F3D0" stroke-width="1"/>
+        <g font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#047857">
+          <text x="220" y="140">metrics →</text>
+          <text x="220" y="154">logs    →</text>
+          <text x="220" y="168">traces  →</text>
+        </g>
+      </g>
+      <!-- Backends: Prom, Loki, Tempo -->
+      <g>
+        <rect x="360" y="30" width="160" height="52" rx="4" fill="#ECFDF5" stroke="#047857" stroke-width="1.1"/>
+        <text x="440" y="50" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="12" font-weight="700" fill="#047857">Prometheus</text>
+        <text x="440" y="68" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9.5" fill="#065F46">decision_total · rate · p99</text>
+
+        <rect x="360" y="98" width="160" height="52" rx="4" fill="#ECFDF5" stroke="#047857" stroke-width="1.1"/>
+        <text x="440" y="118" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="12" font-weight="700" fill="#047857">Loki</text>
+        <text x="440" y="136" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9.5" fill="#065F46">{app="opa"} decision logs</text>
+
+        <rect x="360" y="166" width="160" height="52" rx="4" fill="#ECFDF5" stroke="#047857" stroke-width="1.1"/>
+        <text x="440" y="186" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="12" font-weight="700" fill="#047857">Tempo</text>
+        <text x="440" y="204" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9.5" fill="#065F46">span · PEP → PE → upstream</text>
+      </g>
+      <!-- Grafana SLO -->
+      <g>
+        <rect x="560" y="30" width="240" height="188" rx="5" fill="#FFFFFF" stroke="#047857" stroke-width="1.5"/>
+        <rect x="560" y="30" width="5" height="188" fill="#047857"/>
+        <text x="680" y="52" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="13" font-weight="700" fill="#047857">Grafana · SLO dashboard</text>
+        <text x="680" y="68" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#065F46">allow-rate · deny-rate · latency p99</text>
+        <line x1="574" y1="78" x2="790" y2="78" stroke="#A7F3D0" stroke-width="1"/>
+        <!-- Mini chart 1 — allow/deny bars -->
+        <text x="580" y="94" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="8.5" fill="#065F46">allow / deny · 1h</text>
+        <g>
+          <rect x="580" y="100" width="14" height="26" fill="#047857"/><rect x="580" y="126" width="14" height="6" fill="#BE123C"/>
+          <rect x="600" y="104" width="14" height="22" fill="#047857"/><rect x="600" y="126" width="14" height="4" fill="#BE123C"/>
+          <rect x="620" y="96" width="14" height="30" fill="#047857"/><rect x="620" y="126" width="14" height="6" fill="#BE123C"/>
+          <rect x="640" y="112" width="14" height="14" fill="#047857"/><rect x="640" y="126" width="14" height="14" fill="#BE123C"/>
+          <rect x="660" y="110" width="14" height="16" fill="#047857"/><rect x="660" y="126" width="14" height="8" fill="#BE123C"/>
+          <rect x="680" y="92" width="14" height="34" fill="#047857"/><rect x="680" y="126" width="14" height="4" fill="#BE123C"/>
+        </g>
+        <!-- Mini chart 2 — latency line -->
+        <text x="710" y="94" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="8.5" fill="#065F46">p99 · ms</text>
+        <polyline points="710,132 724,126 738,130 752,120 766,124 780,118 790,122" fill="none" stroke="#047857" stroke-width="1.4"/>
+        <line x1="710" y1="138" x2="790" y2="138" stroke="#E5E7EB" stroke-width="0.6"/>
+        <!-- SLO rows -->
+        <g font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9.5" fill="#065F46">
+          <rect x="574" y="150" width="212" height="18" rx="2" fill="#ECFDF5"/>
+          <text x="582" y="162">SLO · deny-rate &lt; 2% / 24h</text>
+          <text x="780" y="162" text-anchor="end" fill="#047857" font-weight="700">ok</text>
+          <rect x="574" y="172" width="212" height="18" rx="2" fill="#ECFDF5"/>
+          <text x="582" y="184">SLO · auth p99 &lt; 120ms</text>
+          <text x="780" y="184" text-anchor="end" fill="#B45309" font-weight="700">warn</text>
+          <rect x="574" y="194" width="212" height="18" rx="2" fill="#ECFDF5"/>
+          <text x="582" y="206">SLO · bundle freshness &lt; 5m</text>
+          <text x="780" y="206" text-anchor="end" fill="#047857" font-weight="700">ok</text>
+        </g>
+      </g>
+      <!-- Arrows -->
+      <path d="M 170 130 L 200 130" fill="none" stroke="#047857" stroke-width="1.4" marker-end="url(#ld7-ok)"/>
+      <path d="M 330 110 L 360 56" fill="none" stroke="#047857" stroke-width="1.3" marker-end="url(#ld7-ok)"/>
+      <path d="M 330 130 L 360 124" fill="none" stroke="#047857" stroke-width="1.3" marker-end="url(#ld7-ok)"/>
+      <path d="M 330 150 L 360 192" fill="none" stroke="#047857" stroke-width="1.3" marker-end="url(#ld7-ok)"/>
+      <path d="M 520 56 L 560 80" fill="none" stroke="#047857" stroke-width="1.3" marker-end="url(#ld7-ok)"/>
+      <path d="M 520 124 L 560 124" fill="none" stroke="#047857" stroke-width="1.3" marker-end="url(#ld7-ok)"/>
+      <path d="M 520 192 L 560 168" fill="none" stroke="#047857" stroke-width="1.3" marker-end="url(#ld7-ok)"/>
+      <!-- Feedback loop to PA -->
+      <path d="M 680 218 C 680 244 380 248 95 218" fill="none" stroke="#B45309" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#ld7-fb)"/>
+      <rect x="330" y="232" width="188" height="18" rx="2" fill="#FFFBEB" stroke="#B45309" stroke-width="0.8"/>
+      <text x="424" y="245" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#B45309">telemetry → tomorrow's policy (PA)</text>
+    </svg>
+    <div class="ld-legend" aria-hidden="true">
+      <span><i style="color:#047857"></i> signal path · PEP → OTel → backends → SLO</span>
+      <span><i class="dashed" style="color:#B45309"></i> feedback · dashboard informs PA</span>
+      <span style="margin-left:auto">closes the loop every prior lab opened</span>
+    </div>
+  </figure>
 
   <div class="lab-flow" data-t="7" aria-label="Lab 7 flow">
     <div class="fstep"><span class="fs-num">01</span><span class="fs-title">Emit decisions</span><span class="fs-meta">OPA decision logs</span></div>
