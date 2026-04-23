@@ -1722,7 +1722,11 @@ Data-access policy .. Immuta</pre>
 
 <div class="callout caveat">
   <div class="callout-title">Docker Desktop caveats</div>
-  <p><strong>LoadBalancer:</strong> Docker Desktop's built-in Kubernetes assigns <code>localhost</code> as the external IP for <code>Service</code> type <code>LoadBalancer</code> — this is usable, but ports must be free. <strong>Cilium:</strong> kernel-level features (eBPF bandwidth manager, L7 policies) are limited under Docker Desktop's Linux-in-VM kernel; we therefore use Istio as the primary mesh and mention Cilium only in the extensions. <strong>Falco:</strong> we use the <em>modern_ebpf</em> driver, which works on Docker Desktop 4.30+ without kernel module compilation.</p>
+  <ul>
+    <li><strong>LoadBalancer:</strong> Docker Desktop's built-in Kubernetes assigns <code>localhost</code> as the external IP for <code>Service</code> type <code>LoadBalancer</code> — this is usable, but ports must be free.</li>
+    <li><strong>Cilium:</strong> kernel-level features (eBPF bandwidth manager, L7 policies) are limited under Docker Desktop's Linux-in-VM kernel; we therefore use Istio as the primary mesh and mention Cilium only in the extensions.</li>
+    <li><strong>Falco:</strong> we use the <em>modern_ebpf</em> driver, which works on Docker Desktop 4.30+ without kernel module compilation.</li>
+  </ul>
 </div>
 
 <h3>2.2 Suggested repository layout</h3>
