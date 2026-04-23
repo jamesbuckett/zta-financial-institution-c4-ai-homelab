@@ -2186,6 +2186,8 @@ echo "Gatekeeper installed."
 </code></pre>
 </div>
 
+<p><strong>Helm chart:</strong> <code>set driver.kind=modern_ebpf</code> — the default Falco driver tries to compile a kernel module at pod start, which fails under Docker Desktop's Linux-in-VM kernel. The <em>modern_ebpf</em> driver loads a pre-built CO-RE eBPF program instead, and is supported out-of-the-box on Docker Desktop 4.30+.</p>
+
 <div class="code-block terminal">
   <div class="code-head"><span class="lang">Bash</span><span class="path">bootstrap/07-falco.sh</span><button class="copy-btn">Copy</button></div>
 <pre><code>#!/usr/bin/env bash
