@@ -37,7 +37,12 @@
 <meta name="twitter:description" content="Seven hands-on labs that deploy a NIST 800-207 Zero Trust Architecture on Docker Desktop Kubernetes.">
 
 <!-- Inline SVG favicon (avoids external fetch, keeps single-file constraint) -->
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23FAFAFA'/%3E%3Crect x='6' y='6' width='52' height='52' fill='none' stroke='%230A0A0A' stroke-width='3'/%3E%3Ctext x='32' y='42' text-anchor='middle' font-family='-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif' font-size='28' font-weight='700' fill='%23B45309'%3EZ%3C/text%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23FAFAFA'/%3E%3Crect x='6' y='6' width='52' height='52' fill='none' stroke='%230A0A0A' stroke-width='3'/%3E%3Ctext x='32' y='42' text-anchor='middle' font-family='Ubuntu,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif' font-size='28' font-weight='700' fill='%23B45309'%3EZ%3C/text%3E%3C/svg%3E">
+
+<!-- Ubuntu + Ubuntu Mono via Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&family=Ubuntu+Mono:wght@400;700&display=swap">
 
 <!-- Structured data (TechArticle + HowTo). See https://schema.org/TechArticle -->
 <script type="application/ld+json">
@@ -129,8 +134,8 @@
     --ok: #047857;
     --warn: #B45309;
     --bad: #B91C1C;
-    --sans: -apple-system, BlinkMacSystemFont, "Inter", "Geist", "Segoe UI", Roboto, sans-serif;
-    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --sans: "Ubuntu", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --mono: "Ubuntu Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
     --space-1: 4px;
     --space-2: 8px;
     --space-3: 12px;
@@ -1442,46 +1447,46 @@
 
     <!-- Control-plane zone -->
     <rect x="240" y="26" width="500" height="180" fill="#FFFBEB" stroke="#F3E3B8" stroke-width="1" rx="6"/>
-    <text x="260" y="50" font-family="ui-sans-serif" font-size="10.5" font-weight="700" fill="#B45309" letter-spacing="1.4">CONTROL PLANE · §3.1</text>
+    <text x="260" y="50" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="10.5" font-weight="700" fill="#B45309" letter-spacing="1.4">CONTROL PLANE · §3.1</text>
 
     <!-- Data Plane band -->
     <rect x="40" y="250" width="820" height="160" fill="#F7F7F5" stroke="#E7E5E0" stroke-width="1" rx="6"/>
-    <text x="60" y="274" font-family="ui-sans-serif" font-size="10.5" font-weight="700" fill="#6B7280" letter-spacing="1.4">DATA PLANE · §3.1.2</text>
+    <text x="60" y="274" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="10.5" font-weight="700" fill="#6B7280" letter-spacing="1.4">DATA PLANE · §3.1.2</text>
 
     <!-- ===== Control Plane nodes ===== -->
     <!-- Policy Engine (PE) -->
     <g class="node" data-tip-id="pe">
       <rect class="node-hover-ring" x="306" y="92" width="176" height="82" rx="6" fill="none" stroke="#B45309" stroke-width="2"/>
       <rect class="node-bg" x="312" y="98" width="164" height="70" rx="4" fill="#FEF3C7" stroke="#B45309" stroke-width="1.2"/>
-      <text class="node-title" x="394" y="122" text-anchor="middle" font-family="ui-sans-serif" font-size="13" font-weight="700" fill="#78350F">Policy Engine</text>
-      <text x="394" y="140" text-anchor="middle" font-family="ui-sans-serif" font-size="10.5" fill="#92400E">PE · §3.1.1</text>
-      <text x="394" y="157" text-anchor="middle" font-family="ui-monospace, monospace" font-size="9.5" fill="#B45309" letter-spacing="0.5">OPA / Cedar</text>
+      <text class="node-title" x="394" y="122" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="13" font-weight="700" fill="#78350F">Policy Engine</text>
+      <text x="394" y="140" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="10.5" fill="#92400E">PE · §3.1.1</text>
+      <text x="394" y="157" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9.5" fill="#B45309" letter-spacing="0.5">OPA / Cedar</text>
     </g>
 
     <!-- Policy Administrator (PA) -->
     <g class="node" data-tip-id="pa">
       <rect class="node-hover-ring" x="504" y="92" width="148" height="82" rx="6" fill="none" stroke="#B45309" stroke-width="2"/>
       <rect class="node-bg" x="510" y="98" width="136" height="70" rx="4" fill="#FFFBEB" stroke="#B45309" stroke-width="1.2"/>
-      <text class="node-title" x="578" y="122" text-anchor="middle" font-family="ui-sans-serif" font-size="13" font-weight="700" fill="#78350F">Policy Admin</text>
-      <text x="578" y="140" text-anchor="middle" font-family="ui-sans-serif" font-size="10.5" fill="#92400E">PA · §3.1.1</text>
-      <text x="578" y="157" text-anchor="middle" font-family="ui-monospace, monospace" font-size="9.5" fill="#B45309" letter-spacing="0.5">Styra DAS · GitOps</text>
+      <text class="node-title" x="578" y="122" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="13" font-weight="700" fill="#78350F">Policy Admin</text>
+      <text x="578" y="140" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="10.5" fill="#92400E">PA · §3.1.1</text>
+      <text x="578" y="157" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9.5" fill="#B45309" letter-spacing="0.5">Styra DAS · GitOps</text>
     </g>
 
     <!-- Trust Algorithm (inside control plane, below PE/PA) -->
     <g class="node" data-tip-id="ta">
       <rect class="node-hover-ring" x="258" y="176" width="460" height="24" rx="4" fill="none" stroke="#B45309" stroke-width="2" stroke-dasharray="3 3"/>
       <rect class="node-bg" x="264" y="182" width="448" height="16" rx="3" fill="#FCE8B6" stroke="#B45309" stroke-width="0.8"/>
-      <text x="488" y="194" text-anchor="middle" font-family="ui-sans-serif" font-size="10" font-weight="700" fill="#78350F" letter-spacing="0.3">Trust Algorithm · §3.3 (criteria- or score-based)</text>
+      <text x="488" y="194" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="10" font-weight="700" fill="#78350F" letter-spacing="0.3">Trust Algorithm · §3.3 (criteria- or score-based)</text>
     </g>
 
     <!-- Data-source cluster — attached to control plane, left band -->
     <g class="node" data-tip-id="ds">
       <rect class="node-hover-ring" x="32" y="78" width="172" height="140" rx="6" fill="none" stroke="#0369A1" stroke-width="2"/>
       <rect class="node-bg" x="38" y="84" width="160" height="128" rx="4" fill="#EFF6FF" stroke="#0369A1" stroke-width="1.1"/>
-      <text class="node-title" x="118" y="104" text-anchor="middle" font-family="ui-sans-serif" font-size="12" font-weight="700" fill="#0C4A6E">Data Sources</text>
-      <text x="118" y="119" text-anchor="middle" font-family="ui-sans-serif" font-size="10" fill="#075985">§3.1 contextual inputs</text>
+      <text class="node-title" x="118" y="104" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="12" font-weight="700" fill="#0C4A6E">Data Sources</text>
+      <text x="118" y="119" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="10" fill="#075985">§3.1 contextual inputs</text>
       <!-- chips -->
-      <g font-family="ui-sans-serif" font-size="9.5" fill="#0369A1">
+      <g font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="9.5" fill="#0369A1">
         <rect x="50" y="130" width="62" height="16" rx="2" fill="#DBEAFE"/><text x="81" y="141" text-anchor="middle">CDM</text>
         <rect x="118" y="130" width="70" height="16" rx="2" fill="#DBEAFE"/><text x="153" y="141" text-anchor="middle">Identity</text>
         <rect x="50" y="152" width="62" height="16" rx="2" fill="#DBEAFE"/><text x="81" y="163" text-anchor="middle">SIEM</text>
@@ -1495,9 +1500,9 @@
     <g class="node" data-tip-id="pol">
       <rect class="node-hover-ring" x="754" y="78" width="118" height="140" rx="6" fill="none" stroke="#4338CA" stroke-width="2"/>
       <rect class="node-bg" x="760" y="84" width="106" height="128" rx="4" fill="#EEF2FF" stroke="#4338CA" stroke-width="1.1"/>
-      <text class="node-title" x="813" y="104" text-anchor="middle" font-family="ui-sans-serif" font-size="12" font-weight="700" fill="#312E81">Policy Source</text>
-      <text x="813" y="120" text-anchor="middle" font-family="ui-sans-serif" font-size="10" fill="#3730A3">Regs · Standards</text>
-      <g font-family="ui-sans-serif" font-size="9.5" fill="#4338CA">
+      <text class="node-title" x="813" y="104" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="12" font-weight="700" fill="#312E81">Policy Source</text>
+      <text x="813" y="120" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="10" fill="#3730A3">Regs · Standards</text>
+      <g font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="9.5" fill="#4338CA">
         <rect x="770" y="134" width="86" height="16" rx="2" fill="#E0E7FF"/><text x="813" y="145" text-anchor="middle">NIST 800-207</text>
         <rect x="770" y="154" width="86" height="16" rx="2" fill="#E0E7FF"/><text x="813" y="165" text-anchor="middle">FAPI 2.0</text>
         <rect x="770" y="174" width="86" height="16" rx="2" fill="#E0E7FF"/><text x="813" y="185" text-anchor="middle">DORA · PCI</text>
@@ -1509,23 +1514,23 @@
     <g class="node" data-tip-id="sub">
       <rect class="node-hover-ring" x="56" y="298" width="148" height="90" rx="6" fill="none" stroke="#0A0A0A" stroke-width="2"/>
       <rect class="node-bg" x="62" y="304" width="136" height="78" rx="4" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.1"/>
-      <text class="node-title" x="130" y="330" text-anchor="middle" font-family="ui-sans-serif" font-size="13" font-weight="700" fill="#0A0A0A">Subject</text>
-      <text x="130" y="348" text-anchor="middle" font-family="ui-sans-serif" font-size="10.5" fill="#6B7280">user · workload · device</text>
+      <text class="node-title" x="130" y="330" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="13" font-weight="700" fill="#0A0A0A">Subject</text>
+      <text x="130" y="348" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="10.5" fill="#6B7280">user · workload · device</text>
       <!-- Small person icon -->
       <g transform="translate(80 360)" stroke="#0A0A0A" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="7" cy="4" r="3"/>
         <path d="M1 16 c1-4 3-6 6-6 s5 2 6 6"/>
       </g>
-      <text x="144" y="373" text-anchor="middle" font-family="ui-monospace, monospace" font-size="9" fill="#9CA3AF" letter-spacing="0.5">§2.2</text>
+      <text x="144" y="373" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#9CA3AF" letter-spacing="0.5">§2.2</text>
     </g>
 
     <!-- PEP -->
     <g class="node" data-tip-id="pep">
       <rect class="node-hover-ring" x="334" y="298" width="232" height="90" rx="6" fill="none" stroke="#0369A1" stroke-width="2"/>
       <rect class="node-bg" x="340" y="304" width="220" height="78" rx="4" fill="#EFF6FF" stroke="#0369A1" stroke-width="1.1" stroke-dasharray="4 3"/>
-      <text class="node-title" x="450" y="328" text-anchor="middle" font-family="ui-sans-serif" font-size="13" font-weight="700" fill="#0C4A6E">Policy Enforcement Points</text>
-      <text x="450" y="345" text-anchor="middle" font-family="ui-sans-serif" font-size="10.5" fill="#075985">PEP · §3.1.2 — the gate</text>
-      <g font-family="ui-monospace, monospace" font-size="9" fill="#0369A1" letter-spacing="0.3">
+      <text class="node-title" x="450" y="328" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="13" font-weight="700" fill="#0C4A6E">Policy Enforcement Points</text>
+      <text x="450" y="345" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="10.5" fill="#075985">PEP · §3.1.2 — the gate</text>
+      <g font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#0369A1" letter-spacing="0.3">
         <rect x="352" y="358" width="52" height="14" rx="2" fill="#DBEAFE"/><text x="378" y="368" text-anchor="middle">Istio</text>
         <rect x="408" y="358" width="52" height="14" rx="2" fill="#DBEAFE"/><text x="434" y="368" text-anchor="middle">Kong</text>
         <rect x="464" y="358" width="42" height="14" rx="2" fill="#DBEAFE"/><text x="485" y="368" text-anchor="middle">ZPA</text>
@@ -1537,9 +1542,9 @@
     <g class="node" data-tip-id="res">
       <rect class="node-hover-ring" x="694" y="298" width="170" height="90" rx="6" fill="none" stroke="#0F766E" stroke-width="2"/>
       <rect class="node-bg" x="700" y="304" width="158" height="78" rx="4" fill="#F0FDFA" stroke="#0F766E" stroke-width="1.1"/>
-      <text class="node-title" x="779" y="330" text-anchor="middle" font-family="ui-sans-serif" font-size="13" font-weight="700" fill="#134E4A">Enterprise Resource</text>
-      <text x="779" y="348" text-anchor="middle" font-family="ui-sans-serif" font-size="10.5" fill="#115E59">pod · API · data · device</text>
-      <g font-family="ui-monospace, monospace" font-size="9" fill="#0F766E" letter-spacing="0.3">
+      <text class="node-title" x="779" y="330" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="13" font-weight="700" fill="#134E4A">Enterprise Resource</text>
+      <text x="779" y="348" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="10.5" fill="#115E59">pod · API · data · device</text>
+      <g font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#0F766E" letter-spacing="0.3">
         <rect x="710" y="360" width="56" height="14" rx="2" fill="#CCFBF1"/><text x="738" y="370" text-anchor="middle">API</text>
         <rect x="770" y="360" width="56" height="14" rx="2" fill="#CCFBF1"/><text x="798" y="370" text-anchor="middle">DB</text>
       </g>
@@ -1548,34 +1553,34 @@
     <!-- ===== Flows ===== -->
     <!-- Subject → PEP (request) -->
     <line x1="204" y1="342" x2="334" y2="342" stroke="#0A0A0A" stroke-width="1.5" marker-end="url(#arr-ink)" class="flow-anim"/>
-    <text x="270" y="335" text-anchor="middle" font-family="ui-sans-serif" font-size="10" fill="#0A0A0A" font-weight="600">①  request</text>
+    <text x="270" y="335" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="10" fill="#0A0A0A" font-weight="600">①  request</text>
 
     <!-- PEP → PE (CheckRequest / authz query) -->
     <path d="M 418 298 C 418 240, 394 220, 394 174" stroke="#0A0A0A" stroke-width="1.5" fill="none" marker-end="url(#arr-ink)"/>
-    <text x="424" y="244" font-family="ui-sans-serif" font-size="10" fill="#0A0A0A" font-weight="600">②  authz query</text>
+    <text x="424" y="244" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="10" fill="#0A0A0A" font-weight="600">②  authz query</text>
 
     <!-- PE → PEP (decision) -->
     <path d="M 478 174 C 490 220, 500 256, 500 298" stroke="#047857" stroke-width="1.5" fill="none" marker-end="url(#arr-allow)"/>
-    <text x="510" y="252" font-family="ui-sans-serif" font-size="10" fill="#047857" font-weight="600">③  allow / deny / step-up</text>
+    <text x="510" y="252" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="10" fill="#047857" font-weight="600">③  allow / deny / step-up</text>
 
     <!-- DS → PE (signals) -->
     <path d="M 204 150 Q 250 150 312 134" stroke="#B45309" stroke-width="1.3" fill="none" stroke-dasharray="4 3" marker-end="url(#arr-sig)"/>
-    <text x="222" y="132" font-family="ui-sans-serif" font-size="10" fill="#B45309" font-weight="600">signals</text>
+    <text x="222" y="132" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="10" fill="#B45309" font-weight="600">signals</text>
 
     <!-- PA → PE (signed bundle) -->
     <path d="M 510 134 Q 500 126 476 126" stroke="#B45309" stroke-width="1.3" fill="none" stroke-dasharray="4 3" marker-end="url(#arr-sig)"/>
-    <text x="492" y="92" font-family="ui-sans-serif" font-size="10" fill="#B45309" font-weight="600">signed bundle</text>
+    <text x="492" y="92" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="10" fill="#B45309" font-weight="600">signed bundle</text>
 
     <!-- Policy Source → PA -->
     <line x1="760" y1="134" x2="652" y2="134" stroke="#4338CA" stroke-width="1.3" stroke-dasharray="4 3" fill="none" marker-end="url(#arr-sig)"/>
 
     <!-- PEP → Resource (allowed session) -->
     <line x1="566" y1="342" x2="694" y2="342" stroke="#047857" stroke-width="1.5" marker-end="url(#arr-allow)" class="flow-anim"/>
-    <text x="630" y="335" text-anchor="middle" font-family="ui-sans-serif" font-size="10" fill="#047857" font-weight="600">④  session</text>
+    <text x="630" y="335" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="10" fill="#047857" font-weight="600">④  session</text>
 
     <!-- Telemetry from PEP back to DS -->
     <path d="M 450 388 Q 340 420 190 218" stroke="#7C3AED" stroke-width="1.2" fill="none" stroke-dasharray="3 3" marker-end="url(#arr-sig)" opacity="0.7"/>
-    <text x="300" y="412" font-family="ui-sans-serif" font-size="10" fill="#7C3AED" font-weight="600">⑤  telemetry loop</text>
+    <text x="300" y="412" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="10" fill="#7C3AED" font-weight="600">⑤  telemetry loop</text>
   </svg>
 
   <div class="hero-legend" aria-label="Legend">
