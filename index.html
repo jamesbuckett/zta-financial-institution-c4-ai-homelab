@@ -2288,10 +2288,11 @@ spec:
     spec:
       containers:
       - name: opa
-        # Image is resolved per host architecture by the apply wrapper below.
-        # amd64  -> openpolicyagent/opa:0.68.0-envoy
-        # arm64  -> openpolicyagent/opa:0.68.0-envoy-rootless   (multi-arch manifest)
-        image: ${OPA_ENVOY_IMAGE}
+        # Multi-arch manifest (amd64 + arm64). The default
+        # openpolicyagent/opa:0.68.0-envoy tag is amd64 only — the
+        # "-N-static" build-number variants are the ones OPA publishes
+        # for both architectures, so pin one here for portability.
+        image: openpolicyagent/opa:0.68.0-envoy-12-static
         args:
         - "run"
         - "--server"
@@ -2321,41 +2322,7 @@ spec:
 </code></pre>
 </div>
 
-<p class="footnote" style="text-transform:none; letter-spacing:0; font-weight:normal; font-size:12.5px; color: var(--muted);">The OPA image is parameterised because the default <code>openpolicyagent/opa:&lt;ver&gt;-envoy</code> tag ships an amd64-only binary (<code>opa_envoy_linux_amd64</code>) and fails with <code>exec format error</code> on arm64 hosts (Apple Silicon, ARM Windows, Raspberry Pi). The wrapper below detects <code>uname -m</code> and picks the matching multi-arch variant before applying.</p>
-
-<div class="code-block terminal">
-  <div class="code-head"><span class="lang">Bash</span><span class="path">bootstrap/05-opa.sh  (arch-aware apply wrapper)</span><button class="copy-btn">Copy</button></div>
-<pre><code>#!/usr/bin/env bash
-set -euo pipefail
-CTX=docker-desktop
-
-# Resolve the OPA+Envoy image for the host architecture.
-# openpolicyagent/opa:0.68.0-envoy            -> amd64 only
-# openpolicyagent/opa:0.68.0-envoy-rootless   -> multi-arch (amd64 + arm64)
-case "$(uname -m)" in
-  x86_64|amd64)
-    export OPA_ENVOY_IMAGE="openpolicyagent/opa:0.68.0-envoy"
-    ;;
-  aarch64|arm64)
-    export OPA_ENVOY_IMAGE="openpolicyagent/opa:0.68.0-envoy-rootless"
-    ;;
-  *)
-    echo "Unsupported architecture: $(uname -m)" >&2
-    exit 1
-    ;;
-esac
-
-echo "Using OPA image: ${OPA_ENVOY_IMAGE}"
-
-# envsubst only expands the OPA_ENVOY_IMAGE placeholder — any other
-# literal ${...} in the YAML (there aren't any here) is left untouched.
-envsubst '${OPA_ENVOY_IMAGE}' \
-  < bootstrap/05-opa.yaml \
-  | kubectl --context $CTX apply -f -
-
-kubectl --context $CTX -n zta-policy rollout status deploy/opa --timeout=120s
-</code></pre>
-</div>
+<p class="footnote" style="text-transform:none; letter-spacing:0; font-weight:normal; font-size:12.5px; color: var(--muted);">A note on the image tag: the widely referenced <code>openpolicyagent/opa:0.68.0-envoy</code> tag is amd64 only, so its bundled <code>opa_envoy_linux_amd64</code> binary fails with <code>exec format error</code> on arm64 hosts (Apple Silicon, ARM Windows, Raspberry Pi). The numbered <code>-envoy-&lt;N&gt;-static</code> variants (<code>-envoy-12-static</code> at time of writing) are published as multi-arch manifests covering both amd64 and arm64, so the same YAML works on every Docker Desktop platform with no substitution step. Bump the build-number suffix to pick up a newer base-image rebuild of the same OPA version.</p>
 
 <div class="code-block terminal">
   <div class="code-head"><span class="lang">Bash</span><span class="path">bootstrap/06-gatekeeper.sh</span><button class="copy-btn">Copy</button></div>
@@ -2593,7 +2560,7 @@ kubectl --context $CTX apply -f bootstrap/00-namespaces.yaml
 ./bootstrap/02-istio.sh
 kubectl --context $CTX apply -f bootstrap/03-spire.yaml
 kubectl --context $CTX apply -f bootstrap/04-keycloak.yaml
-./bootstrap/05-opa.sh   # arch-aware wrapper — selects amd64 / arm64 image
+kubectl --context $CTX apply -f bootstrap/05-opa.yaml
 
 # Admission, runtime security, observability
 ./bootstrap/06-gatekeeper.sh
