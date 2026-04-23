@@ -2301,7 +2301,7 @@ spec:
         - { containerPort: 8181, name: http }
         - { containerPort: 9191, name: grpc }
         - { containerPort: 8282, name: diag }
-        readinessProbe: { httpGet: { path: /health?plugins, port: 8282 } }
+        readinessProbe: { httpGet: { path: "/health?plugins", port: 8282 } }
         volumeMounts:
         - { name: config, mountPath: /config }
       volumes:
