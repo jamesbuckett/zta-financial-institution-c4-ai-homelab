@@ -2384,7 +2384,7 @@ spec:
 
 <div class="code-block terminal">
   <div class="code-head"><span class="lang">Bash</span><span class="path">apply keycloak</span><button class="copy-btn">Copy</button></div>
-<pre><code>kubectl --context docker-desktop apply -f ./bootstrap/04-keycloak.yaml
+<pre><code>kubectl --context docker-desktop apply -f 04-keycloak.yaml
 
 # Expected:
 # deployment.apps/keycloak created
@@ -2463,7 +2463,7 @@ spec:
 
 <div class="code-block terminal">
   <div class="code-head"><span class="lang">Bash</span><span class="path">apply opa</span><button class="copy-btn">Copy</button></div>
-<pre><code>kubectl --context docker-desktop apply -f ./bootstrap/05-opa.yaml
+<pre><code>kubectl --context docker-desktop apply -f 05-opa.yaml
 
 # Expected:
 # configmap/opa-config created
@@ -2491,7 +2491,7 @@ echo "Gatekeeper installed."
 
 <div class="code-block terminal">
   <div class="code-head"><span class="lang">Bash</span><span class="path">run gatekeeper bootstrap</span><button class="copy-btn">Copy</button></div>
-<pre><code>./bootstrap/06-gatekeeper.sh
+<pre><code>./06-gatekeeper.sh
 
 # Expected (tail):
 # Release "gatekeeper" does not exist. Installing it now.
@@ -2527,7 +2527,7 @@ echo "Falco installed (modern_ebpf driver)."
 
 <div class="code-block terminal">
   <div class="code-head"><span class="lang">Bash</span><span class="path">run falco bootstrap</span><button class="copy-btn">Copy</button></div>
-<pre><code>./bootstrap/07-falco.sh
+<pre><code>./07-falco.sh
 
 # Expected (tail):
 # Release "falco" does not exist. Installing it now.
@@ -2571,7 +2571,7 @@ echo "Observability stack installed (Prometheus, Grafana, Loki, Tempo)."
 
 <div class="code-block terminal">
   <div class="code-head"><span class="lang">Bash</span><span class="path">run observability bootstrap</span><button class="copy-btn">Copy</button></div>
-<pre><code>./bootstrap/08-observability.sh
+<pre><code>./08-observability.sh
 
 # Expected (tail):
 # NAME: kube-prom
