@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: opa-config, namespace: zta-policy }
+data:
+  # Bootstrap minimum: decision logging + the Envoy ext-authz gRPC plugin.
+  # Lab 4 layers in the Rego policy via a ConfigMap volume; Lab 6 replaces
+  # this ConfigMap wholesale to pull signed bundles from the PA. Keeping
+  # the bundle/signing config out of the bootstrap avoids OPA failing at
+  # startup with "key id zta-bundle-key not found" before Lab 6 provides
+  # the signing key and the bundle server.
+  config.yaml: |
+    decision_logs:
+      console: true
+    plugins:
+      envoy_ext_authz_grpc:
+        addr: :9191
+        path: zta/authz/allow
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: opa, namespace: zta-policy }
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: opa } }
+  template:
+    metadata: { labels: { app: opa } }
+    spec:
+      containers:
+      - name: opa
+        # Multi-arch manifest (amd64 + arm64). The default
+        # openpolicyagent/opa:0.68.0-envoy tag is amd64 only — the
+        # "-N-static" build-number variants are the ones OPA publishes
+        # for both architectures, so pin one here for portability.
+        image: openpolicyagent/opa:0.68.0-envoy-12-static
+        args:
+        - "run"
+        - "--server"
+        - "--config-file=/config/config.yaml"
+        - "--addr=:8181"
+        - "--diagnostic-addr=:8282"
+        - "--set=plugins.envoy_ext_authz_grpc.addr=:9191"
+        - "--set=decision_logs.console=true"
+        ports:
+        - { containerPort: 8181, name: http }
+        - { containerPort: 9191, name: grpc }
+        - { containerPort: 8282, name: diag }
+        readinessProbe: { httpGet: { path: "/health?plugins", port: 8282 } }
+        volumeMounts:
+        - { name: config, mountPath: /config }
+      volumes:
+      - { name: config, configMap: { name: opa-config } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: opa, namespace: zta-policy }
+spec:
+  selector: { app: opa }
+  ports:
+  - { name: http, port: 8181, targetPort: 8181 }
+  - { name: grpc, port: 9191, targetPort: 9191 }
+

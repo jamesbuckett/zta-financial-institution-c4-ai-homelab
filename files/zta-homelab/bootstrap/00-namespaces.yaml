@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: zta-system
+  labels: { zta.tier: "control-plane", istio-injection: "enabled" }
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: zta-identity
+  labels: { zta.tier: "control-plane", istio-injection: "enabled" }
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: zta-policy
+  labels: { zta.tier: "control-plane", istio-injection: "enabled" }
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: spire
+  labels: { zta.tier: "control-plane" }
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: zta-observability
+  labels: { zta.tier: "observability", istio-injection: "enabled" }
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: zta-runtime-security
+  labels: { zta.tier: "detect" }
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: bookstore-frontend
+  labels: { zta.tier: "workload", zta.tier-role: "presentation", istio-injection: "enabled" }
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: bookstore-api
+  labels: { zta.tier: "workload", zta.tier-role: "api", istio-injection: "enabled" }
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: bookstore-data
+  labels: { zta.tier: "workload", zta.tier-role: "data", istio-injection: "enabled" }
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cert-manager
+  labels: { zta.tier: "control-plane" }
+

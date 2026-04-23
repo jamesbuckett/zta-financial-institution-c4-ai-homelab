@@ -1,0 +1,97 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata: { name: spire-server, namespace: spire }
+---
+# Empty bundle ConfigMap — SPIRE's k8sbundle notifier patches this in place
+# with the current trust-domain bundle. It must exist before the server starts.
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: spire-bundle, namespace: spire }
+---
+# RBAC for the k8sbundle notifier: spire-server patches the spire-bundle CM
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata: { name: spire-server-configmap, namespace: spire }
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["spire-bundle"]
+    verbs: ["get", "list", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata: { name: spire-server-configmap, namespace: spire }
+subjects:
+  - kind: ServiceAccount
+    name: spire-server
+    namespace: spire
+roleRef:
+  kind: Role
+  name: spire-server-configmap
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: spire-server, namespace: spire }
+data:
+  server.conf: |
+    server {
+      bind_address = "0.0.0.0"
+      bind_port = "8081"
+      trust_domain = "zta.homelab"
+      data_dir = "/run/spire/data"
+      log_level = "INFO"
+      ca_ttl = "24h"
+      default_x509_svid_ttl = "5m"
+      default_jwt_svid_ttl  = "5m"
+    }
+    plugins {
+      DataStore "sql" { plugin_data { database_type = "sqlite3"
+                                      connection_string = "/run/spire/data/datastore.sqlite3" } }
+      KeyManager "disk" { plugin_data { keys_path = "/run/spire/data/keys.json" } }
+      NodeAttestor "k8s_psat" {
+        plugin_data {
+          clusters = {
+            "docker-desktop" = {
+              service_account_allow_list = ["spire:spire-agent"]
+            }
+          }
+        }
+      }
+      Notifier "k8sbundle" { plugin_data { namespace = "spire" } }
+    }
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata: { name: spire-server, namespace: spire }
+spec:
+  serviceName: spire-server
+  replicas: 1
+  selector: { matchLabels: { app: spire-server } }
+  template:
+    metadata: { labels: { app: spire-server } }
+    spec:
+      serviceAccountName: spire-server
+      containers:
+      - name: spire-server
+        image: ghcr.io/spiffe/spire-server:1.10.1
+        args: ["-config", "/run/spire/config/server.conf"]
+        ports: [{ containerPort: 8081, name: grpc }]
+        volumeMounts:
+        - { name: config, mountPath: /run/spire/config, readOnly: true }
+        - { name: data,   mountPath: /run/spire/data }
+      volumes:
+      - { name: config, configMap: { name: spire-server } }
+  volumeClaimTemplates:
+  - metadata: { name: data }
+    spec:
+      accessModes: [ReadWriteOnce]
+      resources: { requests: { storage: 1Gi } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: spire-server, namespace: spire }
+spec:
+  selector: { app: spire-server }
+  ports: [{ name: grpc, port: 8081, targetPort: 8081 }]
+

@@ -1,0 +1,143 @@
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: frontend-html, namespace: bookstore-frontend }
+data:
+  index.html: |
+    <!doctype html><html><body style="font-family: system-ui; padding: 2rem">
+    <h1>ZTA Bookstore</h1><p>Frontend tier — calls API at /api.</p></body></html>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: bookstore-frontend
+  labels: { app: frontend, zta.resource: "true", zta.data-class: "public", zta.tier-role: "presentation" }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: frontend } }
+  template:
+    metadata:
+      labels: { app: frontend, zta.resource: "true", zta.data-class: "public", zta.tier-role: "presentation" }
+    spec:
+      serviceAccountName: default
+      containers:
+      - name: nginx
+        image: nginx:1.27-alpine
+        ports: [{ containerPort: 80 }]
+        volumeMounts:
+        - { name: html, mountPath: /usr/share/nginx/html }
+      volumes:
+      - { name: html, configMap: { name: frontend-html } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: bookstore-frontend
+  labels: { zta.resource: "true", zta.data-class: "public" }
+spec:
+  selector: { app: frontend }
+  ports: [{ name: http, port: 80, targetPort: 80 }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: bookstore-api
+  labels: { app: api, zta.resource: "true", zta.data-class: "confidential", zta.tier-role: "api" }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: api } }
+  template:
+    metadata:
+      labels: { app: api, zta.resource: "true", zta.data-class: "confidential", zta.tier-role: "api" }
+    spec:
+      containers:
+      - name: httpbin
+        # mccutchen/go-httpbin is a maintained, multi-arch (amd64 + arm64)
+        # reimplementation of the classic httpbin endpoints. It replaces
+        # kennethreitz/httpbin, which is unmaintained and ships an amd64-only
+        # gunicorn binary that fails with "exec format error" on arm64.
+        image: mccutchen/go-httpbin:v2.15.0
+        ports: [{ containerPort: 8080 }]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+  namespace: bookstore-api
+  labels: { zta.resource: "true", zta.data-class: "confidential" }
+spec:
+  selector: { app: api }
+  ports: [{ name: http, port: 80, targetPort: 8080 }]
+---
+apiVersion: v1
+kind: Secret
+metadata: { name: db-creds, namespace: bookstore-data }
+type: Opaque
+stringData:
+  POSTGRES_PASSWORD: "bookstore-dev-only"
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db
+  namespace: bookstore-data
+  labels: { app: db, zta.resource: "true", zta.data-class: "restricted", zta.tier-role: "data" }
+spec:
+  serviceName: db
+  replicas: 1
+  selector: { matchLabels: { app: db } }
+  template:
+    metadata:
+      labels: { app: db, zta.resource: "true", zta.data-class: "restricted", zta.tier-role: "data" }
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:16-alpine
+        ports: [{ containerPort: 5432 }]
+        envFrom: [{ secretRef: { name: db-creds } }]
+        env:
+        - { name: POSTGRES_DB,   value: "bookstore" }
+        - { name: POSTGRES_USER, value: "bookstore" }
+        volumeMounts:
+        - { name: pgdata, mountPath: /var/lib/postgresql/data }
+  volumeClaimTemplates:
+  - metadata: { name: pgdata }
+    spec:
+      accessModes: [ReadWriteOnce]
+      resources: { requests: { storage: 1Gi } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+  namespace: bookstore-data
+  labels: { zta.resource: "true", zta.data-class: "restricted" }
+spec:
+  selector: { app: db }
+  ports: [{ name: pg, port: 5432, targetPort: 5432 }]
+---
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata: { name: bookstore-gw, namespace: bookstore-frontend }
+spec:
+  selector: { istio: ingressgateway }
+  servers:
+  - port: { number: 80, name: http, protocol: HTTP }
+    hosts: ["bookstore.local"]
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata: { name: bookstore-vs, namespace: bookstore-frontend }
+spec:
+  hosts: ["bookstore.local"]
+  gateways: [bookstore-gw]
+  http:
+  - match: [{ uri: { prefix: /api/ } }]
+    rewrite: { uri: / }
+    route:
+    - destination: { host: api.bookstore-api.svc.cluster.local, port: { number: 80 } }
+  - route:
+    - destination: { host: frontend.bookstore-frontend.svc.cluster.local, port: { number: 80 } }
+

@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: keycloak, namespace: zta-identity }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: keycloak } }
+  template:
+    metadata: { labels: { app: keycloak } }
+    spec:
+      containers:
+      - name: keycloak
+        image: quay.io/keycloak/keycloak:25.0.6
+        args: ["start-dev", "--http-enabled=true", "--hostname-strict=false"]
+        env:
+        - { name: KEYCLOAK_ADMIN,          value: "admin" }
+        - { name: KEYCLOAK_ADMIN_PASSWORD, value: "admin" }   # dev only
+        - { name: KC_HTTP_PORT,            value: "8080" }
+        ports: [{ containerPort: 8080, name: http }]
+        readinessProbe:
+          httpGet: { path: /realms/master, port: 8080 }
+          initialDelaySeconds: 30
+          periodSeconds: 5
+        resources:
+          requests: { cpu: 100m, memory: 512Mi }
+          limits:   { cpu: 1000m, memory: 1Gi }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: keycloak, namespace: zta-identity }
+spec:
+  selector: { app: keycloak }
+  ports: [{ name: http, port: 8080, targetPort: 8080 }]
+---
+# Ingress via Istio Gateway — exposes http://keycloak.local
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata: { name: keycloak-gw, namespace: zta-identity }
+spec:
+  selector: { istio: ingressgateway }
+  servers:
+  - port: { number: 80, name: http, protocol: HTTP }
+    hosts: ["keycloak.local"]
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata: { name: keycloak-vs, namespace: zta-identity }
+spec:
+  hosts: ["keycloak.local"]
+  gateways: [keycloak-gw]
+  http:
+  - route:
+    - destination: { host: keycloak.zta-identity.svc.cluster.local, port: { number: 8080 } }
+
