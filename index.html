@@ -1729,7 +1729,117 @@ Data-access policy .. Immuta</pre>
   </ul>
 </div>
 
-<h3>2.2 Suggested repository layout</h3>
+<h3>2.2 Install CLI utilities</h3>
+<p>Every lab in this tutorial drives Docker Desktop's Kubernetes through a small set of command-line tools. <code>kubectl</code> talks to the API server, <code>helm</code> renders the third-party charts (cert-manager, Falco, kube-prometheus-stack), <code>kustomize</code> patches the bookstore manifests, <code>istioctl</code> installs and introspects the mesh, <code>jq</code> / <code>yq</code> shape JSON and YAML on the pipe, and <code>openssl</code> inspects the X.509 and SVID material that Lab 2 will generate. Install all of them before touching the cluster — the bootstrap scripts fail fast if any one is missing.</p>
+
+<div class="nist-map">
+  <dt>kubectl</dt><dd>≥ 1.29 — Kubernetes API client; must match the server's minor version ± 1.</dd>
+  <dt>helm</dt><dd>≥ 3.14 — chart renderer for cert-manager, Falco, kube-prometheus-stack, Loki, Tempo.</dd>
+  <dt>kustomize</dt><dd>≥ 5.0 — overlay patcher for the bookstore workload manifests.</dd>
+  <dt>istioctl</dt><dd>≥ 1.22 — installs the mesh in §2.4 and introspects Envoy config in every lab.</dd>
+  <dt>jq</dt><dd>≥ 1.7 — JSON slicer for <code>kubectl get -o json</code> and OPA decision logs.</dd>
+  <dt>yq</dt><dd>≥ 4.40 (Mike Farah) — YAML equivalent of jq; used by the scaffold and teardown scripts.</dd>
+  <dt>openssl</dt><dd>≥ 3.0 — inspects PeerAuthentication and SPIFFE SVID certificates in Lab 2.</dd>
+</div>
+
+<p>Pick the stanza that matches your workstation. Each snippet is idempotent — re-running it upgrades an existing install rather than failing.</p>
+
+<div class="code-block terminal">
+  <div class="code-head"><span class="lang">Bash</span><span class="path">macOS · Homebrew</span><button class="copy-btn">Copy</button></div>
+<pre><code>#!/usr/bin/env bash
+set -euo pipefail
+
+# Homebrew ships current versions of every tool the lab needs.
+brew update
+brew install kubectl helm kustomize jq yq openssl@3
+
+# istioctl ships its own tap for pinned release channels.
+brew install istioctl
+
+# Verify: every line should print a version.
+kubectl version --client --output=yaml | head -2
+helm version --short
+kustomize version
+istioctl version --remote=false
+jq --version; yq --version; openssl version
+</code></pre>
+</div>
+
+<div class="code-block terminal">
+  <div class="code-head"><span class="lang">Bash</span><span class="path">Linux · Debian/Ubuntu · WSL2</span><button class="copy-btn">Copy</button></div>
+<pre><code>#!/usr/bin/env bash
+set -euo pipefail
+
+ARCH="$(dpkg --print-architecture)"          # amd64 or arm64
+BIN=/usr/local/bin
+
+sudo apt-get update
+sudo apt-get install -y curl ca-certificates gnupg jq openssl
+
+# kubectl — pinned to the current stable minor (aligns with Docker Desktop).
+KUBECTL_VER="$(curl -fsSL https://dl.k8s.io/release/stable.txt)"
+curl -fsSL "https://dl.k8s.io/release/${KUBECTL_VER}/bin/linux/${ARCH}/kubectl" \
+  | sudo install /dev/stdin "${BIN}/kubectl"
+
+# helm — upstream installer, version-pinned inside the script.
+curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 \
+  | HELM_INSTALL_DIR="${BIN}" bash
+
+# kustomize — upstream installer; writes into the current directory, then moved.
+curl -fsSL "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" \
+  | bash
+sudo mv ./kustomize "${BIN}/kustomize"
+
+# istioctl — download, extract, promote.
+ISTIO_VERSION="1.22.3"
+curl -fsSL "https://github.com/istio/istio/releases/download/${ISTIO_VERSION}/istio-${ISTIO_VERSION}-linux-${ARCH}.tar.gz" \
+  | tar -xz -C /tmp
+sudo install "/tmp/istio-${ISTIO_VERSION}/bin/istioctl" "${BIN}/istioctl"
+
+# yq — Mike Farah's Go implementation (NOT the Python yq).
+YQ_VERSION="v4.44.3"
+sudo curl -fsSL -o "${BIN}/yq" \
+  "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_${ARCH}"
+sudo chmod +x "${BIN}/yq"
+
+# Verify.
+for b in kubectl helm kustomize istioctl jq yq openssl; do
+  printf "%-10s " "$b"; command -v "$b" &gt;/dev/null || { echo MISSING; exit 1; }
+  "$b" version 2&gt;/dev/null | head -1 || "$b" --version | head -1
+done
+</code></pre>
+</div>
+
+<div class="code-block terminal">
+  <div class="code-head"><span class="lang">PowerShell</span><span class="path">Windows · winget + scoop</span><button class="copy-btn">Copy</button></div>
+<pre><code># winget covers the majority; scoop fills the gap for istioctl + kustomize.
+winget install --id=Kubernetes.kubectl    -e --accept-source-agreements
+winget install --id=Helm.Helm             -e
+winget install --id=jqlang.jq             -e
+winget install --id=MikeFarah.yq          -e
+winget install --id=ShiningLight.OpenSSL  -e
+
+# scoop — installs into a per-user PATH without admin rights.
+iwr -useb get.scoop.sh | iex   # first-time only
+scoop install kustomize istioctl
+
+# Verify in a fresh PowerShell window (PATH needs to refresh):
+kubectl version --client ; helm version --short ; kustomize version
+istioctl version --remote=$false ; jq --version ; yq --version ; openssl version
+</code></pre>
+</div>
+
+<div class="callout caveat">
+  <div class="callout-title">Gotchas worth knowing before Lab 1</div>
+  <ul>
+    <li><strong>Two yq's exist.</strong> Ubuntu's <code>apt install yq</code> pulls the <em>Python</em> implementation, which uses a different syntax. Always install the Go version from <code>mikefarah/yq</code> — the scaffold and teardown scripts assume it.</li>
+    <li><strong>kubectl skew.</strong> A client more than one minor version ahead of the server works for most operations but fails on newer resources (e.g. <code>ValidatingAdmissionPolicy</code>). Match the Docker Desktop Kubernetes minor where you can.</li>
+    <li><strong>istioctl version ↔ control plane version.</strong> Lab 2 pins <code>ISTIO_VERSION=1.22.3</code>. Your <code>istioctl</code> binary must be the same major/minor; upgrading the control plane with a mismatched CLI silently installs the CLI's version.</li>
+    <li><strong>LibreSSL on macOS.</strong> The <code>openssl</code> shipped with macOS is LibreSSL and misses flags we use in Lab 2 (<code>-verify_return_error</code>, newer <code>-subj</code> parsing). Homebrew's <code>openssl@3</code> fixes this — make sure <code>$(brew --prefix openssl@3)/bin</code> is earlier in <code>PATH</code> than <code>/usr/bin</code>.</li>
+  </ul>
+</div>
+
+<h3>2.3 Suggested repository layout</h3>
 <p>Every manifest in this tutorial belongs in a repo that mirrors the lab structure. Create it before you begin — subsequent commands assume this layout.</p>
 
 <div class="code-block">
@@ -1820,7 +1930,7 @@ tree -L 2 "$ROOT" 2>/dev/null || find "$ROOT" -maxdepth 2 -print
 </code></pre>
 </div>
 
-<h3>2.3 Bootstrap — namespaces</h3>
+<h3>2.4 Bootstrap — namespaces</h3>
 <p>Ten namespaces isolate the lab's control plane, data plane, observability, and workloads. Labels are declared now so later labs can reference them.</p>
 
 <div class="code-block">
@@ -1889,7 +1999,7 @@ metadata:
 
 <div class="code-block terminal">
   <div class="code-head"><span class="lang">Bash</span><span class="path">apply namespaces</span><button class="copy-btn">Copy</button></div>
-<pre><code>kubectl --context docker-desktop apply -f bootstrap/00-namespaces.yaml
+<pre><code>kubectl --context docker-desktop apply -f ./bootstrap/00-namespaces.yaml
 
 # Expected:
 # namespace/zta-system created
@@ -1905,7 +2015,7 @@ metadata:
 </code></pre>
 </div>
 
-<h3>2.4 Bootstrap — cert-manager, Istio, SPIRE</h3>
+<h3>2.5 Bootstrap — cert-manager, Istio, SPIRE</h3>
 <p>cert-manager provides a cluster-wide CA for non-SPIFFE TLS (Keycloak ingress, Grafana). Istio is the east-west PEP and sidecar mTLS enforcer. SPIRE issues short-lived X.509 and JWT SVIDs for workload identity — the 800-207 3.1.3 <em>ID Management</em> component in this lab.</p>
 
 <div class="code-block terminal">
@@ -2082,7 +2192,7 @@ spec:
 </code></pre>
 </div>
 
-<h3>2.5 Bootstrap — Keycloak, OPA, Gatekeeper, Falco, observability, bookstore</h3>
+<h3>2.6 Bootstrap — Keycloak, OPA, Gatekeeper, Falco, observability, bookstore</h3>
 
 <div class="code-block">
   <div class="code-head"><span class="lang">YAML</span><span class="path">bootstrap/04-keycloak.yaml  (excerpt)</span><button class="copy-btn">Copy</button></div>
@@ -2424,7 +2534,7 @@ spec:
 </code></pre>
 </div>
 
-<h3>2.6 Run the bootstrap</h3>
+<h3>2.7 Run the bootstrap</h3>
 <p>The preceding sections show the contents of each <code>bootstrap/</code> file. Populate those files (copy from the blocks above), then execute them in numeric order from the repo root. Each step is idempotent — re-running a single line is the recovery path if something fails mid-way.</p>
 
 <div class="code-block terminal">
@@ -2432,7 +2542,7 @@ spec:
 <pre><code>cd ~/zta-homelab
 CTX=docker-desktop
 
-# Namespaces (already shown in §2.3, repeated here for completeness)
+# Namespaces (already shown in §2.4, repeated here for completeness)
 kubectl --context $CTX apply -f bootstrap/00-namespaces.yaml
 
 # Control-plane components
@@ -2450,13 +2560,13 @@ kubectl --context $CTX apply -f bootstrap/05-opa.yaml
 # Sample workload
 kubectl --context $CTX apply -f bootstrap/09-bookstore.yaml
 
-echo "Bootstrap complete — proceed to §2.7 for verification."
+echo "Bootstrap complete — proceed to §2.8 for verification."
 </code></pre>
 </div>
 
 <p class="footnote">Expect 5–10 minutes end-to-end on a warm Docker Desktop cluster; the Helm-driven steps (cert-manager, Istio, Gatekeeper, Falco, observability) dominate the wall-clock time. If a step exits non-zero, fix the cause and re-run that one line — downstream steps depend on it.</p>
 
-<h3>2.7 Verification</h3>
+<h3>2.8 Verification</h3>
 
 <div class="code-block terminal">
   <div class="code-head"><span class="lang">Bash</span><span class="path">verify bootstrap</span><button class="copy-btn">Copy</button></div>
