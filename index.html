@@ -2252,24 +2252,18 @@ spec:
 </div>
 
 <div class="code-block">
-  <div class="code-head"><span class="lang">YAML</span><span class="path">bootstrap/05-opa.yaml  (standalone PE + bundle pull)</span><button class="copy-btn">Copy</button></div>
+  <div class="code-head"><span class="lang">YAML</span><span class="path">bootstrap/05-opa.yaml  (standalone PE, ext-authz plugin only)</span><button class="copy-btn">Copy</button></div>
 <pre><code>apiVersion: v1
 kind: ConfigMap
 metadata: { name: opa-config, namespace: zta-policy }
 data:
+  # Bootstrap minimum: decision logging + the Envoy ext-authz gRPC plugin.
+  # Lab 4 layers in the Rego policy via a ConfigMap volume; Lab 6 replaces
+  # this ConfigMap wholesale to pull signed bundles from the PA. Keeping
+  # the bundle/signing config out of the bootstrap avoids OPA failing at
+  # startup with "key id zta-bundle-key not found" before Lab 6 provides
+  # the signing key and the bundle server.
   config.yaml: |
-    services:
-      bundles-local:
-        url: http://opa-bundle-server.zta-policy.svc.cluster.local
-    bundles:
-      zta:
-        resource: "bundles/zta.tar.gz"
-        service: bundles-local
-        polling:
-          min_delay_seconds: 10
-          max_delay_seconds: 30
-        signing:
-          keyid: "zta-bundle-key"
     decision_logs:
       console: true
     plugins:
