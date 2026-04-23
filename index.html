@@ -2589,7 +2589,7 @@ kubectl --context $CTX apply -f bootstrap/00-namespaces.yaml
 ./bootstrap/02-istio.sh
 kubectl --context $CTX apply -f bootstrap/03-spire.yaml
 kubectl --context $CTX apply -f bootstrap/04-keycloak.yaml
-kubectl --context $CTX apply -f bootstrap/05-opa.yaml
+./bootstrap/05-opa.sh   # arch-aware wrapper — selects amd64 / arm64 image
 
 # Admission, runtime security, observability
 ./bootstrap/06-gatekeeper.sh
