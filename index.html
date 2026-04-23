@@ -2752,39 +2752,7 @@ spec:
 </code></pre>
 </div>
 
-<h3>2.7 Run the bootstrap</h3>
-<p>The preceding sections show the contents of each <code>bootstrap/</code> file. Populate those files (copy from the blocks above), then execute them in numeric order from the repo root. Each step is idempotent — re-running a single line is the recovery path if something fails mid-way.</p>
-
-<div class="code-block terminal">
-  <div class="code-head"><span class="lang">Bash</span><span class="path">run bootstrap in order</span><button class="copy-btn">Copy</button></div>
-<pre><code>cd ~/zta-homelab
-CTX=docker-desktop
-
-# Namespaces (already shown in §2.4, repeated here for completeness)
-kubectl --context $CTX apply -f bootstrap/00-namespaces.yaml
-
-# Control-plane components
-./bootstrap/01-cert-manager.sh
-./bootstrap/02-istio.sh
-kubectl --context $CTX apply -f bootstrap/03-spire.yaml
-kubectl --context $CTX apply -f bootstrap/04-keycloak.yaml
-kubectl --context $CTX apply -f bootstrap/05-opa.yaml
-
-# Admission, runtime security, observability
-./bootstrap/06-gatekeeper.sh
-./bootstrap/07-falco.sh
-./bootstrap/08-observability.sh
-
-# Sample workload
-kubectl --context $CTX apply -f bootstrap/09-bookstore.yaml
-
-echo "Bootstrap complete — proceed to §2.8 for verification."
-</code></pre>
-</div>
-
-<p class="footnote">Expect 5–10 minutes end-to-end on a warm Docker Desktop cluster; the Helm-driven steps (cert-manager, Istio, Gatekeeper, Falco, observability) dominate the wall-clock time. If a step exits non-zero, fix the cause and re-run that one line — downstream steps depend on it.</p>
-
-<h3>2.8 Verification</h3>
+<h3>2.7 Verification</h3>
 
 <div class="code-block terminal">
   <div class="code-head"><span class="lang">Bash</span><span class="path">verify bootstrap</span><button class="copy-btn">Copy</button></div>
