@@ -2952,13 +2952,18 @@ data:
 </code></pre>
   </div>
 
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">apply label schema</span><button class="copy-btn">Copy</button></div>
+<pre><code>kubectl --context docker-desktop apply -f labs/01-resources/label-schema.yaml
+# Expected: configmap/zta-label-schema created
+</code></pre>
+  </div>
+
   <p><span class="step-num">02</span>Back-fill missing labels onto the bookstore resources. Bootstrap set <code>zta.resource</code>, <code>zta.data-class</code>, <code>zta.tier-role</code>; this step adds <code>zta.owner</code> and <code>zta.exposure</code>.</p>
 
   <div class="code-block">
     <div class="code-head"><span class="lang">YAML</span><span class="path">labs/01-resources/backfill-labels.yaml</span><button class="copy-btn">Copy</button></div>
-<pre><code># Apply with:
-#   kubectl --context docker-desktop apply -f labs/01-resources/backfill-labels.yaml
-# This uses server-side apply patches — re-applicable and idempotent.
+<pre><code># Server-side apply patches — re-applicable and idempotent.
 apiVersion: v1
 kind: List
 items:
@@ -2989,6 +2994,15 @@ items:
       zta.owner: "retail-data"
       zta.exposure: "internal-only"
       zta.regulatory: "gdpr,pci,sox"
+</code></pre>
+  </div>
+
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">apply back-fill labels</span><button class="copy-btn">Copy</button></div>
+<pre><code>kubectl --context docker-desktop apply -f labs/01-resources/backfill-labels.yaml
+# Expected: deployment.apps/frontend configured
+#           deployment.apps/api configured
+#           statefulset.apps/db configured
 </code></pre>
   </div>
 
@@ -3032,6 +3046,18 @@ spec:
     namespaces: ["bookstore-frontend","bookstore-api","bookstore-data"]
   parameters:
     required: ["zta.resource","zta.data-class","zta.owner"]
+</code></pre>
+  </div>
+
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">apply Gatekeeper constraint</span><button class="copy-btn">Copy</button></div>
+<pre><code>kubectl --context docker-desktop apply -f labs/01-resources/gatekeeper-required-labels.yaml
+# Expected: constrainttemplate.templates.gatekeeper.sh/k8srequiredztalabels created
+#           k8srequiredztalabels.constraints.gatekeeper.sh/bookstore-resources-labelled created
+
+# The constraint needs a few seconds for Gatekeeper to register the CRD before it is enforced.
+kubectl --context docker-desktop wait --for=condition=established \
+  crd/k8srequiredztalabels.constraints.gatekeeper.sh --timeout=60s
 </code></pre>
   </div>
 
