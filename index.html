@@ -2954,7 +2954,7 @@ data:
 
   <div class="code-block terminal">
     <div class="code-head"><span class="lang">Bash</span><span class="path">apply label schema</span><button class="copy-btn">Copy</button></div>
-<pre><code>kubectl --context docker-desktop apply -f labs/01-resources/label-schema.yaml
+<pre><code>kubectl --context docker-desktop apply -f label-schema.yaml
 # Expected: configmap/zta-label-schema created
 </code></pre>
   </div>
@@ -2999,7 +2999,7 @@ items:
 
   <div class="code-block terminal">
     <div class="code-head"><span class="lang">Bash</span><span class="path">apply back-fill labels</span><button class="copy-btn">Copy</button></div>
-<pre><code>kubectl --context docker-desktop apply -f labs/01-resources/backfill-labels.yaml
+<pre><code>kubectl --context docker-desktop apply -f backfill-labels.yaml
 # Expected: deployment.apps/frontend configured
 #           deployment.apps/api configured
 #           statefulset.apps/db configured
@@ -3051,7 +3051,7 @@ spec:
 
   <div class="code-block terminal">
     <div class="code-head"><span class="lang">Bash</span><span class="path">apply Gatekeeper constraint</span><button class="copy-btn">Copy</button></div>
-<pre><code>kubectl --context docker-desktop apply -f labs/01-resources/gatekeeper-required-labels.yaml
+<pre><code>kubectl --context docker-desktop apply -f gatekeeper-required-labels.yaml
 # Expected: constrainttemplate.templates.gatekeeper.sh/k8srequiredztalabels created
 #           k8srequiredztalabels.constraints.gatekeeper.sh/bookstore-resources-labelled created
 
