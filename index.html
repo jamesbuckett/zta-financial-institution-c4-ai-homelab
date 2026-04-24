@@ -2948,7 +2948,7 @@ data:
       zta.tier-role:     { values: ["presentation","api","data","control-plane","observability"] }
       zta.owner:         { pattern: "^[a-z0-9-]+$",          required: true }
       zta.exposure:      { values: ["internal-only","partner","internet-facing"] }
-      zta.regulatory:    { values: ["none","pci","sox","gdpr","dora","cscf"] }
+      zta.regulatory.*:  { values: ["true"], note: "one label per applicable framework: gdpr|pci|sox|dora|cscf (commas are forbidden in label values, so each framework becomes its own boolean label)" }
 </code></pre>
   </div>
 
@@ -2975,7 +2975,7 @@ items:
     labels:
       zta.owner: "retail-web"
       zta.exposure: "internet-facing"
-      zta.regulatory: "gdpr"
+      zta.regulatory.gdpr: "true"
 - apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -2984,7 +2984,8 @@ items:
     labels:
       zta.owner: "retail-api"
       zta.exposure: "internal-only"
-      zta.regulatory: "gdpr,pci"
+      zta.regulatory.gdpr: "true"
+      zta.regulatory.pci:  "true"
 - apiVersion: apps/v1
   kind: StatefulSet
   metadata:
@@ -2993,16 +2994,19 @@ items:
     labels:
       zta.owner: "retail-data"
       zta.exposure: "internal-only"
-      zta.regulatory: "gdpr,pci,sox"
+      zta.regulatory.gdpr: "true"
+      zta.regulatory.pci:  "true"
+      zta.regulatory.sox:  "true"
 </code></pre>
   </div>
 
   <div class="code-block terminal">
     <div class="code-head"><span class="lang">Bash</span><span class="path">apply back-fill labels</span><button class="copy-btn">Copy</button></div>
-<pre><code>kubectl --context docker-desktop apply -f backfill-labels.yaml
-# Expected: deployment.apps/frontend configured
-#           deployment.apps/api configured
-#           statefulset.apps/db configured
+<pre><code>kubectl --context docker-desktop apply --server-side --field-manager=zta-lab01 \
+  -f backfill-labels.yaml
+# Expected: deployment.apps/frontend serverside-applied
+#           deployment.apps/api serverside-applied
+#           statefulset.apps/db serverside-applied
 </code></pre>
   </div>
 
