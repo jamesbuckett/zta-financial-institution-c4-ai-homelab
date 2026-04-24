@@ -8,6 +8,8 @@ items:
     name: frontend
     namespace: bookstore-frontend
     labels:
+      zta.resource: "true"
+      zta.data-class: "public"
       zta.owner: "retail-web"
       zta.exposure: "internet-facing"
       zta.regulatory.gdpr: "true"
@@ -17,6 +19,8 @@ items:
     name: api
     namespace: bookstore-api
     labels:
+      zta.resource: "true"
+      zta.data-class: "confidential"
       zta.owner: "retail-api"
       zta.exposure: "internal-only"
       zta.regulatory.gdpr: "true"
@@ -27,6 +31,8 @@ items:
     name: db
     namespace: bookstore-data
     labels:
+      zta.resource: "true"
+      zta.data-class: "restricted"
       zta.owner: "retail-data"
       zta.exposure: "internal-only"
       zta.regulatory.gdpr: "true"

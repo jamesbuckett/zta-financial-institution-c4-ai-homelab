@@ -15,9 +15,13 @@ spec:
   - target: admission.k8s.gatekeeper.sh
     rego: |
       package k8srequiredztalabels
+      # object.get defaults missing metadata.labels to {}. Without it, the
+      # reference `input.review.object.metadata.labels` is undefined when an
+      # object has no labels key, the rule body short-circuits, and an
+      # entirely unlabelled Deployment is silently admitted.
       violation[{"msg": msg}] {
         required := input.parameters.required
-        provided := input.review.object.metadata.labels
+        provided := object.get(input.review.object.metadata, "labels", {})
         missing := [k | k := required[_]; not provided[k]]
         count(missing) > 0
         msg := sprintf("ZTA labels missing: %v (per 800-207 2.1 T1)", [missing])
