@@ -3090,10 +3090,16 @@ EXPOSURE:.metadata.labels.zta\.exposure'
 </code></pre>
   </div>
 
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">make inventory.sh executable</span><button class="copy-btn">Copy</button></div>
+<pre><code>chmod +x labs/01-resources/inventory.sh
+</code></pre>
+  </div>
+
   <h3 class="lab-sub">Validation</h3>
   <div class="code-block terminal">
     <div class="code-head"><span class="lang">Bash</span><span class="path">validate Lab 1</span><button class="copy-btn">Copy</button></div>
-<pre><code>bash labs/01-resources/inventory.sh
+<pre><code>./inventory.sh
 
 # Expected (exact rows; order may vary):
 # NAMESPACE           KIND          NAME       DATA-CLASS     TIER          OWNER         EXPOSURE
