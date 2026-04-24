@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: zta-label-schema
+  namespace: zta-system
+  labels: { zta.resource: "true", zta.data-class: "internal" }
+data:
+  schema.yaml: |
+    # ZTA resource label schema v1 — aligns with 800-207 3.1 & 3.4.1
+    labels:
+      zta.resource:      { values: ["true"],                 required: true }
+      zta.data-class:    { values: ["public","internal","confidential","restricted","secret"], required: true }
+      zta.tier-role:     { values: ["presentation","api","data","control-plane","observability"] }
+      zta.owner:         { pattern: "^[a-z0-9-]+$",          required: true }
+      zta.exposure:      { values: ["internal-only","partner","internet-facing"] }
+      zta.regulatory.*:  { values: ["true"], note: "one label per applicable framework: gdpr|pci|sox|dora|cscf (commas are forbidden in label values, so each framework becomes its own boolean label)" }

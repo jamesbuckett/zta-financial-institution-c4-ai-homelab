@@ -1,0 +1,36 @@
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8srequiredztalabels
+spec:
+  crd:
+    spec:
+      names: { kind: K8sRequiredZtaLabels }
+      validation:
+        openAPIV3Schema:
+          type: object
+          properties:
+            required: { type: array, items: { type: string } }
+  targets:
+  - target: admission.k8s.gatekeeper.sh
+    rego: |
+      package k8srequiredztalabels
+      violation[{"msg": msg}] {
+        required := input.parameters.required
+        provided := input.review.object.metadata.labels
+        missing := [k | k := required[_]; not provided[k]]
+        count(missing) > 0
+        msg := sprintf("ZTA labels missing: %v (per 800-207 2.1 T1)", [missing])
+      }
+---
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sRequiredZtaLabels
+metadata: { name: bookstore-resources-labelled }
+spec:
+  match:
+    kinds:
+    - { apiGroups: ["apps"], kinds: ["Deployment","StatefulSet","DaemonSet"] }
+    - { apiGroups: [""],     kinds: ["Service"] }
+    namespaces: ["bookstore-frontend","bookstore-api","bookstore-data"]
+  parameters:
+    required: ["zta.resource","zta.data-class","zta.owner"]

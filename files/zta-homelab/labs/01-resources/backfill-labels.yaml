@@ -1,0 +1,34 @@
+# Server-side apply patches — re-applicable and idempotent.
+apiVersion: v1
+kind: List
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: frontend
+    namespace: bookstore-frontend
+    labels:
+      zta.owner: "retail-web"
+      zta.exposure: "internet-facing"
+      zta.regulatory.gdpr: "true"
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: api
+    namespace: bookstore-api
+    labels:
+      zta.owner: "retail-api"
+      zta.exposure: "internal-only"
+      zta.regulatory.gdpr: "true"
+      zta.regulatory.pci:  "true"
+- apiVersion: apps/v1
+  kind: StatefulSet
+  metadata:
+    name: db
+    namespace: bookstore-data
+    labels:
+      zta.owner: "retail-data"
+      zta.exposure: "internal-only"
+      zta.regulatory.gdpr: "true"
+      zta.regulatory.pci:  "true"
+      zta.regulatory.sox:  "true"
