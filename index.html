@@ -3010,6 +3010,11 @@ items:
 </code></pre>
   </div>
 
+  <aside class="callout caveat">
+    <div class="callout-title">Benign warning on pre-existing clusters</div>
+    <p>If you see <code>Warning: failed to re-apply configuration after performing Server-Side Apply migration</code> immediately followed by <code>serverside-applied</code>, the apply succeeded. On the first server-side apply against an object created by client-side apply, kubectl replays the legacy <code>last-applied-configuration</code> annotation to attribute field ownership. For immutable <code>StatefulSet</code> spec fields the replay is rejected — kubectl itself classifies this as non-fatal. Fresh installs don't hit this because the bootstrap now applies server-side too.</p>
+  </aside>
+
   <p><span class="step-num">03</span>Install a Gatekeeper constraint that refuses any <em>new</em> workload missing the three required labels. This is the admission-time PEP expressing Tenet 1.</p>
 
   <div class="code-block">

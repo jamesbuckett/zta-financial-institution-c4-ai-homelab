@@ -5,6 +5,12 @@ ARCH="$(dpkg --print-architecture)"          # amd64 or arm64
 BIN=/usr/local/bin
 KCTX="docker-desktop"
 
+# Every bootstrap manifest is applied with server-side apply so ownership is
+# tracked per-field. This avoids the "failed to re-apply configuration after
+# performing Server-Side Apply migration" warning when later labs (e.g. Lab 1
+# backfill) run SSA against these objects.
+SSA=(--server-side --field-manager=zta-bootstrap)
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
@@ -39,16 +45,16 @@ run_step() {
     pause
 }
 
-run_step "00-namespaces"     kubectl --context "$KCTX" apply -f 00-namespaces.yaml
+run_step "00-namespaces"     kubectl --context "$KCTX" apply "${SSA[@]}" -f 00-namespaces.yaml
 run_step "01-cert-manager"   ./01-cert-manager.sh
 run_step "02-istio"          ./02-istio.sh
-run_step "03-spire"          kubectl --context "$KCTX" apply -f 03-spire.yaml
-run_step "04-keycloak"       kubectl --context "$KCTX" apply -f 04-keycloak.yaml
-run_step "05-opa"            kubectl --context "$KCTX" apply -f 05-opa.yaml
+run_step "03-spire"          kubectl --context "$KCTX" apply "${SSA[@]}" -f 03-spire.yaml
+run_step "04-keycloak"       kubectl --context "$KCTX" apply "${SSA[@]}" -f 04-keycloak.yaml
+run_step "05-opa"            kubectl --context "$KCTX" apply "${SSA[@]}" -f 05-opa.yaml
 run_step "06-gatekeeper"     ./06-gatekeeper.sh
 run_step "07-falco"          ./07-falco.sh
 run_step "08-observability"  ./08-observability.sh
-run_step "09-bookstore"      kubectl --context "$KCTX" apply -f 09-bookstore.yaml
+run_step "09-bookstore"      kubectl --context "$KCTX" apply "${SSA[@]}" -f 09-bookstore.yaml
 
 echo
 echo "All steps completed successfully."
