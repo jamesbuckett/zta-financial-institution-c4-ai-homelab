@@ -3058,15 +3058,29 @@ spec:
 </code></pre>
   </div>
 
+  <aside class="callout caveat">
+    <div class="callout-title">Two-pass apply is intentional</div>
+    <p>The file contains both a <code>ConstraintTemplate</code> and the <code>K8sRequiredZtaLabels</code> constraint it defines. On the first <code>kubectl apply</code>, the template is created — which <em>causes</em> Gatekeeper to register the <code>K8sRequiredZtaLabels</code> CRD. That registration is asynchronous, so the constraint in the same file fails with <code>no matches for kind "K8sRequiredZtaLabels" ... ensure CRDs are installed first</code>. We wait for the CRD to be <code>Established</code>, then re-apply so the constraint object lands against the now-known CRD. This is a known Gatekeeper admission-order quirk, not a lab error.</p>
+  </aside>
+
   <div class="code-block terminal">
     <div class="code-head"><span class="lang">Bash</span><span class="path">apply Gatekeeper constraint</span><button class="copy-btn">Copy</button></div>
-<pre><code>kubectl --context docker-desktop apply -f gatekeeper-required-labels.yaml
-# Expected: constrainttemplate.templates.gatekeeper.sh/k8srequiredztalabels created
-#           k8srequiredztalabels.constraints.gatekeeper.sh/bookstore-resources-labelled created
+<pre><code># First apply installs the ConstraintTemplate, which registers the
+# K8sRequiredZtaLabels CRD. The constraint itself will fail on this first
+# pass with "no matches for kind K8sRequiredZtaLabels" — that is expected.
+kubectl --context docker-desktop apply -f gatekeeper-required-labels.yaml || true
+# Expected on first pass:
+#   constrainttemplate.templates.gatekeeper.sh/k8srequiredztalabels created
+#   error: resource mapping not found for ... K8sRequiredZtaLabels ... ensure CRDs are installed first
 
-# The constraint needs a few seconds for Gatekeeper to register the CRD before it is enforced.
+# Wait for Gatekeeper to register the constraint CRD.
 kubectl --context docker-desktop wait --for=condition=established \
   crd/k8srequiredztalabels.constraints.gatekeeper.sh --timeout=60s
+
+# Re-apply so the constraint object is now created against the established CRD.
+kubectl --context docker-desktop apply -f gatekeeper-required-labels.yaml
+# Expected: constrainttemplate.templates.gatekeeper.sh/k8srequiredztalabels unchanged
+#           k8srequiredztalabels.constraints.gatekeeper.sh/bookstore-resources-labelled created
 </code></pre>
   </div>
 
