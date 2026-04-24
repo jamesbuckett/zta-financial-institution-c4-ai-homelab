@@ -2481,9 +2481,13 @@ CTX=docker-desktop
 # OPA Gatekeeper — admission-time policy PEP
 helm repo add gatekeeper https://open-policy-agent.github.io/gatekeeper/charts
 helm repo update
+# ZTA posture is fail-closed: if Gatekeeper cannot evaluate a request, reject
+# it instead of admitting it. This flips the validation.gatekeeper.sh webhook's
+# failurePolicy from the chart default (Ignore) to Fail.
 helm --kube-context $CTX upgrade --install gatekeeper gatekeeper/gatekeeper \
   --namespace gatekeeper-system --create-namespace \
-  --version 3.17.1 --wait
+  --version 3.17.1 --wait \
+  --set validatingWebhookFailurePolicy=Fail
 
 echo "Gatekeeper installed."
 </code></pre>
@@ -3133,6 +3137,11 @@ kubectl --context docker-desktop get k8srequiredztalabels -o json \
 
   <h3 class="lab-sub">Break-it exercise</h3>
   <p>Attempt to deploy a new workload into <code>bookstore-api</code> missing the required labels. The admission-time PEP must refuse it.</p>
+
+  <aside class="callout caveat">
+    <div class="callout-title">Fail-closed is the ZTA posture</div>
+    <p>The bootstrap installs Gatekeeper with <code>validatingWebhookFailurePolicy=Fail</code>. The chart default is <code>Ignore</code>, which means if Gatekeeper cannot evaluate a request — controller not ready, webhook timeout, constraint still loading after a fresh apply — the request is <em>admitted</em>. That violates Tenet 1: a momentary control-plane hiccup would let unlabelled workloads land. Fail-closed rejects on uncertainty, which is what ZTA requires. Trade-off: if Gatekeeper itself is unhealthy, writes to matched kinds (<code>Deployment</code>, <code>StatefulSet</code>, <code>DaemonSet</code>, <code>Service</code>) in the three bookstore namespaces will be rejected until it recovers. Lab 6 revisits this under "strict enforcement".</p>
+  </aside>
 
   <div class="code-block terminal">
     <div class="code-head"><span class="lang">Bash</span><span class="path">break-it</span><button class="copy-btn">Copy</button></div>
