@@ -1,0 +1,18 @@
+# Break-it exercise (Lab 2): downgrade bookstore-api to PERMISSIVE and re-run
+# the plaintext attempt from step 04. The call should now SUCCEED and the
+# response should NOT include X-Forwarded-Client-Cert. This is precisely the
+# risk Tenet 2 prohibits.
+#
+# Apply:    kubectl --context docker-desktop apply -f 06-break-it.yaml
+# Re-test:  kubectl --context docker-desktop -n zta-lab-debug exec debug -- \
+#             curl -sS --max-time 3 http://api.bookstore-api.svc.cluster.local/headers \
+#             | jq '.headers | keys | length'
+# Restore:  kubectl --context docker-desktop -n bookstore-api delete peerauthentication downgrade
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: downgrade
+  namespace: bookstore-api
+spec:
+  mtls:
+    mode: PERMISSIVE
