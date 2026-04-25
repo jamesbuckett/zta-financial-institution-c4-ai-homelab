@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: zta-dashboard
+  namespace: zta-observability
+  labels: { grafana_dashboard: "1" }
+data:
+  zta.json: |
+    {
+      "title": "ZTA — Decisions, Latency, Drift (800-207 8.6 SLOs)",
+      "uid": "zta-main",
+      "schemaVersion": 38,
+      "timezone": "browser",
+      "panels": [
+        { "title": "Decision rate (allow / deny / step-up)",
+          "type": "timeseries",
+          "gridPos": {"h":8,"w":12,"x":0,"y":0},
+          "targets": [
+            { "expr": "sum by (decision) (rate(http_request_duration_seconds_count{job=~\"opa.*\"}[5m]))" }
+          ] },
+        { "title": "Decision latency P50 / P99 (ms)",
+          "type": "timeseries",
+          "gridPos": {"h":8,"w":12,"x":12,"y":0},
+          "targets": [
+            { "expr": "1000 * histogram_quantile(0.5,  sum by (le) (rate(http_request_duration_seconds_bucket{job=~\"opa.*\"}[5m])))" },
+            { "expr": "1000 * histogram_quantile(0.99, sum by (le) (rate(http_request_duration_seconds_bucket{job=~\"opa.*\"}[5m])))" }
+          ] },
+        { "title": "Deny reasons — last 1h",
+          "type": "bargauge",
+          "gridPos": {"h":8,"w":12,"x":0,"y":8},
+          "targets": [
+            { "expr": "sum by (reason) (count_over_time({namespace=\"zta-policy\", allow=\"false\"} | json [1h]))", "datasource": {"type":"loki"} }
+          ] },
+        { "title": "Recent denies (decision_id, path, posture, reason)",
+          "type": "logs",
+          "gridPos": {"h":8,"w":12,"x":12,"y":8},
+          "targets": [
+            { "expr": "{namespace=\"zta-policy\", allow=\"false\"} | json", "datasource": {"type":"loki"} }
+          ] }
+      ]
+    }
