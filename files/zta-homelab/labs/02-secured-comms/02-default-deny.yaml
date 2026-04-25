@@ -1,0 +1,32 @@
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata: { name: default-deny, namespace: bookstore-api }
+spec: {}   # empty spec == deny-all
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata: { name: default-deny, namespace: bookstore-data }
+spec: {}
+---
+# Allow the ingress gateway to reach the api and frontend
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata: { name: allow-ingress-to-frontend, namespace: bookstore-frontend }
+spec:
+  selector: { matchLabels: { app: frontend } }
+  rules:
+  - from:
+    - source:
+        principals: ["cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account"]
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata: { name: allow-ingress-and-frontend-to-api, namespace: bookstore-api }
+spec:
+  selector: { matchLabels: { app: api } }
+  rules:
+  - from:
+    - source:
+        principals:
+        - "cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account"
+        - "cluster.local/ns/bookstore-frontend/sa/default"
