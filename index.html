@@ -2975,11 +2975,13 @@ data:
   <div class="code-block terminal verify">
     <div class="code-head"><span class="lang">Bash</span><span class="path">step 01</span><button class="copy-btn">Copy</button></div>
 <pre><code># 1. ConfigMap exists in the zta-system namespace.
+printf '\n== 1. ConfigMap exists in zta-system namespace ==\n'
 kubectl --context docker-desktop -n zta-system get configmap zta-label-schema \
   -o jsonpath='{.metadata.name}{" "}{.metadata.labels.zta\.resource}{"\n"}'
 # Expected: zta-label-schema true
 
 # 2. Schema is parseable YAML and declares the three required labels.
+printf '\n== 2. Schema declares the three required labels ==\n'
 kubectl --context docker-desktop -n zta-system get configmap zta-label-schema \
   -o jsonpath='{.data.schema\.yaml}' \
   | yq -r '.labels | to_entries | map(select(.value.required == true)) | .[].key'
@@ -2989,6 +2991,7 @@ kubectl --context docker-desktop -n zta-system get configmap zta-label-schema \
 #   zta.owner
 
 # 3. The schema itself carries the resource label — it is a labelled resource.
+printf '\n== 3. Schema ConfigMap is itself a labelled resource ==\n'
 kubectl --context docker-desktop -n zta-system get configmap \
   --field-selector metadata.name=zta-label-schema \
   -l zta.resource=true --no-headers | wc -l
@@ -3061,6 +3064,7 @@ items:
   <div class="code-block terminal verify">
     <div class="code-head"><span class="lang">Bash</span><span class="path">step 02</span><button class="copy-btn">Copy</button></div>
 <pre><code># 1. Each workload carries the three required labels (T1).
+printf '\n== 1. Each bookstore workload carries the three required labels ==\n'
 for tuple in 'bookstore-frontend deployment frontend' \
              'bookstore-api      deployment api' \
              'bookstore-data     statefulset db'; do
@@ -3075,11 +3079,15 @@ done
 
 # 2. Field manager is zta-lab01 — proves these labels were set by THIS step,
 #    not silently re-asserted by an earlier client-side apply.
-kubectl --context docker-desktop -n bookstore-api get deploy api -o json \
-  | jq -r '.metadata.managedFields[] | select(.manager=="zta-lab01") | .manager'
+#    --show-managed-fields is required because kubectl strips that array by default.
+printf '\n== 2. Field manager zta-lab01 owns labels on api Deployment ==\n'
+kubectl --context docker-desktop -n bookstore-api get deploy api \
+  --show-managed-fields -o json \
+  | jq -r '[.metadata.managedFields[]? | select(.manager=="zta-lab01") | .manager] | unique[]'
 # Expected: zta-lab01
 
 # 3. Per-framework regulatory flags landed.
+printf '\n== 3. Per-framework regulatory flags on db StatefulSet ==\n'
 kubectl --context docker-desktop -n bookstore-data get statefulset db \
   -o jsonpath='{.metadata.labels}' | jq 'with_entries(select(.key|startswith("zta.regulatory.")))'
 # Expected: {"zta.regulatory.gdpr":"true","zta.regulatory.pci":"true","zta.regulatory.sox":"true"}
@@ -3162,27 +3170,32 @@ kubectl --context docker-desktop apply -f gatekeeper-required-labels.yaml
   <div class="code-block terminal verify">
     <div class="code-head"><span class="lang">Bash</span><span class="path">step 03</span><button class="copy-btn">Copy</button></div>
 <pre><code># 1. ConstraintTemplate is Established — Gatekeeper accepted the Rego.
+printf '\n== 1. ConstraintTemplate is Established ==\n'
 kubectl --context docker-desktop get constrainttemplate k8srequiredztalabels \
   -o jsonpath='{.status.byPod[*].observedGeneration}{"\n"}{range .status.byPod[*]}{.id}{"="}{.operations}{"\n"}{end}'
 # Expected: a generation number, then one row per Gatekeeper pod listing the
 #           operations it has registered (audit, mutation-status, webhook).
 
 # 2. The constraint CRD is registered cluster-wide.
+printf '\n== 2. K8sRequiredZtaLabels CRD is registered ==\n'
 kubectl --context docker-desktop get crd k8srequiredztalabels.constraints.gatekeeper.sh \
   -o jsonpath='{.status.conditions[?(@.type=="Established")].status}{"\n"}'
 # Expected: True
 
 # 3. The constraint object exists with the three required labels in spec.parameters.
+printf '\n== 3. Constraint requires the three ZTA labels ==\n'
 kubectl --context docker-desktop get k8srequiredztalabels bookstore-resources-labelled \
   -o jsonpath='{.spec.parameters.required}{"\n"}'
 # Expected: ["zta.resource","zta.data-class","zta.owner"]
 
 # 4. Failure policy is Fail (fail-closed) — required for ZTA posture.
+printf '\n== 4. Webhook failure policy is Fail (fail-closed) ==\n'
 kubectl --context docker-desktop get validatingwebhookconfiguration gatekeeper-validating-webhook-configuration \
   -o jsonpath='{.webhooks[?(@.name=="validation.gatekeeper.sh")].failurePolicy}{"\n"}'
 # Expected: Fail
 
 # 5. Audit reports zero existing violations — Step 02 back-fill worked.
+printf '\n== 5. Audit reports zero existing violations ==\n'
 kubectl --context docker-desktop get k8srequiredztalabels bookstore-resources-labelled \
   -o jsonpath='{.status.totalViolations}{"\n"}'
 # Expected: 0
@@ -3218,17 +3231,20 @@ EXPOSURE:.metadata.labels.zta\.exposure'
   <div class="code-block terminal verify">
     <div class="code-head"><span class="lang">Bash</span><span class="path">step 04</span><button class="copy-btn">Copy</button></div>
 <pre><code># 1. Script is present and executable.
+printf '\n== 1. inventory.sh is present and executable ==\n'
 test -x ./inventory.sh &amp;&amp; echo OK
 # Expected: OK
 
 # 2. Script runs and emits a header plus &gt;= 6 inventory rows
 #    (3 deployments/statefulsets + 3 services across the bookstore namespaces).
+printf '\n== 2. inventory.sh emits header + &gt;= 6 bookstore rows ==\n'
 ./inventory.sh | tee /tmp/zta-inventory.out
 ROWS=$(tail -n +2 /tmp/zta-inventory.out | grep -cE 'bookstore-(frontend|api|data)')
 echo "rows=$ROWS"
 # Expected: rows=6   (or higher if you have added extra labelled resources)
 
 # 3. Every inventoried row carries a non-empty data-class — Tenet 1's whole point.
+printf '\n== 3. Every inventoried row has a recognised data-class ==\n'
 awk 'NR&gt;1 {print $4}' /tmp/zta-inventory.out | grep -cE '^(public|internal|confidential|restricted|secret)$'
 # Expected: same number as rows above
 </code></pre>
