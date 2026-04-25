@@ -115,4 +115,8 @@ After running `00-secured-comms-install.sh` on a clean Docker Desktop with boots
 
 ## File-by-file source mapping
 
-For the implementation plan, the YAML files are **verbatim** copies of the index.html `<pre><code>` blocks (HTML entities decoded: `&lt;`→`<`, `&gt;`→`>`, `&amp;`→`&`). The verify scripts wrap each in-doc check with the `check "<label>" <command>` helper from Lab 1's `verify.sh` so failures print a `FAIL  <label>` line rather than an opaque non-zero exit.
+For the implementation plan, the YAML files are **verbatim** copies of the index.html `<pre><code>` blocks (HTML entities decoded: `&lt;`→`<`, `&gt;`→`>`, `&amp;`→`&`).
+
+Per-step verify scripts (`01-verify.sh` … `06-verify.sh`) follow Lab 1's narrative pattern: each numbered check prints a heading via `printf`, runs the kubectl/istioctl command verbatim from the doc, and is followed by an `# Expected: ...` comment. They do not use the `check` helper and do not have `set -e` — they exist for the learner to read inline as the orchestrator pauses between steps.
+
+The umbrella `verify.sh` is the strict pass/fail script. It wraps every assertion with the `check "<label>" <command>` helper from Lab 1's `verify.sh` so failures print a `FAIL <label>` line and the overall script exits non-zero on the first failed step.
