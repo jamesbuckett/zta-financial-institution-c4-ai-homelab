@@ -2570,7 +2570,10 @@ helm --kube-context $CTX upgrade --install kube-prom prometheus-community/kube-p
 helm --kube-context $CTX upgrade --install loki grafana/loki \
   --namespace zta-observability --version 6.10.0 \
   --set deploymentMode=SingleBinary --set singleBinary.replicas=1 \
-  --set loki.auth_enabled=false --wait
+  --set loki.auth_enabled=false \
+  --set loki.storage.type=filesystem \
+  --set minio.enabled=false \
+  --wait
 
 helm --kube-context $CTX upgrade --install tempo grafana/tempo \
   --namespace zta-observability --version 1.10.1 --wait
