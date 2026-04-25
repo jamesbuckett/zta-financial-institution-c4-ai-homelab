@@ -1,0 +1,52 @@
+# Note: the pa-policies ConfigMap (containing the Lab 4 Rego) is built
+# dynamically by the orchestrator from ../04-dynamic-policy/01-zta.authz.rego
+# at install time. This file ships only the Deployment + Service so the
+# policy source isn't duplicated.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pa
+  namespace: zta-policy
+  labels: { zta.resource: "true", zta.data-class: "restricted", zta.owner: "policy-coe", zta.tier-role: "control-plane" }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: pa } }
+  template:
+    metadata: { labels: { app: pa, zta.resource: "true", zta.data-class: "restricted", zta.owner: "policy-coe", zta.tier-role: "control-plane" } }
+    spec:
+      initContainers:
+      - name: build
+        image: openpolicyagent/opa:0.68.0
+        command:
+        - sh
+        - -c
+        - |
+          set -e
+          mkdir -p /out/bundles
+          opa build -b /policies \
+            --signing-alg RS256 \
+            --signing-key /keys/bundle-signer.pem \
+            --bundle \
+            -o /out/bundles/zta.tar.gz
+          echo 'built signed bundle:'; ls -lah /out/bundles
+        volumeMounts:
+        - { name: policies, mountPath: /policies, readOnly: true }
+        - { name: keys,     mountPath: /keys,     readOnly: true }
+        - { name: out,      mountPath: /out }
+      containers:
+      - name: nginx
+        image: nginx:1.27-alpine
+        volumeMounts:
+        - { name: out, mountPath: /usr/share/nginx/html }
+        ports: [{ containerPort: 80 }]
+      volumes:
+      - { name: policies, configMap: { name: pa-policies } }
+      - { name: keys,     secret:    { secretName: bundle-signer } }
+      - { name: out,      emptyDir:  {} }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: opa-bundle-server, namespace: zta-policy }
+spec:
+  selector: { app: pa }
+  ports: [{ name: http, port: 80, targetPort: 80 }]
