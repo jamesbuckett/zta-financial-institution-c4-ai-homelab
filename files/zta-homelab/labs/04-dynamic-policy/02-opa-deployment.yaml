@@ -1,0 +1,24 @@
+# Patch the OPA Deployment to mount the policy and enable ext_authz.
+# The opa-policy ConfigMap is built dynamically from 01-zta.authz.rego at
+# install time (see 00-dynamic-policy-install.sh).
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: opa, namespace: zta-policy }
+spec:
+  template:
+    spec:
+      containers:
+      - name: opa
+        args:
+        - "run"
+        - "--server"
+        - "--addr=:8181"
+        - "--diagnostic-addr=:8282"
+        - "--set=plugins.envoy_ext_authz_grpc.addr=:9191"
+        - "--set=plugins.envoy_ext_authz_grpc.path=zta/authz/result"
+        - "--set=decision_logs.console=true"
+        - "/policies/zta.authz.rego"
+        volumeMounts:
+        - { name: policy, mountPath: /policies }
+      volumes:
+      - { name: policy, configMap: { name: opa-policy } }
