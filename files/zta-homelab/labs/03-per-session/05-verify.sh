@@ -25,7 +25,7 @@ echo "$LOGS" | grep -m1 -oE 'URI:spiffe://[^[:space:]]+'
 
 # 3. notAfter is <= 5 minutes from now (NOT a long-lived cert).
 printf '\n== 3. notAfter is within ~5 minutes of now ==\n'
-NA=$(echo "$LOGS" | awk -F= '/notAfter/ {print $3; exit}' | awk '{$1=$1; print}')
+NA=$(echo "$LOGS" | awk -F= '/notAfter/ {print $2; exit}' | awk '{$1=$1; print}')
 echo "notAfter=$NA"
 # Expected: notAfter is within ~5 minutes of system time
 #           (date -d "$NA" +%s vs date +%s should differ by <= 320)

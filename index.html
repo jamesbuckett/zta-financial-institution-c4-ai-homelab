@@ -4231,7 +4231,7 @@ echo "$LOGS" | grep -m1 -oE 'URI:spiffe://[^[:space:]]+'
 # Expected: URI:spiffe://zta.homelab/ns/bookstore-api/sa/default
 
 # 3. notAfter is &lt;= 5 minutes from now (NOT a long-lived cert).
-NA=$(echo "$LOGS" | awk -F= '/notAfter/ {print $3; exit}' | awk '{$1=$1; print}')
+NA=$(echo "$LOGS" | awk -F= '/notAfter/ {print $2; exit}' | awk '{$1=$1; print}')
 echo "notAfter=$NA"
 # Expected: notAfter is within ~5 minutes of system time
 #           (date -d "$NA" +%s vs date +%s should differ by &lt;= 320)
