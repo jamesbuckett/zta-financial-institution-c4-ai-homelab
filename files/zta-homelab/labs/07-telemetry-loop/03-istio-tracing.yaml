@@ -1,0 +1,27 @@
+apiVersion: telemetry.istio.io/v1
+kind: Telemetry
+metadata: { name: mesh-default, namespace: istio-system }
+spec:
+  tracing:
+  - providers: [{ name: otel-tempo }]
+    randomSamplingPercentage: 100
+---
+# CAVEAT: this rewrites the istio-system/istio configmap's mesh: key. We
+# explicitly include BOTH extension providers so Lab 4's opa-ext-authz
+# wiring survives the apply. If bootstrap had other top-level keys in
+# this configmap (meshNetworks, defaultProviders, etc.), they may be
+# lost. See spec for risk note.
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: istio, namespace: istio-system }
+data:
+  mesh: |
+    extensionProviders:
+    - name: opa-ext-authz
+      envoyExtAuthzGrpc:
+        service: opa.zta-policy.svc.cluster.local
+        port: 9191
+    - name: otel-tempo
+      opentelemetry:
+        service: tempo.zta-observability.svc.cluster.local
+        port: 4317
