@@ -50,7 +50,14 @@ while [ $# -gt 0 ]; do
     case "$1" in
         --pause)            PAUSE=1; shift ;;
         --skip-bootstrap)   SKIP_BOOTSTRAP=1; shift ;;
-        --from)             FROM="${2:-}"; shift 2 ;;
+        --from)
+            FROM="${2:-}"
+            if [ -z "$FROM" ]; then
+                echo "Error: --from requires an integer argument 1..7" >&2
+                exit 2
+            fi
+            shift 2
+            ;;
         --verify-only)      VERIFY_ONLY=1; shift ;;
         -h|--help)          usage; exit 0 ;;
         *)                  echo "Unknown option: $1" >&2; usage; exit 2 ;;
