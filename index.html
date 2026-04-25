@@ -6720,16 +6720,17 @@ echo "load mix complete"
 
   <div class="code-block terminal verify">
     <div class="code-head"><span class="lang">Bash</span><span class="path">step 05</span><button class="copy-btn">Copy</button></div>
-<pre><code># 1. The load mix produced &gt;= 200 OPA decisions in the last 5 minutes.
-kubectl --context docker-desktop -n zta-policy port-forward svc/kube-prom-kube-prome-prometheus 9090:9090 &gt;/dev/null 2&gt;&amp;1 &amp; PF_PID=$!; sleep 3
+<pre><code># Open the Prometheus port-forward up front and reuse it for checks 1 and 3.
+kubectl --context docker-desktop -n zta-policy port-forward svc/kube-prom-kube-prome-prometheus 9090:9090 &gt;/dev/null 2&gt;&amp;1 &amp; PROM_PID=$!; sleep 3
+
+# 1. The load mix produced &gt;= 200 OPA decisions in the last 5 minutes.
 curl -sG 'http://localhost:9090/api/v1/query' \
   --data-urlencode 'query=sum(increase(http_request_duration_seconds_count{job=~"opa.*"}[5m]))' \
   | jq '.data.result[0].value[1] | tonumber'
 # Expected: &gt;= 200
-kill $PF_PID 2&gt;/dev/null
 
 # 2. All three posture values appear in Loki (proves the dashboard's deny-reasons panel has signal).
-kubectl --context docker-desktop -n zta-observability port-forward svc/loki 3100:3100 &gt;/dev/null 2&gt;&amp;1 &amp; PF_PID=$!; sleep 3
+kubectl --context docker-desktop -n zta-observability port-forward svc/loki 3100:3100 &gt;/dev/null 2&gt;&amp;1 &amp; LOKI_PID=$!; sleep 3
 for P in trusted suspect tampered; do
   N=$(curl -sG 'http://localhost:3100/loki/api/v1/query_range' \
     --data-urlencode "query={namespace=\"zta-policy\", posture=\"$P\"}" \
@@ -6739,14 +6740,16 @@ for P in trusted suspect tampered; do
   echo "$P=$N"
 done
 # Expected: trusted &gt; 0, suspect &gt; 0, tampered &gt; 0
+kill $LOKI_PID 2&gt;/dev/null
 
 # 3. P99 decision latency is below the 800-207 8.6 SLO ceiling of 10 ms.
+# Prom port-forward (PROM_PID) is still alive.
 P99=$(curl -sG 'http://localhost:9090/api/v1/query' --data-urlencode \
   'query=1000 * histogram_quantile(0.99, sum by (le) (rate(http_request_duration_seconds_bucket{job=~"opa.*"}[5m])))' \
   2&gt;/dev/null | jq -r '.data.result[0].value[1] // "0"')
 echo "P99_ms=$P99"
 # Expected: P99_ms &lt; 10
-kill $PF_PID 2&gt;/dev/null
+kill $PROM_PID 2&gt;/dev/null
 </code></pre>
   </div>
 
