@@ -1,0 +1,36 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata: { name: ext-authz-opa, namespace: istio-system }
+spec:
+  configPatches:
+  - applyTo: CLUSTER
+    match:
+      context: SIDECAR_INBOUND
+    patch:
+      operation: ADD
+      value:
+        name: opa-ext-authz
+        type: STRICT_DNS
+        connect_timeout: 1s
+        http2_protocol_options: {}
+        load_assignment:
+          cluster_name: opa-ext-authz
+          endpoints:
+          - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address:
+                    address: opa.zta-policy.svc.cluster.local
+                    port_value: 9191
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata: { name: ext-authz-opa, namespace: bookstore-api }
+spec:
+  selector: { matchLabels: { app: api } }
+  action: CUSTOM
+  provider: { name: opa-ext-authz }
+  rules:
+  - to:
+    - operation:
+        paths: ["/*"]

@@ -1,0 +1,13 @@
+# CAVEAT: this overwrites the istio-system/istio configmap's `mesh` key.
+# Bootstrap is assumed not to have populated it with other content. If it
+# has, swap to `kubectl patch --type=merge` instead.
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: istio, namespace: istio-system }
+data:
+  mesh: |
+    extensionProviders:
+    - name: opa-ext-authz
+      envoyExtAuthzGrpc:
+        service: opa.zta-policy.svc.cluster.local
+        port: 9191
