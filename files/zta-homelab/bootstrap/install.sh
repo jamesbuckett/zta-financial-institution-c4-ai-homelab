@@ -36,7 +36,7 @@ pause() {
 
 run_step() {
     CURRENT_STEP="$1"; shift
-    echo
+    clear
     echo "==============================================================="
     echo ">>> ${CURRENT_STEP}"
     echo "    $*"
