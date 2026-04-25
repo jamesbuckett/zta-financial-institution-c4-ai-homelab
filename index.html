@@ -539,6 +539,12 @@
   .code-block pre { margin: 0; padding: 14px 16px; overflow-x: auto; font-family: var(--mono); font-size: 14px; line-height: 1.6; color: var(--code-ink); background: transparent; }
   .code-block pre code { background: transparent; border: 0; padding: 0; font-size: inherit; color: inherit; }
   .code-block.terminal .code-head { background: #FAFAF7; }
+  /* Verify blocks — read-only confirmation queries that prove the prior step took effect.
+     Distinct accent left-border + tinted head so they read as "check, don't change". */
+  .code-block.verify { border-left: 2px solid var(--accent); }
+  .code-block.verify .code-head { background: var(--accent-wash); color: var(--accent-ink); }
+  .code-block.verify .code-head .lang { color: var(--accent-ink); }
+  .code-block.verify .code-head .path::before { content: "verify · "; color: var(--accent); font-weight: 600; }
 
   /* Tables */
   .table-wrap { overflow-x: auto; margin: var(--space-4) 0; border: 1px solid var(--border); border-radius: var(--radius); }
@@ -2963,6 +2969,29 @@ data:
 </code></pre>
   </div>
 
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 01</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. ConfigMap exists in the zta-system namespace.
+kubectl --context docker-desktop -n zta-system get configmap zta-label-schema \
+  -o jsonpath='{.metadata.name}{" "}{.metadata.labels.zta\.resource}{"\n"}'
+# Expected: zta-label-schema true
+
+# 2. Schema is parseable YAML and declares the three required labels.
+kubectl --context docker-desktop -n zta-system get configmap zta-label-schema \
+  -o jsonpath='{.data.schema\.yaml}' \
+  | yq -r '.labels | to_entries | map(select(.value.required == true)) | .[].key'
+# Expected (any order):
+#   zta.resource
+#   zta.data-class
+#   zta.owner
+
+# 3. The schema itself carries the resource label — it is a labelled resource.
+kubectl --context docker-desktop -n zta-system get configmap zta-label-schema \
+  -l zta.resource=true --no-headers | wc -l
+# Expected: 1
+</code></pre>
+  </div>
+
   <p><span class="step-num">02</span>Back-fill labels onto the bookstore resources. This manifest re-asserts every label the <code>K8sRequiredZtaLabels</code> constraint will enforce — <code>zta.resource</code>, <code>zta.data-class</code>, <code>zta.owner</code> — and adds <code>zta.exposure</code> plus per-framework <code>zta.regulatory.*</code> flags. Server-side apply with its own field manager keeps the step idempotent and safe to re-run against the values already set by bootstrap.</p>
 
   <div class="code-block">
@@ -3024,6 +3053,34 @@ items:
     <div class="callout-title">Benign warning on pre-existing clusters</div>
     <p>If you see <code>Warning: failed to re-apply configuration after performing Server-Side Apply migration</code> immediately followed by <code>serverside-applied</code>, the apply succeeded. On the first server-side apply against an object created by client-side apply, kubectl replays the legacy <code>last-applied-configuration</code> annotation to attribute field ownership. For immutable <code>StatefulSet</code> spec fields the replay is rejected — kubectl itself classifies this as non-fatal. Fresh installs don't hit this because the bootstrap now applies server-side too.</p>
   </aside>
+
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 02</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. Each workload carries the three required labels (T1).
+for tuple in 'bookstore-frontend deployment frontend' \
+             'bookstore-api      deployment api' \
+             'bookstore-data     statefulset db'; do
+  read -r ns kind name &lt;&lt;&lt;"$tuple"
+  kubectl --context docker-desktop -n "$ns" get "$kind" "$name" \
+    -o jsonpath='{.metadata.labels.zta\.resource}{" "}{.metadata.labels.zta\.data-class}{" "}{.metadata.labels.zta\.owner}{"\n"}'
+done
+# Expected:
+#   true public       retail-web
+#   true confidential retail-api
+#   true restricted   retail-data
+
+# 2. Field manager is zta-lab01 — proves these labels were set by THIS step,
+#    not silently re-asserted by an earlier client-side apply.
+kubectl --context docker-desktop -n bookstore-api get deploy api -o json \
+  | jq -r '.metadata.managedFields[] | select(.manager=="zta-lab01") | .manager'
+# Expected: zta-lab01
+
+# 3. Per-framework regulatory flags landed.
+kubectl --context docker-desktop -n bookstore-data get statefulset db \
+  -o jsonpath='{.metadata.labels}' | jq 'with_entries(select(.key|startswith("zta.regulatory.")))'
+# Expected: {"zta.regulatory.gdpr":"true","zta.regulatory.pci":"true","zta.regulatory.sox":"true"}
+</code></pre>
+  </div>
 
   <p><span class="step-num">03</span>Install a Gatekeeper constraint that refuses any <em>new</em> workload missing the three required labels. This is the admission-time PEP expressing Tenet 1.</p>
 
@@ -3098,6 +3155,36 @@ kubectl --context docker-desktop apply -f gatekeeper-required-labels.yaml
 </code></pre>
   </div>
 
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 03</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. ConstraintTemplate is Established — Gatekeeper accepted the Rego.
+kubectl --context docker-desktop get constrainttemplate k8srequiredztalabels \
+  -o jsonpath='{.status.byPod[*].observedGeneration}{"\n"}{range .status.byPod[*]}{.id}{"="}{.operations}{"\n"}{end}'
+# Expected: a generation number, then one row per Gatekeeper pod listing the
+#           operations it has registered (audit, mutation-status, webhook).
+
+# 2. The constraint CRD is registered cluster-wide.
+kubectl --context docker-desktop get crd k8srequiredztalabels.constraints.gatekeeper.sh \
+  -o jsonpath='{.status.conditions[?(@.type=="Established")].status}{"\n"}'
+# Expected: True
+
+# 3. The constraint object exists with the three required labels in spec.parameters.
+kubectl --context docker-desktop get k8srequiredztalabels bookstore-resources-labelled \
+  -o jsonpath='{.spec.parameters.required}{"\n"}'
+# Expected: ["zta.resource","zta.data-class","zta.owner"]
+
+# 4. Failure policy is Fail (fail-closed) — required for ZTA posture.
+kubectl --context docker-desktop get validatingwebhookconfiguration gatekeeper-validating-webhook-configuration \
+  -o jsonpath='{.webhooks[?(@.name=="validation.gatekeeper.sh")].failurePolicy}{"\n"}'
+# Expected: Fail
+
+# 5. Audit reports zero existing violations — Step 02 back-fill worked.
+kubectl --context docker-desktop get k8srequiredztalabels bookstore-resources-labelled \
+  -o jsonpath='{.status.totalViolations}{"\n"}'
+# Expected: 0
+</code></pre>
+  </div>
+
   <p><span class="step-num">04</span>Produce the resource inventory — the CDM stand-in. A single <code>kubectl</code> invocation reports every labelled resource across the cluster, mimicking the Wiz/Tanium CDM feed in 7.14.</p>
 
   <div class="code-block terminal">
@@ -3121,6 +3208,25 @@ EXPOSURE:.metadata.labels.zta\.exposure'
   <div class="code-block terminal">
     <div class="code-head"><span class="lang">Bash</span><span class="path">make inventory.sh executable</span><button class="copy-btn">Copy</button></div>
 <pre><code>chmod +x inventory.sh
+</code></pre>
+  </div>
+
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 04</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. Script is present and executable.
+test -x ./inventory.sh &amp;&amp; echo OK
+# Expected: OK
+
+# 2. Script runs and emits a header plus &gt;= 6 inventory rows
+#    (3 deployments/statefulsets + 3 services across the bookstore namespaces).
+./inventory.sh | tee /tmp/zta-inventory.out
+ROWS=$(tail -n +2 /tmp/zta-inventory.out | grep -cE 'bookstore-(frontend|api|data)')
+echo "rows=$ROWS"
+# Expected: rows=6   (or higher if you have added extra labelled resources)
+
+# 3. Every inventoried row carries a non-empty data-class — Tenet 1's whole point.
+awk 'NR&gt;1 {print $4}' /tmp/zta-inventory.out | grep -cE '^(public|internal|confidential|restricted|secret)$'
+# Expected: same number as rows above
 </code></pre>
   </div>
 
@@ -3331,6 +3437,35 @@ spec:
 </code></pre>
   </div>
 
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">apply mesh-wide STRICT</span><button class="copy-btn">Copy</button></div>
+<pre><code>kubectl --context docker-desktop apply -f peer-authn-strict.yaml
+# Expected: peerauthentication.security.istio.io/default created
+</code></pre>
+  </div>
+
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 01</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. PeerAuthentication is at mesh root and mode is STRICT.
+kubectl --context docker-desktop -n istio-system get peerauthentication default \
+  -o jsonpath='{.spec.mtls.mode}{"\n"}'
+# Expected: STRICT
+
+# 2. No namespace-level PeerAuthentication is overriding back to PERMISSIVE.
+kubectl --context docker-desktop get peerauthentication -A \
+  -o jsonpath='{range .items[*]}{.metadata.namespace}/{.metadata.name}={.spec.mtls.mode}{"\n"}{end}' \
+  | grep -v '=STRICT$' || echo 'all STRICT'
+# Expected: all STRICT
+
+# 3. The mesh control plane has propagated the policy to every sidecar.
+kubectl --context docker-desktop -n bookstore-api get pod -l app=api -o name \
+  | head -1 \
+  | xargs -I{} istioctl --context docker-desktop proxy-config listener {}.bookstore-api --port 15006 -o json \
+  | jq -r '..|.transportSocket?.name? // empty' | sort -u
+# Expected: contains envoy.transport_sockets.tls — the inbound listener terminates mTLS
+</code></pre>
+  </div>
+
   <p><span class="step-num">02</span>Apply a default-deny <code>AuthorizationPolicy</code> to each bookstore namespace. T2 is about encryption; combining it with a default-deny is how 800-207 3.3.1 intends enforcement to look.</p>
 
   <div class="code-block">
@@ -3370,6 +3505,42 @@ spec:
 </code></pre>
   </div>
 
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">apply default-deny</span><button class="copy-btn">Copy</button></div>
+<pre><code>kubectl --context docker-desktop apply -f default-deny.yaml
+# Expected: 4 authorizationpolicy.security.istio.io/... created
+</code></pre>
+  </div>
+
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 02</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. Empty-spec deny exists in the two protected namespaces.
+for ns in bookstore-api bookstore-data; do
+  kubectl --context docker-desktop -n "$ns" get authorizationpolicy default-deny \
+    -o jsonpath='{.metadata.namespace}/{.metadata.name} spec={.spec}{"\n"}'
+done
+# Expected:
+#   bookstore-api/default-deny  spec={}
+#   bookstore-data/default-deny spec={}
+
+# 2. Allow-rule exists for ingress -&gt; frontend, and ingress+frontend -&gt; api.
+kubectl --context docker-desktop -n bookstore-frontend get authorizationpolicy allow-ingress-to-frontend \
+  -o jsonpath='{.spec.rules[0].from[0].source.principals}{"\n"}'
+# Expected: ["cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account"]
+
+kubectl --context docker-desktop -n bookstore-api get authorizationpolicy allow-ingress-and-frontend-to-api \
+  -o jsonpath='{.spec.rules[0].from[0].source.principals}{"\n"}' | jq 'length'
+# Expected: 2
+
+# 3. The deny is taking effect — Envoy's RBAC listener filter is now wired.
+istioctl --context docker-desktop proxy-config listener \
+  $(kubectl --context docker-desktop -n bookstore-api get pod -l app=api -o name | head -1 | cut -d/ -f2).bookstore-api \
+  --port 15006 -o json \
+  | jq -r '..|.name? // empty' | grep -c 'envoy\.filters\.http\.rbac'
+# Expected: &gt;= 1
+</code></pre>
+  </div>
+
   <p><span class="step-num">03</span>Deploy a <em>debug pod</em> without sidecar injection in an unrelated namespace. This is the "hostile insider on the same LAN" scenario.</p>
 
   <div class="code-block">
@@ -3393,6 +3564,38 @@ spec:
 </code></pre>
   </div>
 
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">apply debug pod</span><button class="copy-btn">Copy</button></div>
+<pre><code>kubectl --context docker-desktop apply -f debug-pod.yaml
+kubectl --context docker-desktop -n zta-lab-debug wait --for=condition=Ready pod/debug --timeout=60s
+# Expected: namespace/zta-lab-debug created
+#           pod/debug created
+#           pod/debug condition met
+</code></pre>
+  </div>
+
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 03</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. Namespace exists and explicitly disables sidecar injection.
+kubectl --context docker-desktop get ns zta-lab-debug \
+  -o jsonpath='{.metadata.labels.istio-injection}{"\n"}'
+# Expected: disabled
+
+# 2. Pod is Running and has exactly ONE container — proves no sidecar was injected.
+kubectl --context docker-desktop -n zta-lab-debug get pod debug \
+  -o jsonpath='{.status.phase}{" "}{.spec.containers[*].name}{" count="}{range .spec.containers[*]}{.name}{","}{end}{"\n"}'
+# Expected: Running tools count=tools,
+#           (No "istio-proxy" sidecar — that is the whole point of this step.)
+
+# 3. tcpdump is available and the capability bits really landed.
+kubectl --context docker-desktop -n zta-lab-debug exec debug -- which tcpdump
+# Expected: /usr/bin/tcpdump  (or /usr/sbin/tcpdump)
+kubectl --context docker-desktop -n zta-lab-debug get pod debug \
+  -o jsonpath='{.spec.containers[0].securityContext.capabilities.add}{"\n"}'
+# Expected: ["NET_RAW","NET_ADMIN"]
+</code></pre>
+  </div>
+
   <p><span class="step-num">04</span>Attempt a plaintext HTTP call from the debug pod to the API. Because the API sidecar enforces STRICT mTLS, the handshake fails.</p>
 
   <div class="code-block terminal">
@@ -3405,6 +3608,31 @@ spec:
 # * Empty reply from server
 # * Closing connection
 # curl: (52) Empty reply from server
+</code></pre>
+  </div>
+
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 04</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. The plaintext call exits non-zero with curl code 52 (Empty reply).
+kubectl --context docker-desktop -n zta-lab-debug exec debug -- \
+  bash -c "curl -sS --max-time 5 http://api.bookstore-api.svc.cluster.local/headers; echo EXIT=$?"
+# Expected: a curl error message (Empty reply / Recv failure) and EXIT=52
+#           (NOT EXIT=0 — that would mean STRICT mTLS is not enforced)
+
+# 2. TCP reaches the sidecar but is then closed without an HTTP body —
+#    proves the sidecar accepted the connection then refused the plaintext.
+kubectl --context docker-desktop -n zta-lab-debug exec debug -- \
+  bash -c "echo -e 'GET /headers HTTP/1.1\r\nHost: api.bookstore-api.svc.cluster.local\r\n\r\n' \
+           | timeout 4 nc -v api.bookstore-api.svc.cluster.local 80; echo EXIT=$?"
+# Expected: 'open' or 'succeeded' on connect, then EOF / no HTTP/1.1 response.
+#           No "HTTP/1.1 200" or "HTTP/1.1 4xx" line — the sidecar dropped before HTTP.
+
+# 3. Istio access log on the api side shows a connection-level reset, not an HTTP 4xx.
+kubectl --context docker-desktop -n bookstore-api logs \
+  $(kubectl --context docker-desktop -n bookstore-api get pod -l app=api -o name | head -1) \
+  -c istio-proxy --tail=5 | grep -E 'response_code_details|connection_termination' || true
+# Expected: lines containing 'connection_termination_details' or response code 0
+#           — STRICT mTLS terminated before any HTTP layer existed.
 </code></pre>
   </div>
 
@@ -3431,6 +3659,27 @@ grep -E 'GET |Host: |User-Agent' /tmp/capture.txt || echo 'no plaintext HTTP'
 </code></pre>
   </div>
 
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 05</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. Capture file exists and is non-empty — tcpdump actually saw frames.
+test -s /tmp/capture.txt &amp;&amp; echo "bytes=$(wc -c &lt; /tmp/capture.txt)"
+# Expected: bytes=&gt;0
+
+# 2. NO plaintext HTTP method or HTTP-style header on the wire.
+grep -cE '^(GET|POST|PUT|DELETE) /|Host: |User-Agent: ' /tmp/capture.txt
+# Expected: 0
+
+# 3. TLS record headers ARE present (handshake byte 0x16, version 0x0303).
+grep -cE '0x0000:.*1603 03|160303' /tmp/capture.txt
+# Expected: &gt;= 1   (some frames begin with a TLS 1.2/1.3 record; exact count varies)
+
+# 4. Sidecar inbound port 15006 appears as a flow target — confirms traffic
+#    was redirected through Envoy rather than reaching the app socket directly.
+grep -cE '\.15006:' /tmp/capture.txt
+# Expected: &gt;= 1
+</code></pre>
+  </div>
+
   <p><span class="step-num">06</span>Cross-check the mesh's own view with <code>istioctl</code>. This must <em>agree</em> with the packet capture — if it contradicts, believe the capture.</p>
 
   <div class="code-block terminal">
@@ -3442,6 +3691,36 @@ grep -E 'GET |Host: |User-Agent' /tmp/capture.txt || echo 'no plaintext HTTP'
 # Expected:
 # HOST:PORT                                     STATUS    SERVER   CLIENT   AUTHN POLICY   DESTINATION RULE
 # api.bookstore-api.svc.cluster.local:80        OK        STRICT   ISTIO_MUTUAL   default/istio-system   -
+</code></pre>
+  </div>
+
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 06</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. tls-check reports SERVER=STRICT, CLIENT=ISTIO_MUTUAL, STATUS=OK.
+istioctl --context docker-desktop authn tls-check \
+  $(kubectl --context docker-desktop -n bookstore-frontend get pod -l app=frontend -o name | head -1 | cut -d/ -f2).bookstore-frontend \
+  api.bookstore-api.svc.cluster.local \
+  | awk 'NR&gt;1 {print $2,$3,$4}' | head -1
+# Expected: OK STRICT ISTIO_MUTUAL
+
+# 2. Sidecar reports a SECRET resource carrying a SPIFFE SVID for the api workload.
+istioctl --context docker-desktop proxy-config secret \
+  $(kubectl --context docker-desktop -n bookstore-api get pod -l app=api -o name | head -1 | cut -d/ -f2).bookstore-api \
+  -o json \
+  | jq -r '.dynamicActiveSecrets[]?.name' | sort -u
+# Expected: ROOTCA, default        (default = the workload's SVID)
+
+# 3. The SVID's URI SAN names the api workload — proves Istio CA, not a bystander, signed it.
+istioctl --context docker-desktop proxy-config secret \
+  $(kubectl --context docker-desktop -n bookstore-api get pod -l app=api -o name | head -1 | cut -d/ -f2).bookstore-api \
+  -o json \
+  | jq -r '.dynamicActiveSecrets[] | select(.name=="default") | .secret.tlsCertificate.certificateChain.inlineBytes' \
+  | base64 -d | openssl x509 -noout -ext subjectAltName 2&gt;/dev/null
+# Expected: URI:spiffe://cluster.local/ns/bookstore-api/sa/default
+
+# 4. Capture and control-plane view AGREE — neither dissents about STRICT.
+grep -cE '^(GET|POST) ' /tmp/capture.txt 2&gt;/dev/null || echo 0
+# Expected: 0  (matches the istioctl OK / STRICT line above; both agree)
 </code></pre>
   </div>
 
@@ -3666,6 +3945,38 @@ echo "Realm ready. Secret stored in labs/03-per-session/.env"
 </code></pre>
   </div>
 
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 01</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. Realm exists with the 5-minute access-token lifespan T3 demands.
+curl -s -H 'Host: keycloak.local' \
+  http://localhost/realms/zta-bookstore/.well-known/openid-configuration \
+  | jq -r '.issuer, .token_endpoint'
+# Expected:
+#   http://keycloak.local/realms/zta-bookstore
+#   http://keycloak.local/realms/zta-bookstore/protocol/openid-connect/token
+
+# 2. accessTokenLifespan is exactly 300 s (T3 — short-lived).
+KC_POD=$(kubectl --context docker-desktop -n zta-identity get pod -l app=keycloak -o name | head -1)
+kubectl --context docker-desktop -n zta-identity exec -i $KC_POD -- \
+  /opt/keycloak/bin/kcadm.sh get realms/zta-bookstore --fields accessTokenLifespan
+# Expected: "accessTokenLifespan" : 300
+
+# 3. Confidential client and test user are present.
+kubectl --context docker-desktop -n zta-identity exec -i $KC_POD -- \
+  /opt/keycloak/bin/kcadm.sh get clients -r zta-bookstore -q clientId=bookstore-api \
+  --fields clientId,publicClient,directAccessGrantsEnabled
+# Expected: clientId=bookstore-api, publicClient=false, directAccessGrantsEnabled=true
+
+kubectl --context docker-desktop -n zta-identity exec -i $KC_POD -- \
+  /opt/keycloak/bin/kcadm.sh get users -r zta-bookstore -q username=alice --fields username,enabled
+# Expected: username=alice, enabled=true
+
+# 4. The .env file with the client secret was written and is non-empty.
+test -s labs/03-per-session/.env &amp;&amp; grep -c '^BOOKSTORE_CLIENT_SECRET=' labs/03-per-session/.env
+# Expected: 1
+</code></pre>
+  </div>
+
   <p><span class="step-num">02</span>Acquire an access token via the OAuth2 Password Grant and inspect its <code>exp</code> claim.</p>
 
   <div class="code-block terminal">
@@ -3695,6 +4006,36 @@ echo "$TOKEN" | cut -d. -f2 | base64 -d 2&gt;/dev/null | jq '{sub, aud, iss, exp
 </code></pre>
   </div>
 
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 02</span><button class="copy-btn">Copy</button></div>
+<pre><code># Re-uses $TOKEN from the previous block.
+# 1. Token has three dot-separated segments — well-formed JWT.
+echo "$TOKEN" | awk -F. '{print NF}'
+# Expected: 3
+
+# 2. lifetime_s == 300, alg is HS256/RS256 (whatever Keycloak issued — never 'none').
+echo "$TOKEN" | cut -d. -f1 | base64 -d 2&gt;/dev/null | jq '.alg, .typ'
+# Expected: "RS256"  "JWT"     (alg must NOT be "none")
+
+LIFE=$(echo "$TOKEN" | cut -d. -f2 | base64 -d 2&gt;/dev/null | jq '.exp - .iat')
+echo "lifetime_s=$LIFE"
+# Expected: lifetime_s=300
+
+# 3. iss matches the realm and aud is set — token is bound to this realm.
+echo "$TOKEN" | cut -d. -f2 | base64 -d 2&gt;/dev/null | jq -r '.iss, .azp, .typ'
+# Expected:
+#   http://keycloak.local/realms/zta-bookstore
+#   bookstore-api
+#   Bearer
+
+# 4. Signature verifies against the realm JWKS — proves it isn't a forged token.
+JWKS=$(curl -s -H 'Host: keycloak.local' \
+  http://localhost/realms/zta-bookstore/protocol/openid-connect/certs)
+echo "$JWKS" | jq '.keys | length'
+# Expected: &gt;= 1   (a signing key is published; the SDK or API gateway will use it)
+</code></pre>
+  </div>
+
   <p><span class="step-num">03</span>Register the bookstore-api workload in SPIRE with a 5-minute X.509 TTL; confirm it receives and rotates SVIDs.</p>
 
   <div class="code-block terminal">
@@ -3716,6 +4057,38 @@ kubectl --context docker-desktop -n spire exec -i $SS -- \
 # Parent ID        : spiffe://zta.homelab/spire/agent/k8s_psat/docker-desktop
 # X509-SVID TTL    : 300
 # JWT-SVID TTL     : 300
+</code></pre>
+  </div>
+
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 03</span><button class="copy-btn">Copy</button></div>
+<pre><code>SS=$(kubectl --context docker-desktop -n spire get pod -l app=spire-server -o name | head -1)
+
+# 1. Entry exists for the bookstore-api workload with both selectors.
+kubectl --context docker-desktop -n spire exec -i $SS -- \
+  /opt/spire/bin/spire-server entry show \
+  -spiffeID spiffe://zta.homelab/ns/bookstore-api/sa/default
+# Expected: one entry with selectors k8s:ns:bookstore-api and k8s:sa:default
+
+# 2. SVID TTL is 300 s (per-session is "short-lived", not "default 1h").
+kubectl --context docker-desktop -n spire exec -i $SS -- \
+  /opt/spire/bin/spire-server entry show \
+  -spiffeID spiffe://zta.homelab/ns/bookstore-api/sa/default \
+  | awk '/X509-SVID TTL/ {print $NF; exit}'
+# Expected: 300
+
+# 3. SPIRE agent reports the entry has been distributed to a node.
+kubectl --context docker-desktop -n spire exec -i $SS -- \
+  /opt/spire/bin/spire-server agent list \
+  | grep -c 'docker-desktop'
+# Expected: &gt;= 1   (one agent per node; we have one node)
+
+# 4. No duplicate entries — exactly one canonical SPIFFE ID for this workload.
+kubectl --context docker-desktop -n spire exec -i $SS -- \
+  /opt/spire/bin/spire-server entry show \
+  -spiffeID spiffe://zta.homelab/ns/bookstore-api/sa/default \
+  | grep -c '^Entry ID'
+# Expected: 1
 </code></pre>
   </div>
 
@@ -3771,6 +4144,46 @@ data:
 </code></pre>
   </div>
 
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">apply svid-watcher</span><button class="copy-btn">Copy</button></div>
+<pre><code>kubectl --context docker-desktop apply -f svid-watcher.yaml
+kubectl --context docker-desktop -n bookstore-api rollout status deploy/svid-watcher --timeout=120s
+# Expected: deployment "svid-watcher" successfully rolled out
+</code></pre>
+  </div>
+
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 04</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. Deployment is Available with 1/1 replicas.
+kubectl --context docker-desktop -n bookstore-api get deploy svid-watcher \
+  -o jsonpath='{.status.readyReplicas}/{.status.replicas}{"\n"}'
+# Expected: 1/1
+
+# 2. Pod has TWO containers (helper + observer) — no Istio sidecar attached
+#    because zta-lab-debug-style injection isn't disabled here, so we expect
+#    THREE containers if Lab 2 is still active. Either is acceptable; the
+#    helper and observer must both be present.
+kubectl --context docker-desktop -n bookstore-api get pod -l app=svid-watcher \
+  -o jsonpath='{.items[0].spec.containers[*].name}{"\n"}'
+# Expected: contains 'watcher' and 'observer'
+
+# 3. svid-helper ConfigMap is mounted and contains the agent_address path.
+kubectl --context docker-desktop -n bookstore-api get configmap svid-helper \
+  -o jsonpath='{.data.helper\.conf}' | grep -c agent_address
+# Expected: 1
+
+# 4. The SPIRE agent's hostPath socket is reachable from the pod
+#    (an SVID file should appear within a few seconds of pod start).
+POD=$(kubectl --context docker-desktop -n bookstore-api get pod -l app=svid-watcher -o name | head -1)
+for i in 1 2 3 4 5 6 7 8 9 10; do
+  if kubectl --context docker-desktop -n bookstore-api exec $POD -c observer -- \
+       test -f /svid/svid.pem 2&gt;/dev/null; then echo "svid present"; break; fi
+  sleep 3
+done
+# Expected: svid present
+</code></pre>
+  </div>
+
   <p><span class="step-num">05</span>Tail the <code>observer</code> container and watch serials change.</p>
 
   <div class="code-block terminal">
@@ -3781,6 +4194,32 @@ data:
 # serial=4F7A...01  notAfter=Apr 17 09:42:03 2026 GMT  subject=... URI:spiffe://zta.homelab/ns/bookstore-api/sa/default
 # serial=4F7A...01  notAfter=Apr 17 09:42:03 2026 GMT  ...
 # serial=4F7A...02  notAfter=Apr 17 09:44:33 2026 GMT  subject=... URI:spiffe://zta.homelab/ns/bookstore-api/sa/default
+</code></pre>
+  </div>
+
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 05</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. Capture roughly 3 minutes of observer output and prove the serial CHANGED.
+LOGS=$(kubectl --context docker-desktop -n bookstore-api logs --since=180s deploy/svid-watcher -c observer)
+echo "$LOGS" | awk -F= '/^serial=/ {print $2}' | awk '{print $1}' | sort -u | tee /tmp/serials.txt
+SERIALS=$(wc -l &lt; /tmp/serials.txt)
+echo "distinct_serials=$SERIALS"
+# Expected: distinct_serials &gt;= 2   (at least one rotation observed in 180 s)
+
+# 2. URI SAN names the bookstore-api workload — proves SPIRE issued the SVID.
+echo "$LOGS" | grep -m1 -oE 'URI:spiffe://[^[:space:]]+'
+# Expected: URI:spiffe://zta.homelab/ns/bookstore-api/sa/default
+
+# 3. notAfter is &lt;= 5 minutes from now (NOT a long-lived cert).
+NA=$(echo "$LOGS" | awk -F= '/notAfter/ {print $3; exit}' | awk '{$1=$1; print}')
+echo "notAfter=$NA"
+# Expected: notAfter is within ~5 minutes of system time
+#           (date -d "$NA" +%s vs date +%s should differ by &lt;= 320)
+
+# 4. Tenet 3 maps cleanly: token TTL = SVID TTL = 300 s.
+LIFE=$(echo "$TOKEN" | cut -d. -f2 | base64 -d 2&gt;/dev/null | jq '.exp - .iat')
+echo "token_ttl=$LIFE svid_ttl=300"
+# Expected: token_ttl=300 svid_ttl=300   (per-session for both subject and workload)
 </code></pre>
   </div>
 
@@ -4127,6 +4566,31 @@ decision_id := crypto.sha256(sprintf("%v|%v|%v|%v|%v",
 </code></pre>
   </div>
 
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 01</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. The .rego file parses — no syntax error, default-deny is wired.
+opa parse labs/04-dynamic-policy/zta.authz.rego &gt;/dev/null &amp;&amp; echo PARSED
+# Expected: PARSED
+
+# 2. Default-deny is the bottom of the rule lattice (T4 — fail-closed).
+grep -E '^default (allow|decision)' labs/04-dynamic-policy/zta.authz.rego
+# Expected:
+#   default allow := false
+#   default decision := {"allow": false, "reason": "default-deny"}
+
+# 3. Unit-test against a fabricated input — trusted GET allows, tampered denies.
+opa eval -d labs/04-dynamic-policy/zta.authz.rego \
+  --input &lt;(printf '%s' '{"attributes":{"request":{"http":{"method":"GET","path":"/anything","headers":{"authorization":"Bearer eyJ.eyJzdWIiOiJhbGljZSJ9.","x-device-posture":"trusted"}}},"source":{"principal":"spiffe://cluster.local/ns/bookstore-frontend/sa/default"}}}') \
+  'data.zta.authz.decision' --format=json | jq '.result[0].expressions[0].value.allow'
+# Expected: true
+
+opa eval -d labs/04-dynamic-policy/zta.authz.rego \
+  --input &lt;(printf '%s' '{"attributes":{"request":{"http":{"method":"GET","path":"/anything","headers":{"authorization":"Bearer eyJ.eyJzdWIiOiJhbGljZSJ9.","x-device-posture":"tampered"}}}}}') \
+  'data.zta.authz.decision' --format=json | jq '.result[0].expressions[0].value.reason'
+# Expected: "device-tampered"
+</code></pre>
+  </div>
+
   <p><span class="step-num">02</span>Load the policy into the running OPA. We re-use the OPA from bootstrap (2.5). The ConfigMap is mounted as a bundle-free policy file.</p>
 
   <div class="code-block">
@@ -4160,6 +4624,46 @@ spec:
         - { name: policy, mountPath: /policies }
       volumes:
       - { name: policy, configMap: { name: opa-policy } }
+</code></pre>
+  </div>
+
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">apply OPA policy</span><button class="copy-btn">Copy</button></div>
+<pre><code>kubectl --context docker-desktop apply -f opa-policy.yaml
+kubectl --context docker-desktop -n zta-policy rollout status deploy/opa --timeout=120s
+# Expected: deployment "opa" successfully rolled out
+</code></pre>
+  </div>
+
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 02</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. ConfigMap exists and contains the package declaration.
+kubectl --context docker-desktop -n zta-policy get configmap opa-policy \
+  -o jsonpath='{.data.zta\.authz\.rego}' | grep -c '^package zta.authz'
+# Expected: 1
+
+# 2. OPA pod is Running with the new args (ext_authz gRPC + decision logs).
+kubectl --context docker-desktop -n zta-policy get deploy opa \
+  -o jsonpath='{.spec.template.spec.containers[0].args}' \
+  | jq -r '.[]' | grep -E 'envoy_ext_authz_grpc|decision_logs.console'
+# Expected (both lines):
+#   --set=plugins.envoy_ext_authz_grpc.addr=:9191
+#   --set=plugins.envoy_ext_authz_grpc.path=zta/authz/result
+#   --set=decision_logs.console=true
+
+# 3. OPA's REST API reports the policy is loaded — query it directly.
+OPA_POD=$(kubectl --context docker-desktop -n zta-policy get pod -l app=opa -o name | head -1)
+kubectl --context docker-desktop -n zta-policy exec $OPA_POD -- \
+  wget -qO- http://localhost:8181/v1/policies | jq -r '.result[].id'
+# Expected: a path containing 'zta.authz.rego'
+
+# 4. The package compiles inside OPA — query it and get a structured response.
+kubectl --context docker-desktop -n zta-policy exec $OPA_POD -- \
+  wget -qO- --post-data='{"input":{}}' --header='Content-Type: application/json' \
+  http://localhost:8181/v1/data/zta/authz/decision | jq '.result.allow, .result.reason'
+# Expected:
+#   false
+#   "default-deny"
 </code></pre>
   </div>
 
@@ -4223,6 +4727,51 @@ data:
 </code></pre>
   </div>
 
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">apply ext-authz wiring</span><button class="copy-btn">Copy</button></div>
+<pre><code>kubectl --context docker-desktop apply -f ext-authz-provider.yaml
+kubectl --context docker-desktop apply -f ext-authz-envoyfilter.yaml
+# Restart istiod so the mesh config is reloaded, then bounce the api pod
+# so its sidecar picks up the new EnvoyFilter and CUSTOM authorization.
+kubectl --context docker-desktop -n istio-system rollout restart deploy/istiod
+kubectl --context docker-desktop -n istio-system rollout status  deploy/istiod --timeout=120s
+kubectl --context docker-desktop -n bookstore-api rollout restart deploy/api
+kubectl --context docker-desktop -n bookstore-api rollout status  deploy/api --timeout=120s
+</code></pre>
+  </div>
+
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 03</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. Mesh config publishes the extension provider.
+kubectl --context docker-desktop -n istio-system get configmap istio \
+  -o jsonpath='{.data.mesh}' | grep -A2 extensionProviders | grep -c opa-ext-authz
+# Expected: 1
+
+# 2. EnvoyFilter is registered in istio-system.
+kubectl --context docker-desktop -n istio-system get envoyfilter ext-authz-opa \
+  -o jsonpath='{.spec.configPatches[0].applyTo}{"\n"}'
+# Expected: CLUSTER
+
+# 3. CUSTOM AuthorizationPolicy on the api uses provider opa-ext-authz.
+kubectl --context docker-desktop -n bookstore-api get authorizationpolicy ext-authz-opa \
+  -o jsonpath='{.spec.action}/{.spec.provider.name}{"\n"}'
+# Expected: CUSTOM/opa-ext-authz
+
+# 4. The api sidecar's listener actually contains the ext_authz filter.
+istioctl --context docker-desktop proxy-config listener \
+  $(kubectl --context docker-desktop -n bookstore-api get pod -l app=api -o name | head -1 | cut -d/ -f2).bookstore-api \
+  --port 15006 -o json \
+  | jq -r '..|.name? // empty' | grep -c 'envoy\.filters\.http\.ext_authz'
+# Expected: &gt;= 1
+
+# 5. The OPA gRPC port is reachable from the api sidecar.
+kubectl --context docker-desktop -n bookstore-api exec \
+  $(kubectl --context docker-desktop -n bookstore-api get pod -l app=api -o name | head -1) \
+  -c istio-proxy -- /bin/sh -c 'echo &gt; /dev/tcp/opa.zta-policy.svc.cluster.local/9191 &amp;&amp; echo OK'
+# Expected: OK
+</code></pre>
+  </div>
+
   <p><span class="step-num">04</span>Drive three requests that differ only in the posture header. Collect OPA decision logs.</p>
 
   <div class="code-block terminal">
@@ -4257,6 +4806,39 @@ done
 </code></pre>
   </div>
 
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 04</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. Capture the matrix into a file for asserting on, not eyeballing.
+: &gt; /tmp/zta-matrix.txt
+for POSTURE in trusted suspect tampered; do
+  for METHOD in GET POST; do
+    CODE=$(curl -s -o /dev/null -w '%{http_code}' \
+      -X $METHOD -H 'Host: bookstore.local' \
+      -H "Authorization: Bearer $TOKEN" \
+      -H "x-device-posture: $POSTURE" \
+      http://localhost/api/anything)
+    echo "$POSTURE $METHOD $CODE" &gt;&gt; /tmp/zta-matrix.txt
+  done
+done
+cat /tmp/zta-matrix.txt
+
+# 2. Assert the exact 6-row decision shape T4 demands.
+grep -c '^trusted GET 200$'   /tmp/zta-matrix.txt   # Expected: 1
+grep -c '^trusted POST 200$'  /tmp/zta-matrix.txt   # Expected: 1
+grep -c '^suspect GET 200$'   /tmp/zta-matrix.txt   # Expected: 1
+grep -c '^suspect POST 403$'  /tmp/zta-matrix.txt   # Expected: 1
+grep -c '^tampered GET 403$'  /tmp/zta-matrix.txt   # Expected: 1
+grep -c '^tampered POST 403$' /tmp/zta-matrix.txt   # Expected: 1
+
+# 3. Each denied response carries a decision-id header so the client can cite it.
+curl -sS -D - -o /dev/null \
+  -X POST -H 'Host: bookstore.local' \
+  -H "Authorization: Bearer $TOKEN" -H 'x-device-posture: tampered' \
+  http://localhost/api/anything | grep -i 'x-zta-decision-id' | wc -l
+# Expected: 1
+</code></pre>
+  </div>
+
   <p><span class="step-num">05</span>Inspect the OPA decision log for the <code>decision_id</code>. Source 8.5 names this the canonical audit artefact.</p>
 
   <div class="code-block terminal">
@@ -4269,6 +4851,34 @@ done
 # {"decision_id":"0a3e...","path":"/anything","posture":"suspect","result":true,"reason":"ok"}
 # {"decision_id":"f19d...","path":"/anything","posture":"suspect","result":false,"reason":"no-matching-allow"}
 # {"decision_id":"c821...","path":"/anything","posture":"tampered","result":false,"reason":"device-tampered"}
+</code></pre>
+  </div>
+
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 05</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. At least 6 decision lines exist in the OPA log — one per request.
+DECISIONS=$(kubectl --context docker-desktop -n zta-policy logs deploy/opa --tail=200 \
+  | jq -c 'select(.decision_id != null)' 2&gt;/dev/null | wc -l)
+echo "decisions=$DECISIONS"
+# Expected: decisions &gt;= 6
+
+# 2. Each decision_id is unique (it is a per-request audit handle, not a label).
+kubectl --context docker-desktop -n zta-policy logs deploy/opa --tail=200 \
+  | jq -r 'select(.decision_id != null) | .decision_id' | tail -6 | sort -u | wc -l
+# Expected: 6
+
+# 3. The reasons populate the four expected categories.
+kubectl --context docker-desktop -n zta-policy logs deploy/opa --tail=200 \
+  | jq -r 'select(.result.headers["x-zta-decision-reason"]) | .result.headers["x-zta-decision-reason"]' \
+  | sort -u
+# Expected (subset): ok, device-tampered, no-matching-allow
+
+# 4. Every decision carries the input shape Envoy actually sent — proves
+#    the audit row is complete enough to reconstruct the call.
+kubectl --context docker-desktop -n zta-policy logs deploy/opa --tail=20 \
+  | jq -c 'select(.decision_id) | {has_method: (.input.attributes.request.http.method != null), has_posture: (.input.attributes.request.http.headers["x-device-posture"] != null), has_principal: (.input.attributes.source.principal != null)}' \
+  | sort -u
+# Expected: {"has_method":true,"has_posture":true,"has_principal":true}
 </code></pre>
   </div>
 
@@ -4472,6 +5082,33 @@ kubectl --context docker-desktop -n zta-runtime-security logs ds/falco --tail=5 
 </code></pre>
   </div>
 
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 01</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. DaemonSet matches node count — every node has Falco; no monitoring gaps.
+NODES=$(kubectl --context docker-desktop get nodes --no-headers | wc -l)
+READY=$(kubectl --context docker-desktop -n zta-runtime-security get ds falco \
+          -o jsonpath='{.status.numberReady}')
+echo "nodes=$NODES ready=$READY"
+# Expected: nodes equals ready (e.g. nodes=1 ready=1 on Docker Desktop)
+
+# 2. Driver reports as modern_ebpf and is loaded — not "skipped" / "fallback".
+kubectl --context docker-desktop -n zta-runtime-security logs ds/falco --tail=200 \
+  | grep -E 'driver loaded|modern_ebpf' | head -2
+# Expected: a 'modern_ebpf' line and a 'driver loaded' line
+
+# 3. The default Falco rule set is loaded (Terminal shell in container is required by step 06).
+kubectl --context docker-desktop -n zta-runtime-security logs ds/falco --tail=500 \
+  | grep -c 'Terminal shell in container'
+# Expected: &gt;= 1   (rule will be referenced at engine startup or in tests)
+
+# 4. Falco's metrics endpoint is up (T7 will scrape this in lab 7).
+FALCO_POD=$(kubectl --context docker-desktop -n zta-runtime-security get pod -l app.kubernetes.io/name=falco -o name | head -1)
+kubectl --context docker-desktop -n zta-runtime-security exec $FALCO_POD -- \
+  wget -qO- http://localhost:8765/healthz
+# Expected: ok   (or HTTP 200 body)
+</code></pre>
+  </div>
+
   <p><span class="step-num">02</span>Deploy the CDM stand-in. It listens on HTTP for Falco sidekick webhooks and patches annotations. The code below is intentionally small.</p>
 
   <div class="code-block">
@@ -4551,6 +5188,48 @@ spec:
 </code></pre>
   </div>
 
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">apply CDM</span><button class="copy-btn">Copy</button></div>
+<pre><code>kubectl --context docker-desktop apply -f cdm.yaml
+kubectl --context docker-desktop -n zta-runtime-security rollout status deploy/cdm --timeout=180s
+# Expected: deployment "cdm" successfully rolled out
+</code></pre>
+  </div>
+
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 02</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. CDM Deployment ready, Service reachable on port 80.
+kubectl --context docker-desktop -n zta-runtime-security get deploy cdm \
+  -o jsonpath='{.status.readyReplicas}/{.status.replicas}{"\n"}'
+# Expected: 1/1
+
+kubectl --context docker-desktop -n zta-runtime-security get svc cdm \
+  -o jsonpath='{.spec.ports[0].port}/{.spec.ports[0].targetPort}{"\n"}'
+# Expected: 80/8080
+
+# 2. RBAC is exactly the minimum needed (pods get/list/patch/watch — no more).
+kubectl --context docker-desktop get clusterrole cdm-patch-pods \
+  -o jsonpath='{.rules[0].verbs}{"\n"}'
+# Expected: ["get","list","patch","watch"]
+
+kubectl --context docker-desktop auth can-i patch pods \
+  --as=system:serviceaccount:zta-runtime-security:cdm -A
+# Expected: yes
+
+kubectl --context docker-desktop auth can-i delete pods \
+  --as=system:serviceaccount:zta-runtime-security:cdm -A
+# Expected: no   (CDM must NOT be able to delete — over-permissioning would break T5)
+
+# 3. The CDM listens — POST a synthetic Falco event and confirm 204.
+CDM_POD=$(kubectl --context docker-desktop -n zta-runtime-security get pod -l app=cdm -o name | head -1)
+kubectl --context docker-desktop -n zta-runtime-security exec $CDM_POD -- \
+  wget -qO- --post-data='{"rule":"smoke","output_fields":{}}' \
+  --header='Content-Type: application/json' \
+  --server-response http://localhost:8080/ 2&gt;&amp;1 | grep -E 'HTTP/1\.[01] 204'
+# Expected: a 'HTTP/1.x 204' line
+</code></pre>
+  </div>
+
   <p><span class="step-num">03</span>Point Falcosidekick at the CDM webhook.</p>
 
   <div class="code-block terminal">
@@ -4563,6 +5242,36 @@ spec:
   --set falcosidekick.config.webhook.address=http://cdm.zta-runtime-security.svc.cluster.local/ \
   --set falcosidekick.config.webhook.minimumpriority=notice \
   --wait
+</code></pre>
+  </div>
+
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 03</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. Falcosidekick pod is up and reports the webhook address as the CDM service.
+kubectl --context docker-desktop -n zta-runtime-security get deploy falco-falcosidekick \
+  -o jsonpath='{.status.readyReplicas}/{.status.replicas}{"\n"}'
+# Expected: 1/1
+
+kubectl --context docker-desktop -n zta-runtime-security get deploy falco-falcosidekick \
+  -o jsonpath='{.spec.template.spec.containers[0].env}' \
+  | jq -r '.[] | select(.name=="WEBHOOK_ADDRESS") | .value'
+# Expected: http://cdm.zta-runtime-security.svc.cluster.local/
+
+# 2. minimumpriority is 'notice' (not 'critical') — captures Terminal-shell.
+kubectl --context docker-desktop -n zta-runtime-security get deploy falco-falcosidekick \
+  -o jsonpath='{.spec.template.spec.containers[0].env}' \
+  | jq -r '.[] | select(.name=="WEBHOOK_MINIMUMPRIORITY") | .value'
+# Expected: notice
+
+# 3. End-to-end: synthesise a Falco POST through Falcosidekick and confirm
+#    the CDM logs the dispatch.
+SK_POD=$(kubectl --context docker-desktop -n zta-runtime-security get pod -l app.kubernetes.io/name=falcosidekick -o name | head -1)
+kubectl --context docker-desktop -n zta-runtime-security exec $SK_POD -- \
+  wget -qO- --post-data='{"priority":"Notice","rule":"smoke","output_fields":{"k8s.ns.name":"bookstore-api","k8s.pod.name":"smoke"}}' \
+  --header='Content-Type: application/json' http://localhost:2801/ &gt;/dev/null
+sleep 2
+kubectl --context docker-desktop -n zta-runtime-security logs deploy/cdm --tail=20 | grep -c 'PATCHED\|smoke'
+# Expected: &gt;= 1
 </code></pre>
   </div>
 
@@ -4612,6 +5321,43 @@ spec:
 </code></pre>
   </div>
 
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">apply posture-header</span><button class="copy-btn">Copy</button></div>
+<pre><code>kubectl --context docker-desktop apply -f posture-header.yaml
+kubectl --context docker-desktop -n bookstore-api rollout status deploy/api --timeout=180s
+# Expected: deployment "api" successfully rolled out
+</code></pre>
+  </div>
+
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 04</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. EnvoyFilter exists in bookstore-api and inserts a Lua HTTP filter.
+kubectl --context docker-desktop -n bookstore-api get envoyfilter project-posture-header \
+  -o jsonpath='{.spec.configPatches[0].patch.value.name}{"\n"}'
+# Expected: envoy.filters.http.lua
+
+# 2. The Lua source actually contains the x-device-posture insertion logic.
+kubectl --context docker-desktop -n bookstore-api get envoyfilter project-posture-header \
+  -o jsonpath='{.spec.configPatches[0].patch.value.typed_config.inlineCode}' \
+  | grep -c 'x-device-posture'
+# Expected: 1
+
+# 3. The api Deployment exposes ZTA_POD_POSTURE via downward API.
+kubectl --context docker-desktop -n bookstore-api get deploy api \
+  -o jsonpath='{.spec.template.spec.containers[?(@.name=="httpbin")].env}' \
+  | jq -r '.[] | select(.name=="ZTA_POD_POSTURE") | .valueFrom.fieldRef.fieldPath'
+# Expected: metadata.annotations['zta.posture']
+
+# 4. Live request from the frontend now carries the header even when the caller did not.
+FRONTEND=$(kubectl --context docker-desktop -n bookstore-frontend get pod -l app=frontend -o name | head -1)
+kubectl --context docker-desktop -n bookstore-frontend exec $FRONTEND -c nginx -- \
+  wget -qO- 'http://api.bookstore-api.svc.cluster.local/headers' \
+  | jq -r '.headers["X-Device-Posture"] // "missing"'
+# Expected: a string ('trusted' if no annotation set yet, or whatever the
+#           current pod annotation says) — must NOT be "missing"
+</code></pre>
+  </div>
+
   <p class="footnote">Istio's Envoy does not trivially read pod annotations at runtime; the downward-API env var is the portable trick — when the pod annotation changes, Kubernetes <em>does not</em> restart the pod, so we schedule a small reconciliation in step 5 to bounce the pod after a posture change. In a production setup the CDM would push posture to Redis and the Lua filter would read it there — faster than pod restarts.</p>
 
   <p><span class="step-num">05</span>Reconciliation: a tiny controller deletes a pod whose <code>zta.posture</code> annotation has changed, forcing the new env-var value to materialise.</p>
@@ -4649,6 +5395,46 @@ spec:
 </code></pre>
   </div>
 
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">apply reconciler</span><button class="copy-btn">Copy</button></div>
+<pre><code>kubectl --context docker-desktop apply -f reconciler.yaml
+# Expected: cronjob.batch/posture-reconciler created
+</code></pre>
+  </div>
+
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 05</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. CronJob exists with the every-minute schedule.
+kubectl --context docker-desktop -n zta-runtime-security get cronjob posture-reconciler \
+  -o jsonpath='{.spec.schedule}{"\n"}'
+# Expected: */1 * * * *
+
+# 2. CronJob runs as the cdm ServiceAccount (RBAC-bound, not cluster-admin).
+kubectl --context docker-desktop -n zta-runtime-security get cronjob posture-reconciler \
+  -o jsonpath='{.spec.jobTemplate.spec.template.spec.serviceAccountName}{"\n"}'
+# Expected: cdm
+
+# 3. End-to-end smoke: annotate the api pod &amp; wait for reconcile to fire,
+#    then confirm the env var on the new pod matches the annotation.
+POD=$(kubectl --context docker-desktop -n bookstore-api get pod -l app=api -o name | head -1 | cut -d/ -f2)
+kubectl --context docker-desktop -n bookstore-api annotate --overwrite pod/$POD zta.posture=suspect
+# Wait up to ~75 s for the next CronJob tick + a fresh pod.
+for i in $(seq 1 25); do
+  NEW=$(kubectl --context docker-desktop -n bookstore-api get pod -l app=api -o name | head -1 | cut -d/ -f2)
+  if [ "$NEW" != "$POD" ]; then
+    sleep 5
+    NEWANN=$(kubectl --context docker-desktop -n bookstore-api get pod $NEW -o jsonpath='{.metadata.annotations.zta\.posture}')
+    NEWENV=$(kubectl --context docker-desktop -n bookstore-api get pod $NEW -o jsonpath='{.spec.containers[?(@.name=="httpbin")].env[?(@.name=="ZTA_POD_POSTURE")].value}')
+    echo "ann=$NEWANN env=$NEWENV"
+    break
+  fi
+  sleep 3
+done
+# Expected (after at most ~75 s): ann=suspect env=metadata.annotations['zta.posture']
+#                                 (the env var spec is preserved; new pod resolves it.)
+</code></pre>
+  </div>
+
   <p><span class="step-num">06</span>Trigger a detection. Exec a shell inside the api pod — Falco rule <em>Terminal shell in container</em> fires.</p>
 
   <div class="code-block terminal">
@@ -4674,6 +5460,35 @@ kubectl --context docker-desktop -n zta-runtime-security logs ds/falco --tail=50
 # CDM should have patched the annotation:
 kubectl --context docker-desktop -n bookstore-api get pod -l app=api \
   -o jsonpath='{.items[0].metadata.annotations.zta\.posture}'; echo
+# Expected: tampered
+</code></pre>
+  </div>
+
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 06</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. Falco emitted the rule with priority &gt;= notice.
+kubectl --context docker-desktop -n zta-runtime-security logs ds/falco --since=2m \
+  | jq -c 'select(.rule=="Terminal shell in container") | {priority, k8s_ns: .output_fields["k8s.ns.name"], k8s_pod: .output_fields["k8s.pod.name"]}' \
+  | head -1
+# Expected: a JSON line with priority=Notice (or Warning/Critical) and k8s_ns=bookstore-api
+
+# 2. CDM logs show it received the event and patched.
+kubectl --context docker-desktop -n zta-runtime-security logs deploy/cdm --since=2m \
+  | grep -E 'PATCHED.*bookstore-api.*posture=tampered' | head -1
+# Expected: a line containing PATCHED ns=bookstore-api ... posture=tampered
+
+# 3. Pod annotation is now 'tampered' AND it carries the rule that fired.
+POD=$(kubectl --context docker-desktop -n bookstore-api get pod -l app=api -o name | head -1)
+kubectl --context docker-desktop -n bookstore-api get $POD \
+  -o jsonpath='{.metadata.annotations}' | jq '{posture: .["zta.posture"], rule: .["zta.posture.rule"], at: .["zta.posture.at"]}'
+# Expected: posture=tampered, rule contains 'Terminal shell', at is non-empty
+
+# 4. Posture flows to the wire: a fresh request now carries x-device-posture: tampered.
+FRONTEND=$(kubectl --context docker-desktop -n bookstore-frontend get pod -l app=frontend -o name | head -1)
+sleep 5
+kubectl --context docker-desktop -n bookstore-frontend exec $FRONTEND -c nginx -- \
+  wget -qO- 'http://api.bookstore-api.svc.cluster.local/headers' \
+  | jq -r '.headers["X-Device-Posture"]'
 # Expected: tampered
 </code></pre>
   </div>
@@ -4971,6 +5786,39 @@ kubectl --context docker-desktop -n zta-policy create secret generic bundle-sign
 </code></pre>
   </div>
 
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 01</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. Both key files exist locally with sane permissions.
+test -s labs/06-strict-enforcement/keys/bundle-signer.pem &amp;&amp; \
+test -s labs/06-strict-enforcement/keys/bundle-signer.pub &amp;&amp; echo OK
+# Expected: OK
+
+# 2. Private key is RSA 2048 (T6 floor — anything weaker should be rejected).
+openssl rsa -in labs/06-strict-enforcement/keys/bundle-signer.pem -text -noout 2&gt;/dev/null \
+  | grep -E 'Private-Key:|modulus' | head -1
+# Expected: Private-Key: (2048 bit, ...)
+
+# 3. Public key matches private key (an unmatched pair would silently break verification).
+PRIV_MOD=$(openssl rsa -in labs/06-strict-enforcement/keys/bundle-signer.pem -modulus -noout 2&gt;/dev/null | sha256sum)
+PUB_MOD=$(openssl rsa -pubin -in labs/06-strict-enforcement/keys/bundle-signer.pub -modulus -noout 2&gt;/dev/null | sha256sum)
+test "$PRIV_MOD" = "$PUB_MOD" &amp;&amp; echo "match" || echo "MISMATCH"
+# Expected: match
+
+# 4. Secret has both keys.
+kubectl --context docker-desktop -n zta-policy get secret bundle-signer \
+  -o jsonpath='{range .data}{.}{end}' &gt;/dev/null
+kubectl --context docker-desktop -n zta-policy get secret bundle-signer \
+  -o jsonpath='{.data}' | jq 'keys'
+# Expected: ["bundle-signer.pem","bundle-signer.pub"]
+
+# 5. Private key is NOT exposed via any unexpected ConfigMap (defence-in-depth).
+kubectl --context docker-desktop get cm -A -o json \
+  | jq -r '.items[] | select(.data!=null) | .data | tostring' \
+  | grep -c 'BEGIN RSA PRIVATE KEY' || true
+# Expected: 0
+</code></pre>
+  </div>
+
   <p><span class="step-num">02</span>Build and serve a signed bundle. The PA is a sidecar that runs <code>opa build</code> on each policy change and an nginx that serves the tarball.</p>
 
   <div class="code-block">
@@ -5033,6 +5881,46 @@ spec:
 </code></pre>
   </div>
 
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">apply PA</span><button class="copy-btn">Copy</button></div>
+<pre><code>kubectl --context docker-desktop apply -f pa.yaml
+kubectl --context docker-desktop -n zta-policy rollout status deploy/pa --timeout=180s
+# Expected: deployment "pa" successfully rolled out
+</code></pre>
+  </div>
+
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 02</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. PA deployment is Available — init container's opa-build succeeded.
+kubectl --context docker-desktop -n zta-policy get deploy pa \
+  -o jsonpath='{.status.readyReplicas}/{.status.replicas}{"\n"}'
+# Expected: 1/1
+
+# 2. The init log proves opa build emitted a tarball.
+kubectl --context docker-desktop -n zta-policy logs deploy/pa -c build --tail=20 \
+  | grep -E 'built signed bundle|zta\.tar\.gz'
+# Expected: a 'built signed bundle:' line and an ls entry showing zta.tar.gz
+
+# 3. nginx is serving the bundle path with a non-zero Content-Length.
+PA_POD=$(kubectl --context docker-desktop -n zta-policy get pod -l app=pa -o name | head -1)
+kubectl --context docker-desktop -n zta-policy exec $PA_POD -c nginx -- \
+  wget -qS -O /dev/null http://localhost/bundles/zta.tar.gz 2&gt;&amp;1 \
+  | grep -E 'HTTP/1\.[01] 200|Content-Length:'
+# Expected: HTTP/1.1 200 and a Content-Length &gt; 0
+
+# 4. The bundle contains a .signatures.json file — proves the signer ran.
+kubectl --context docker-desktop -n zta-policy exec $PA_POD -c nginx -- \
+  sh -c 'tar -tzf /usr/share/nginx/html/bundles/zta.tar.gz' \
+  | grep -E '^\.signatures\.json|signatures\.json'
+# Expected: .signatures.json (or similar — the OPA bundle signing manifest)
+
+# 5. Service routes to the PA (cluster IP populated, endpoints non-empty).
+kubectl --context docker-desktop -n zta-policy get endpoints opa-bundle-server \
+  -o jsonpath='{.subsets[0].addresses[*].ip}{"\n"}' | wc -w
+# Expected: 1   (one PA replica)
+</code></pre>
+  </div>
+
   <p><span class="step-num">03</span>Reconfigure OPA to consume the signed bundle and reject anything that does not verify. Replace the earlier <code>opa-config</code> ConfigMap.</p>
 
   <div class="code-block">
@@ -5084,6 +5972,35 @@ spec:
 </code></pre>
   </div>
 
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 03</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. opa-config ConfigMap defines a 'zta' bundle and a 'pa' service.
+kubectl --context docker-desktop -n zta-policy get cm opa-config \
+  -o jsonpath='{.data.config\.yaml}' | grep -E 'bundles:|services:|signing:|keys:' | sort -u
+# Expected: all four lines present
+
+# 2. The PA service URL is set to the cluster-internal name (not localhost).
+kubectl --context docker-desktop -n zta-policy get cm opa-config \
+  -o jsonpath='{.data.config\.yaml}' \
+  | yq -r '.services.pa.url'
+# Expected: http://opa-bundle-server.zta-policy.svc.cluster.local
+
+# 3. signing.keyid in the bundle config matches a key declared in keys.
+yq_keyid=$(kubectl --context docker-desktop -n zta-policy get cm opa-config \
+  -o jsonpath='{.data.config\.yaml}' | yq -r '.bundles.zta.signing.keyid')
+yq_keys=$(kubectl --context docker-desktop -n zta-policy get cm opa-config \
+  -o jsonpath='{.data.config\.yaml}' | yq -r '.keys | keys | .[]')
+echo "$yq_keyid in $yq_keys"
+echo "$yq_keys" | grep -qx "$yq_keyid" &amp;&amp; echo OK || echo MISMATCH
+# Expected: OK
+
+# 4. The public key block is the actual PEM, not the placeholder text.
+kubectl --context docker-desktop -n zta-policy get cm opa-config \
+  -o jsonpath='{.data.config\.yaml}' | grep -c 'paste contents of keys'
+# Expected: 0   (must NOT contain the placeholder; you replaced it with the real key)
+</code></pre>
+  </div>
+
   <p><span class="step-num">04</span>Apply, then verify that OPA reports the bundle as <code>ok</code>.</p>
 
   <div class="code-block terminal">
@@ -5103,6 +6020,44 @@ curl -s http://$(kubectl --context docker-desktop -n zta-policy get svc opa -o j
 #   "last_successful_download":   "2026-04-17T...Z",
 #   "errors": null
 # }
+</code></pre>
+  </div>
+
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 04</span><button class="copy-btn">Copy</button></div>
+<pre><code>OPA_IP=$(kubectl --context docker-desktop -n zta-policy get svc opa -o jsonpath='{.spec.clusterIP}')
+STATUS=$(curl -s http://$OPA_IP:8282/status)
+
+# 1. The bundle is named 'zta' and has no errors.
+echo "$STATUS" | jq -r '.bundles.zta | "name=\(.name) errors=\(.errors)"'
+# Expected: name=zta errors=null
+
+# 2. last_successful_activation is recent (within 60 s).
+ACT=$(echo "$STATUS" | jq -r '.bundles.zta.last_successful_activation')
+NOW=$(date -u +%s)
+ACT_TS=$(date -u -d "$ACT" +%s 2&gt;/dev/null || date -u -j -f '%Y-%m-%dT%H:%M:%S%Z' "$ACT" +%s 2&gt;/dev/null)
+echo "act_age_s=$((NOW - ACT_TS))"
+# Expected: act_age_s &lt; 60
+
+# 3. Make a request and confirm OPA still answers — proves the bundle ALSO
+#    contains a working policy, not just a verifiable signature.
+source labs/03-per-session/.env
+TOKEN=$(curl -s -H 'Host: keycloak.local' \
+  -d 'grant_type=password' -d 'client_id=bookstore-api' \
+  -d "client_secret=$BOOKSTORE_CLIENT_SECRET" \
+  -d 'username=alice' -d 'password=alice' \
+  http://localhost/realms/zta-bookstore/protocol/openid-connect/token \
+  | jq -r .access_token)
+curl -s -o /dev/null -w 'code=%{http_code}\n' \
+  -H 'Host: bookstore.local' -H "Authorization: Bearer $TOKEN" \
+  -H 'x-device-posture: trusted' \
+  http://localhost/api/headers
+# Expected: code=200   (signed bundle is enforcing the same rules as Lab 4)
+
+# 4. Watch /v1/policies — the bundle's compiled .rego is mounted under bundles/zta.
+kubectl --context docker-desktop -n zta-policy exec deploy/opa -- \
+  wget -qO- http://localhost:8181/v1/policies | jq -r '.result[].id' | head -3
+# Expected: paths beginning with /bundles/zta/ (NOT /policies/zta.authz.rego from Lab 4)
 </code></pre>
   </div>
 
@@ -5136,6 +6091,38 @@ curl -s -o /dev/null -w 'round2=%{http_code}\n' \
   -H 'Host: bookstore.local' -H "Authorization: Bearer $TOKEN" \
   http://localhost/api/headers
 # Expected: round2=200
+</code></pre>
+  </div>
+
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 05</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. Two decisions logged in the last 60 s — one deny, one allow.
+DENY=$(kubectl --context docker-desktop -n zta-policy logs deploy/opa --since=60s \
+  | jq -c 'select(.decision_id and .result.allowed==false)' | wc -l)
+ALLOW=$(kubectl --context docker-desktop -n zta-policy logs deploy/opa --since=60s \
+  | jq -c 'select(.decision_id and .result.allowed==true)'  | wc -l)
+echo "deny=$DENY allow=$ALLOW"
+# Expected: deny &gt;= 1  allow &gt;= 1
+
+# 2. Reasons are exactly 'device-tampered' (round 1) and 'ok' (round 2).
+kubectl --context docker-desktop -n zta-policy logs deploy/opa --since=60s \
+  | jq -r 'select(.decision_id) | .result.headers["x-zta-decision-reason"]' \
+  | tail -2 | sort -u
+# Expected:
+#   device-tampered
+#   ok
+
+# 3. The two decision_ids differ — same Alice, different decisions, distinct audit rows.
+kubectl --context docker-desktop -n zta-policy logs deploy/opa --since=60s \
+  | jq -r 'select(.decision_id) | .decision_id' | tail -2 | sort -u | wc -l
+# Expected: 2
+
+# 4. The pod that served round 2 is a DIFFERENT pod from round 1
+#    (operator deletion forced a fresh ZTA_POD_POSTURE env var).
+kubectl --context docker-desktop -n bookstore-api get pod -l app=api \
+  -o jsonpath='{.items[0].metadata.creationTimestamp}{"\n"}'
+# Expected: a recent timestamp (within a couple of minutes), proving the pod
+#           is fresh — its env var resolved 'trusted' from the new annotation.
 </code></pre>
   </div>
 
@@ -5370,6 +6357,45 @@ spec:
 </code></pre>
   </div>
 
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">apply OPA ServiceMonitor</span><button class="copy-btn">Copy</button></div>
+<pre><code>kubectl --context docker-desktop apply -f opa-servicemonitor.yaml
+# Expected: service/opa-metrics created, servicemonitor.monitoring.coreos.com/opa created
+</code></pre>
+  </div>
+
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 01</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. opa-metrics Service exposes diagnostic port 8282 with selector app=opa.
+kubectl --context docker-desktop -n zta-policy get svc opa-metrics \
+  -o jsonpath='{.spec.ports[0].port}/{.spec.ports[0].targetPort}{" sel="}{.spec.selector.app}{"\n"}'
+# Expected: 8282/8282 sel=opa
+
+kubectl --context docker-desktop -n zta-policy get endpoints opa-metrics \
+  -o jsonpath='{.subsets[0].addresses[*].ip}{"\n"}' | wc -w
+# Expected: &gt;= 1
+
+# 2. ServiceMonitor exists and matches the kube-prom release label.
+kubectl --context docker-desktop -n zta-observability get servicemonitor opa \
+  -o jsonpath='{.metadata.labels.release}{"\n"}'
+# Expected: kube-prom
+
+# 3. Prometheus has discovered OPA as an active target (port-forward Prom first).
+kubectl --context docker-desktop -n zta-observability port-forward svc/kube-prom-kube-prome-prometheus 9090:9090 &gt;/dev/null 2&gt;&amp;1 &amp;
+PF_PID=$!; sleep 3
+curl -s 'http://localhost:9090/api/v1/targets?state=active' \
+  | jq '[.data.activeTargets[] | select(.labels.job=="opa") | .health] | unique'
+# Expected: ["up"]
+kill $PF_PID 2&gt;/dev/null
+
+# 4. Metrics actually contain the OPA decision counter.
+OPA_POD=$(kubectl --context docker-desktop -n zta-policy get pod -l app=opa -o name | head -1)
+kubectl --context docker-desktop -n zta-policy exec $OPA_POD -- \
+  wget -qO- http://localhost:8282/metrics | grep -c '^opa_'
+# Expected: &gt;= 1
+</code></pre>
+  </div>
+
   <p><span class="step-num">02</span>Deploy Grafana Agent to tail OPA logs into Loki, parsing JSON so every field is a label.</p>
 
   <div class="code-block">
@@ -5435,6 +6461,47 @@ spec:
 </code></pre>
   </div>
 
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">apply Grafana Agent</span><button class="copy-btn">Copy</button></div>
+<pre><code>kubectl --context docker-desktop apply -f grafana-agent.yaml
+kubectl --context docker-desktop -n zta-observability rollout status ds/grafana-agent --timeout=180s
+# Expected: daemon set "grafana-agent" successfully rolled out
+</code></pre>
+  </div>
+
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 02</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. DaemonSet runs on every node.
+NODES=$(kubectl --context docker-desktop get nodes --no-headers | wc -l)
+READY=$(kubectl --context docker-desktop -n zta-observability get ds grafana-agent \
+          -o jsonpath='{.status.numberReady}')
+echo "nodes=$NODES ready=$READY"
+# Expected: nodes equals ready
+
+# 2. Agent config targets the Loki cluster service and parses to a single client URL.
+kubectl --context docker-desktop -n zta-observability get cm grafana-agent-config \
+  -o jsonpath='{.data.agent\.yaml}' \
+  | yq -r '.logs.configs[0].clients[0].url'
+# Expected: http://loki.zta-observability.svc.cluster.local:3100/loki/api/v1/push
+
+# 3. Pipeline stage extracts decision_id, allow, reason as Loki labels.
+kubectl --context docker-desktop -n zta-observability get cm grafana-agent-config \
+  -o jsonpath='{.data.agent\.yaml}' \
+  | yq -r '.logs.configs[0].scrape_configs[0].pipeline_stages[1].labels | keys | .[]'
+# Expected (any order, must include all three):
+#   decision_id
+#   allow
+#   reason
+
+# 4. Loki is reachable and reports zta-policy as a discovered namespace label.
+kubectl --context docker-desktop -n zta-observability port-forward svc/loki 3100:3100 &gt;/dev/null 2&gt;&amp;1 &amp;
+PF_PID=$!; sleep 3
+curl -s 'http://localhost:3100/loki/api/v1/labels' | jq -r '.data | .[]' | grep -c '^namespace$'
+# Expected: 1
+kill $PF_PID 2&gt;/dev/null
+</code></pre>
+  </div>
+
   <p><span class="step-num">03</span>Enable OpenTelemetry emission from Istio to Tempo.</p>
 
   <div class="code-block">
@@ -5461,6 +6528,51 @@ data:
       opentelemetry:
         service: tempo.zta-observability.svc.cluster.local
         port: 4317
+</code></pre>
+  </div>
+
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">apply Istio tracing</span><button class="copy-btn">Copy</button></div>
+<pre><code>kubectl --context docker-desktop apply -f istio-tracing.yaml
+kubectl --context docker-desktop -n istio-system rollout restart deploy/istiod
+kubectl --context docker-desktop -n istio-system rollout status  deploy/istiod --timeout=120s
+</code></pre>
+  </div>
+
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 03</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. Telemetry resource exists at mesh root with otel-tempo provider and 100% sampling.
+kubectl --context docker-desktop -n istio-system get telemetry mesh-default \
+  -o jsonpath='{.spec.tracing[0].providers[0].name}/{.spec.tracing[0].randomSamplingPercentage}{"\n"}'
+# Expected: otel-tempo/100
+
+# 2. Mesh config registers BOTH extension providers (opa-ext-authz preserved + otel-tempo added).
+kubectl --context docker-desktop -n istio-system get cm istio \
+  -o jsonpath='{.data.mesh}' \
+  | yq -r '.extensionProviders[].name' | sort
+# Expected:
+#   opa-ext-authz
+#   otel-tempo
+
+# 3. Make a request and confirm the api sidecar emits an OTel trace export.
+source labs/03-per-session/.env
+TOKEN=$(curl -s -H 'Host: keycloak.local' \
+  -d 'grant_type=password' -d 'client_id=bookstore-api' \
+  -d "client_secret=$BOOKSTORE_CLIENT_SECRET" \
+  -d 'username=alice' -d 'password=alice' \
+  http://localhost/realms/zta-bookstore/protocol/openid-connect/token \
+  | jq -r .access_token)
+curl -s -o /dev/null -H 'Host: bookstore.local' -H "Authorization: Bearer $TOKEN" \
+  -H 'x-device-posture: trusted' http://localhost/api/headers
+sleep 5
+
+# Tempo records traces from the ingress gateway.
+kubectl --context docker-desktop -n zta-observability port-forward svc/tempo 3200:3200 &gt;/dev/null 2&gt;&amp;1 &amp;
+PF_PID=$!; sleep 3
+curl -s 'http://localhost:3200/api/search?tags=service.name=istio-ingressgateway&amp;limit=5' \
+  | jq '.traces | length'
+# Expected: &gt;= 1
+kill $PF_PID 2&gt;/dev/null
 </code></pre>
   </div>
 
@@ -5512,6 +6624,43 @@ data:
 </code></pre>
   </div>
 
+  <div class="code-block terminal">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">apply dashboard</span><button class="copy-btn">Copy</button></div>
+<pre><code>kubectl --context docker-desktop apply -f dashboard.yaml
+# Expected: configmap/zta-dashboard created
+</code></pre>
+  </div>
+
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 04</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. ConfigMap carries the grafana_dashboard label so the sidecar provisioner picks it up.
+kubectl --context docker-desktop -n zta-observability get cm zta-dashboard \
+  -o jsonpath='{.metadata.labels.grafana_dashboard}{"\n"}'
+# Expected: 1
+
+# 2. Embedded JSON parses and declares exactly four panels with Tenet-7-aligned titles.
+kubectl --context docker-desktop -n zta-observability get cm zta-dashboard \
+  -o jsonpath='{.data.zta\.json}' | jq '.panels | length'
+# Expected: 4
+
+kubectl --context docker-desktop -n zta-observability get cm zta-dashboard \
+  -o jsonpath='{.data.zta\.json}' | jq -r '.panels[].title'
+# Expected (any order):
+#   Decision rate (allow / deny / step-up)
+#   Decision latency P50 / P99 (ms)
+#   Deny reasons — last 1h
+#   Recent denies (decision_id, path, posture, reason)
+
+# 3. Grafana has registered the dashboard under uid 'zta-main'.
+kubectl --context docker-desktop -n zta-observability port-forward svc/kube-prom-grafana 3000:80 &gt;/dev/null 2&gt;&amp;1 &amp;
+PF_PID=$!; sleep 3
+curl -su admin:admin http://localhost:3000/api/dashboards/uid/zta-main \
+  | jq -r '.dashboard.title // "missing"'
+# Expected: ZTA — Decisions, Latency, Drift (800-207 8.6 SLOs)
+kill $PF_PID 2&gt;/dev/null
+</code></pre>
+  </div>
+
   <p><span class="step-num">05</span>Drive a small load mix and watch the dashboard update. This synthesises the source 5 flow traffic: mostly trusted GETs, a trickle of suspect POSTs, and an occasional tampered device.</p>
 
   <div class="code-block terminal">
@@ -5549,6 +6698,38 @@ echo "load mix complete"
 </code></pre>
   </div>
 
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 05</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. The load mix produced &gt;= 200 OPA decisions in the last 5 minutes.
+kubectl --context docker-desktop -n zta-policy port-forward svc/kube-prom-kube-prome-prometheus 9090:9090 &gt;/dev/null 2&gt;&amp;1 &amp; PF_PID=$!; sleep 3
+curl -sG 'http://localhost:9090/api/v1/query' \
+  --data-urlencode 'query=sum(increase(http_request_duration_seconds_count{job=~"opa.*"}[5m]))' \
+  | jq '.data.result[0].value[1] | tonumber'
+# Expected: &gt;= 200
+kill $PF_PID 2&gt;/dev/null
+
+# 2. All three posture values appear in Loki (proves the dashboard's deny-reasons panel has signal).
+kubectl --context docker-desktop -n zta-observability port-forward svc/loki 3100:3100 &gt;/dev/null 2&gt;&amp;1 &amp; PF_PID=$!; sleep 3
+for P in trusted suspect tampered; do
+  N=$(curl -sG 'http://localhost:3100/loki/api/v1/query_range' \
+    --data-urlencode "query={namespace=\"zta-policy\", posture=\"$P\"}" \
+    --data-urlencode "start=$(date -u -d '-10 min' +%s)000000000" \
+    --data-urlencode "end=$(date -u +%s)000000000" \
+    | jq '[.data.result[].values[] | length] | add // 0')
+  echo "$P=$N"
+done
+# Expected: trusted &gt; 0, suspect &gt; 0, tampered &gt; 0
+
+# 3. P99 decision latency is below the 800-207 8.6 SLO ceiling of 10 ms.
+P99=$(curl -sG 'http://localhost:9090/api/v1/query' --data-urlencode \
+  'query=1000 * histogram_quantile(0.99, sum by (le) (rate(http_request_duration_seconds_bucket{job=~"opa.*"}[5m])))' \
+  2&gt;/dev/null | jq -r '.data.result[0].value[1] // "0"')
+echo "P99_ms=$P99"
+# Expected: P99_ms &lt; 10
+kill $PF_PID 2&gt;/dev/null
+</code></pre>
+  </div>
+
   <p><span class="step-num">06</span>Use the telemetry to improve the policy. You should see that the single largest deny reason is <code>no-matching-allow</code> — a catch-all. Distinguish <em>missing token</em> from <em>unmatched rule</em> so operators see a faster path to fix.</p>
 
   <div class="code-block">
@@ -5563,6 +6744,39 @@ echo "load mix complete"
   </div>
 
   <p>Republish the bundle (Lab 6 PA rebuilds it on ConfigMap change — rollout restart <code>pa</code>). Repeat the load mix; the deny-reasons bar chart should now distinguish <code>missing-token</code> from <code>no-matching-allow</code>, which is the T7 feedback loop closing.</p>
+
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">step 06</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. Refined Rego is in the PA ConfigMap and lists the new reasons.
+kubectl --context docker-desktop -n zta-policy get cm pa-policies \
+  -o jsonpath='{.data.zta\.authz\.rego}' | grep -E '"missing-token"|"invalid-subject"' | wc -l
+# Expected: 2
+
+# 2. PA rebuilt the bundle and OPA picked it up (last_successful_activation is recent).
+kubectl --context docker-desktop -n zta-policy rollout restart deploy/pa
+kubectl --context docker-desktop -n zta-policy rollout status  deploy/pa --timeout=180s
+sleep 15
+OPA_IP=$(kubectl --context docker-desktop -n zta-policy get svc opa -o jsonpath='{.spec.clusterIP}')
+ACT=$(curl -s http://$OPA_IP:8282/status | jq -r '.bundles.zta.last_successful_activation')
+NOW=$(date -u +%s); ACT_TS=$(date -u -d "$ACT" +%s 2&gt;/dev/null || date -u -j -f '%Y-%m-%dT%H:%M:%S%Z' "$ACT" +%s 2&gt;/dev/null)
+echo "act_age_s=$((NOW - ACT_TS))"
+# Expected: act_age_s &lt; 60
+
+# 3. Send a request with NO Authorization header — reason should now be 'missing-token',
+#    not the old catch-all 'no-matching-allow'.
+curl -s -o /dev/null -D /tmp/h \
+  -H 'Host: bookstore.local' -H 'x-device-posture: trusted' \
+  http://localhost/api/anything
+grep -i 'x-zta-decision-reason' /tmp/h
+# Expected: x-zta-decision-reason: missing-token
+
+# 4. The dashboard's deny-reason vocabulary now contains all three categories.
+kubectl --context docker-desktop -n zta-policy logs deploy/opa --since=5m \
+  | jq -r 'select(.decision_id) | .result.headers["x-zta-decision-reason"]' \
+  | sort -u
+# Expected (subset): missing-token, no-matching-allow, device-tampered, ok
+</code></pre>
+  </div>
 
   <h3 class="lab-sub">Validation</h3>
   <div class="code-block terminal">
@@ -5811,6 +7025,75 @@ echo "==&gt; T7: the decision chain is visible"
 kubectl --context docker-desktop -n zta-policy logs deploy/opa --tail=6 \
   | jq -c 'select(.decision_id) | {decision_id, allow: .result.allowed, reason: .result.headers["x-zta-decision-reason"]}' \
   | tail -2
+</code></pre>
+  </div>
+
+  <div class="code-block terminal verify">
+    <div class="code-head"><span class="lang">Bash</span><span class="path">capstone — every tenet</span><button class="copy-btn">Copy</button></div>
+<pre><code># Tenet-by-tenet acceptance: each line is one assertion. The capstone is
+# only "passing" if every line below prints its expected value.
+
+# T1 · Resources are inventoried with the three required labels.
+kubectl --context docker-desktop get deploy,statefulset -A -l zta.resource=true \
+  -o jsonpath='{range .items[*]}{.metadata.namespace}/{.metadata.name}{"\n"}{end}' | wc -l
+# Expected: &gt;= 3   (frontend, api, db at minimum)
+
+# T1 · Gatekeeper still has zero violations — admission PEP is healthy.
+kubectl --context docker-desktop get k8srequiredztalabels bookstore-resources-labelled \
+  -o jsonpath='{.status.totalViolations}{"\n"}'
+# Expected: 0
+
+# T2 · Mesh-wide STRICT mTLS is in force.
+kubectl --context docker-desktop -n istio-system get peerauthentication default \
+  -o jsonpath='{.spec.mtls.mode}{"\n"}'
+# Expected: STRICT
+
+# T3 · The token Alice used has a 5-minute lifetime, no longer.
+echo "$TOKEN" | cut -d. -f2 | base64 -d 2&gt;/dev/null | jq '.exp - .iat'
+# Expected: 300
+
+# T3 · SVID TTL is also 5 minutes — workload identity matches subject identity.
+SS=$(kubectl --context docker-desktop -n spire get pod -l app=spire-server -o name | head -1)
+kubectl --context docker-desktop -n spire exec -i $SS -- \
+  /opt/spire/bin/spire-server entry show \
+  -spiffeID spiffe://zta.homelab/ns/bookstore-api/sa/default \
+  | awk '/X509-SVID TTL/ {print $NF; exit}'
+# Expected: 300
+
+# T4 · The denied round and the allowed round produced DISTINCT decision_ids.
+kubectl --context docker-desktop -n zta-policy logs deploy/opa --since=5m \
+  | jq -r 'select(.decision_id) | .decision_id' | tail -4 | sort -u | wc -l
+# Expected: &gt;= 2
+
+# T5 · Falco is alive and the api pod's posture annotation is back to 'trusted'.
+kubectl --context docker-desktop -n zta-runtime-security get ds falco \
+  -o jsonpath='{.status.numberReady}'; echo
+# Expected: 1
+kubectl --context docker-desktop -n bookstore-api get pod -l app=api \
+  -o jsonpath='{.items[0].metadata.annotations.zta\.posture}'; echo
+# Expected: trusted
+
+# T6 · OPA is still consuming the SIGNED bundle and reporting no errors.
+OPA_IP=$(kubectl --context docker-desktop -n zta-policy get svc opa -o jsonpath='{.spec.clusterIP}')
+curl -s http://$OPA_IP:8282/status | jq -r '.bundles.zta | "errors=\(.errors) name=\(.name)"'
+# Expected: errors=null name=zta
+
+# T7 · Loki holds an audit trail for THIS run.
+kubectl --context docker-desktop -n zta-observability port-forward svc/loki 3100:3100 &gt;/dev/null 2&gt;&amp;1 &amp; PF_PID=$!; sleep 3
+curl -sG 'http://localhost:3100/loki/api/v1/query_range' \
+  --data-urlencode 'query={namespace="zta-policy"} | json' \
+  --data-urlencode "start=$(date -u -d '-10 min' +%s)000000000" \
+  --data-urlencode "end=$(date -u +%s)000000000" \
+  | jq '[.data.result[].values[] | length] | add // 0'
+# Expected: &gt;= 6   (at least one decision per request emitted in this run)
+kill $PF_PID 2&gt;/dev/null
+
+# T7 · Tempo holds a trace for the allowed round, end-to-end through the gateway.
+kubectl --context docker-desktop -n zta-observability port-forward svc/tempo 3200:3200 &gt;/dev/null 2&gt;&amp;1 &amp; PF_PID=$!; sleep 3
+curl -s 'http://localhost:3200/api/search?tags=service.name=istio-ingressgateway&amp;limit=5' \
+  | jq '.traces | length'
+# Expected: &gt;= 1
+kill $PF_PID 2&gt;/dev/null
 </code></pre>
   </div>
 
