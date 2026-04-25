@@ -26,6 +26,9 @@ on_error() {
 trap 'on_error $LINENO' ERR
 
 pause() {
+    if [ "${ZTA_NO_PAUSE:-0}" = "1" ]; then
+        return 0
+    fi
     echo
     read -r -p "Step '${CURRENT_STEP}' complete. Press Enter to continue (Ctrl-C to abort)... " _
     echo
