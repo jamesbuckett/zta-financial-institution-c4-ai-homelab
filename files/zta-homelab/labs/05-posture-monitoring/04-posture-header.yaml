@@ -1,0 +1,39 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata: { name: project-posture-header, namespace: bookstore-api }
+spec:
+  workloadSelector: { labels: { app: api } }
+  configPatches:
+  - applyTo: HTTP_FILTER
+    match:
+      context: SIDECAR_INBOUND
+      listener:
+        filterChain: { filter: { name: "envoy.filters.network.http_connection_manager" } }
+    patch:
+      operation: INSERT_BEFORE
+      value:
+        name: envoy.filters.http.lua
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
+          inlineCode: |
+            function envoy_on_request(request_handle)
+              local p = os.getenv("ZTA_POD_POSTURE") or "trusted"
+              if request_handle:headers():get("x-device-posture") == nil then
+                request_handle:headers():add("x-device-posture", p)
+              end
+            end
+---
+# Mount the pod annotation as an env var via the downward API.
+# Requires a small patch to the api Deployment:
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: api, namespace: bookstore-api }
+spec:
+  template:
+    spec:
+      containers:
+      - name: httpbin
+        env:
+        - name: ZTA_POD_POSTURE
+          valueFrom:
+            fieldRef: { fieldPath: "metadata.annotations['zta.posture']" }
