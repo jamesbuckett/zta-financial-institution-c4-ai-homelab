@@ -13,7 +13,8 @@ kubectl --context docker-desktop -n zta-system get configmap zta-label-schema \
 #   zta.owner
 
 # 3. The schema itself carries the resource label — it is a labelled resource.
-kubectl --context docker-desktop -n zta-system get configmap zta-label-schema \
+kubectl --context docker-desktop -n zta-system get configmap \
+  --field-selector metadata.name=zta-label-schema \
   -l zta.resource=true --no-headers | wc -l
 # Expected: 1
 
