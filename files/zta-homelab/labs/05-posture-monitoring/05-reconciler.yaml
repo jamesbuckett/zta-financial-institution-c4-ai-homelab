@@ -1,0 +1,28 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata: { name: posture-reconciler, namespace: zta-runtime-security }
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: cdm
+          restartPolicy: OnFailure
+          containers:
+          - name: reconcile
+            image: bitnami/kubectl:1.30
+            command:
+            - sh
+            - -c
+            - |
+              for p in $(kubectl get pods -A -l app=api \
+                    -o jsonpath='{range .items[?(@.metadata.annotations.zta\.posture)]}{.metadata.namespace}/{.metadata.name}{"\n"}{end}'); do
+                NS=${p%/*}; POD=${p#*/}
+                ENV_NOW=$(kubectl get pod -n $NS $POD -o jsonpath='{.spec.containers[?(@.name=="httpbin")].env[?(@.name=="ZTA_POD_POSTURE")].value}' || true)
+                ANN_NOW=$(kubectl get pod -n $NS $POD -o jsonpath='{.metadata.annotations.zta\.posture}')
+                if [ "$ENV_NOW" != "$ANN_NOW" ]; then
+                  echo "bouncing $NS/$POD: env=$ENV_NOW ann=$ANN_NOW"
+                  kubectl delete pod -n $NS $POD --wait=false
+                fi
+              done
