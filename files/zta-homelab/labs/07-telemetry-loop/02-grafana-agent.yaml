@@ -1,0 +1,58 @@
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: grafana-agent-config, namespace: zta-observability }
+data:
+  agent.yaml: |
+    logs:
+      configs:
+      - name: default
+        positions: { filename: /tmp/positions.yaml }
+        clients:
+        - url: http://loki.zta-observability.svc.cluster.local:3100/loki/api/v1/push
+        scrape_configs:
+        - job_name: opa-decisions
+          kubernetes_sd_configs: [{ role: pod }]
+          relabel_configs:
+          - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_pod_label_app]
+            regex: "zta-policy;opa"
+            action: keep
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: namespace
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: pod
+          pipeline_stages:
+          - json:
+              expressions:
+                decision_id: decision_id
+                allow: result.allowed
+                reason: 'result.headers["x-zta-decision-reason"]'
+                path:   input.attributes.request.http.path
+                method: input.attributes.request.http.method
+                posture: 'input.attributes.request.http.headers["x-device-posture"]'
+          - labels:
+              decision_id:
+              allow:
+              reason:
+              path:
+              method:
+              posture:
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata: { name: grafana-agent, namespace: zta-observability }
+spec:
+  selector: { matchLabels: { app: grafana-agent } }
+  template:
+    metadata: { labels: { app: grafana-agent } }
+    spec:
+      serviceAccountName: default
+      containers:
+      - name: agent
+        image: grafana/agent:v0.43.4
+        args: ["-config.file=/etc/agent/agent.yaml"]
+        volumeMounts:
+        - { name: config, mountPath: /etc/agent }
+        - { name: varlog, mountPath: /var/log, readOnly: true }
+      volumes:
+      - { name: config, configMap: { name: grafana-agent-config } }
+      - { name: varlog, hostPath: { path: /var/log } }
