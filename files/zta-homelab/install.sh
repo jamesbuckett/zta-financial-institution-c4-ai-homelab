@@ -97,22 +97,29 @@ trap on_error ERR
 # Lab table
 
 LABS=(
-    "01-resources:00-resources-install.sh"
-    "02-secured-comms:00-secured-comms-install.sh"
-    "03-per-session:00-per-session-install.sh"
-    "04-dynamic-policy:00-dynamic-policy-install.sh"
-    "05-posture-monitoring:00-posture-monitoring-install.sh"
-    "06-strict-enforcement:00-strict-enforcement-install.sh"
-    "07-telemetry-loop:00-telemetry-loop-install.sh"
+    "01-resources:00-resources-install.sh:Resources (NIST SP 800-207 Tenet 1)"
+    "02-secured-comms:00-secured-comms-install.sh:Secured Comms (NIST SP 800-207 Tenet 2)"
+    "03-per-session:00-per-session-install.sh:Per-Session (NIST SP 800-207 Tenet 3)"
+    "04-dynamic-policy:00-dynamic-policy-install.sh:Dynamic Policy (NIST SP 800-207 Tenet 4)"
+    "05-posture-monitoring:00-posture-monitoring-install.sh:Posture Monitoring (NIST SP 800-207 Tenet 5)"
+    "06-strict-enforcement:00-strict-enforcement-install.sh:Strict Enforcement (NIST SP 800-207 Tenet 6)"
+    "07-telemetry-loop:00-telemetry-loop-install.sh:Telemetry Loop (NIST SP 800-207 Tenet 7)"
 )
 
 # ---------------------------------------------------------------------------
-# Banner
-
-banner() {
-    echo "==============================================================="
-    echo ">>> $1"
-    echo "==============================================================="
+# Section header. Lab orchestrators `clear` between steps and wipe the
+# screen, so make the master banner distinctive enough to find in scrollback.
+section() {
+    local title=$1
+    local stage=${2:-}
+    echo
+    echo "###############################################################"
+    echo "#"
+    echo "#  >>> ${title}"
+    [ -n "$stage" ] && echo "#  >>> Stage: ${stage}"
+    echo "#"
+    echo "###############################################################"
+    echo
 }
 
 # ---------------------------------------------------------------------------
@@ -130,7 +137,7 @@ echo
 # Bootstrap (skip if --skip-bootstrap, --from N>1, or --verify-only).
 if [ "$VERIFY_ONLY" = "0" ] && [ "$SKIP_BOOTSTRAP" = "0" ] && [ "$FROM" = "1" ]; then
     CURRENT_STAGE="bootstrap"
-    banner "Bootstrap (cluster prerequisites)"
+    section "Bootstrap — cluster prerequisites" "install"
     bash bootstrap/00-bootstrap-install.sh
     echo
     echo "Bootstrap complete."
@@ -140,19 +147,19 @@ fi
 # Each lab: install (unless --verify-only) + umbrella verify.
 for ((i = FROM; i <= 7; i++)); do
     entry="${LABS[$((i - 1))]}"
-    dir="${entry%%:*}"
-    install="${entry##*:}"
+    IFS=':' read -r dir install title <<<"$entry"
     lab_path="labs/${dir}"
+    header="Lab ${i} — ${title}"
 
     if [ "$VERIFY_ONLY" = "0" ]; then
         CURRENT_STAGE="lab ${i} install (${dir})"
-        banner "Lab ${i} install — ${dir}"
+        section "${header}" "install"
         bash "${lab_path}/${install}"
         echo
     fi
 
     CURRENT_STAGE="lab ${i} verify (${dir})"
-    banner "Lab ${i} verify — ${dir}"
+    section "${header}" "verify"
     bash "${lab_path}/verify.sh"
     echo
 done
