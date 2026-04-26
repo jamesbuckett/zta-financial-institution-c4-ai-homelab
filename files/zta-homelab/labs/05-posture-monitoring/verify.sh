@@ -118,8 +118,11 @@ check "CDM has handled at least one Falco event for the bookstore-api workload" 
 # out of an httpbin response (no body on a 403). Instead, check that OPA's
 # decision log saw x-device-posture=tampered in the request input — that
 # proves the Lua filter injected the header before ext_authz ran.
+# Use `logs -l app=opa` (not `logs deploy/opa`) because OPA runs 2 replicas
+# and `kubectl logs deploy/...` reads only the first pod — the decision we
+# need may have landed on the other one via Service load-balancing.
 check "OPA decision log shows x-device-posture=tampered injected by Lua filter" \
-  bash -c "kubectl --context $CTX -n zta-policy logs deploy/opa --tail=200 \
+  bash -c "kubectl --context $CTX -n zta-policy logs -l app=opa --tail=200 \
             | jq -r 'select(.path == \"zta/authz/result\") | .input.attributes.request.http.headers[\"x-device-posture\"] // empty' \
             | grep -qx tampered"
 
@@ -149,9 +152,13 @@ check "frontend->api request with x-device-posture=tampered returns HTTP 403" \
                   -H 'x-device-posture: tampered' \
                   http://localhost/api/headers)\" = '403' ]"
 
+# Same multi-pod caveat as the previous OPA-log check. Also bump --tail from
+# 20 to 200: kubelet's /health probes emit ~2 lines every ~10s, so --tail=20
+# only covers the last ~100s on a single pod and merging two pods halves
+# that window — easily losing the decision the curl above just made.
 check "OPA decision log shows reason device-tampered (recent)" \
-  bash -c "kubectl --context $CTX -n zta-policy logs deploy/opa --tail=20 \
-            | jq -r 'select(.result.headers[\"x-zta-decision-reason\"]==\"device-tampered\") | .result.headers[\"x-zta-decision-reason\"]' \
+  bash -c "kubectl --context $CTX -n zta-policy logs -l app=opa --tail=200 \
+            | jq -r 'select(.result?.headers?[\"x-zta-decision-reason\"]==\"device-tampered\") | .result.headers[\"x-zta-decision-reason\"]' \
             | grep -qx 'device-tampered'"
 
 # ---------------------------------------------------------------------------
