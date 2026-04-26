@@ -57,7 +57,18 @@ run_step "05-opa"            kubectl --context "$KCTX" apply "${SSA[@]}" -f 05-o
 run_step "06-gatekeeper"     ./06-gatekeeper.sh
 run_step "07-falco"          ./07-falco.sh
 run_step "08-observability"  ./08-observability.sh
-run_step "09-bookstore"      kubectl --context "$KCTX" apply "${SSA[@]}" -f 09-bookstore.yaml
+step_09_bookstore() {
+    # Apply the bookstore workloads, then wait for each to be Ready before
+    # returning. Without this wait, control returns to the master installer
+    # while the api/db/frontend pods are still Pending, and Lab 2's verify
+    # races the api pod's startup when it port-forwards via
+    # `istioctl proxy-config listener`.
+    kubectl --context "$KCTX" apply "${SSA[@]}" -f 09-bookstore.yaml
+    kubectl --context "$KCTX" -n bookstore-frontend rollout status deployment/frontend --timeout=180s
+    kubectl --context "$KCTX" -n bookstore-api      rollout status deployment/api      --timeout=180s
+    kubectl --context "$KCTX" -n bookstore-data     rollout status statefulset/db      --timeout=180s
+}
+run_step "09-bookstore"      step_09_bookstore
 
 echo
 echo "All steps completed successfully."
