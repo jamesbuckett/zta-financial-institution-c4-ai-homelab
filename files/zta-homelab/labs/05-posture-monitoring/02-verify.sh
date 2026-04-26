@@ -26,10 +26,23 @@ kubectl --context docker-desktop auth can-i delete pods \
 # Use 127.0.0.1 (not 'localhost') so we don't end up routing via ::1 — the
 # python HTTPServer in the CDM image only binds IPv4 (0.0.0.0:8080), and
 # busybox-wget's localhost resolves IPv6 first inside this image.
+# Poll for up to 180s: the container has no readiness probe and its command
+# is `pip install kubernetes && python app.py`, so the pod is Ready (and
+# `kubectl rollout status` returns) as soon as pip *starts* — but the HTTP
+# server isn't accepting connections until pip finishes (~30-90s on first
+# run with a cold image cache).
 printf '\n== 3. CDM responds 204 to a synthetic Falco event ==\n'
 CDM_POD=$(kubectl --context docker-desktop -n zta-runtime-security get pod -l app=cdm -o name | head -1)
-kubectl --context docker-desktop -n zta-runtime-security exec $CDM_POD -- \
-  wget -qO- --post-data='{"rule":"smoke","output_fields":{}}' \
-  --header='Content-Type: application/json' \
-  --server-response http://127.0.0.1:8080/ 2>&1 | grep -E 'HTTP/1\.[01] 204'
+for _ in $(seq 1 90); do
+  if kubectl --context docker-desktop -n zta-runtime-security exec $CDM_POD -- \
+       wget -qO- --post-data='{"rule":"smoke","output_fields":{}}' \
+       --header='Content-Type: application/json' \
+       --server-response --timeout=3 http://127.0.0.1:8080/ 2>&1 \
+       | grep -E 'HTTP/1\.[01] 204'; then
+    exit 0
+  fi
+  sleep 2
+done
+echo "FAIL: CDM did not return 204 within 180s" >&2
+exit 1
 # Expected: a 'HTTP/1.x 204' line
