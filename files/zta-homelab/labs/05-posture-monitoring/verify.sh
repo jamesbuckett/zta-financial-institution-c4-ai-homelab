@@ -120,11 +120,16 @@ check "CDM has handled at least one Falco event for the bookstore-api workload" 
 # proves the Lua filter injected the header before ext_authz ran.
 # Use `logs -l app=opa` (not `logs deploy/opa`) because OPA runs 2 replicas
 # and `kubectl logs deploy/...` reads only the first pod — the decision we
-# need may have landed on the other one via Service load-balancing.
+# need may have landed on the other one via Service load-balancing. Use plain
+# grep (not jq): once Lab 7 is installed, OPA's Status Log entries grow to
+# tens of KB (full Prometheus metrics blob) and the kubelet splits lines
+# >16KB, which makes any structural JSON parse downstream unreliable. The
+# substring `"x-device-posture":"tampered"` only appears in decision-log
+# entries, never in the bundles/metrics blob, so a substring match is both
+# sufficient and immune to the splitting.
 check "OPA decision log shows x-device-posture=tampered injected by Lua filter" \
-  bash -c "kubectl --context $CTX -n zta-policy logs -l app=opa --tail=200 \
-            | jq -r 'select(.path == \"zta/authz/result\") | .input.attributes.request.http.headers[\"x-device-posture\"] // empty' \
-            | grep -qx tampered"
+  bash -c "kubectl --context $CTX -n zta-policy logs -l app=opa --tail=5000 \
+            | grep -q '\"x-device-posture\":\"tampered\"'"
 
 # ---------------------------------------------------------------------------
 section "Lab-5 validation — Lab 4 policy denies on tampered posture"
@@ -154,14 +159,10 @@ check "frontend->api request with x-device-posture=tampered returns HTTP 403" \
                   -H 'x-device-posture: tampered' \
                   http://localhost/api/headers)\" = '403' ]"
 
-# Same multi-pod caveat as the previous OPA-log check. Also bump --tail from
-# 20 to 200: kubelet's /health probes emit ~2 lines every ~10s, so --tail=20
-# only covers the last ~100s on a single pod and merging two pods halves
-# that window — easily losing the decision the curl above just made.
+# Same multi-pod + Status-Log-noise caveats as the preceding OPA-log check.
 check "OPA decision log shows reason device-tampered (recent)" \
-  bash -c "kubectl --context $CTX -n zta-policy logs -l app=opa --tail=200 \
-            | jq -r 'select(.result?.headers?[\"x-zta-decision-reason\"]==\"device-tampered\") | .result.headers[\"x-zta-decision-reason\"]' \
-            | grep -qx 'device-tampered'"
+  bash -c "kubectl --context $CTX -n zta-policy logs -l app=opa --tail=5000 \
+            | grep -q '\"x-zta-decision-reason\":\"device-tampered\"'"
 
 # ---------------------------------------------------------------------------
 printf '\n----------------------------------------\n'
