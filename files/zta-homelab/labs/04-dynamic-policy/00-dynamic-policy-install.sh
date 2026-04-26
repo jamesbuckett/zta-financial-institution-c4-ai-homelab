@@ -14,6 +14,7 @@ SSA=(--server-side --field-manager=zta-lab04)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
+LAB_TITLE="Lab 4 — Dynamic Policy (NIST SP 800-207 Tenet 4)"
 CURRENT_STEP=""
 
 on_error() {
@@ -41,7 +42,8 @@ run_step() {
     CURRENT_STEP="$1"; shift
     clear
     echo "==============================================================="
-    echo ">>> ${CURRENT_STEP}"
+    echo ">>> ${LAB_TITLE}"
+    echo ">>> Step: ${CURRENT_STEP}"
     echo "==============================================================="
     "$@"
     pause

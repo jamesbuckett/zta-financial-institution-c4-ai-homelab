@@ -14,6 +14,8 @@ SSA=(--server-side --field-manager=zta-lab05)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
+LAB_TITLE="Lab 5 — Posture Monitoring (NIST SP 800-207 Tenet 5)"
+
 # Pre-check helm prerequisites before doing anything.
 command -v helm >/dev/null || { echo "ERROR: helm not on PATH"; exit 1; }
 helm repo list 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx falcosecurity || {
@@ -50,7 +52,8 @@ run_step() {
     CURRENT_STEP="$1"; shift
     clear
     echo "==============================================================="
-    echo ">>> ${CURRENT_STEP}"
+    echo ">>> ${LAB_TITLE}"
+    echo ">>> Step: ${CURRENT_STEP}"
     echo "==============================================================="
     "$@"
     pause
