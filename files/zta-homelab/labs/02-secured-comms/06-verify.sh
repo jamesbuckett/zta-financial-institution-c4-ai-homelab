@@ -12,7 +12,9 @@ istioctl --context docker-desktop proxy-config cluster -n bookstore-frontend "$F
 
 printf '\n== 1b. Destination workload effective PeerAuthentication mode ==\n'
 API_POD=$(kubectl --context docker-desktop -n bookstore-api get pod -l app=api -o name | head -1 | cut -d/ -f2)
-istioctl --context docker-desktop experimental describe pod -n bookstore-api "$API_POD" \
+# istioctl 1.22 doesn't honor `-n <ns>` for the pod fetch in
+# `experimental describe pod`; the `<pod>.<namespace>` shorthand does.
+istioctl --context docker-desktop experimental describe pod "$API_POD.bookstore-api" \
   | awk '/Workload mTLS mode:/ {print $NF}'
 # Expected: STRICT
 

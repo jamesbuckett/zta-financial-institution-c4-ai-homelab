@@ -167,7 +167,9 @@ step_06_istio_cross_check() {
 
     echo
     echo "Destination effective PeerAuthentication mode (api):"
-    istioctl --context "$KCTX" experimental describe pod -n bookstore-api "$API_POD" \
+    # istioctl 1.22 doesn't honor `-n <ns>` for the pod fetch in
+    # `experimental describe pod`; the `<pod>.<namespace>` shorthand does.
+    istioctl --context "$KCTX" experimental describe pod "$API_POD.bookstore-api" \
         | awk '/Workload mTLS mode:/ {print $NF}'
 
     echo
