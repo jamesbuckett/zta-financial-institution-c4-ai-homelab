@@ -117,8 +117,18 @@ check "/v1/policies lists at least one zta/ bundle path" \
 # ---------------------------------------------------------------------------
 section "Step 05 — close-the-loop pattern"
 
-check "OPA decision log contains both an allow and a deny in last 5 min" \
-  bash -c "logs=\$(kubectl --context $CTX -n zta-policy logs deploy/opa --since=5m) && \
+# `logs deploy/opa` reads only the first replica, but OPA runs 2 pods and
+# Envoy ext_authz Service-load-balances between them — the allow and the
+# deny from 05-close-loop.sh routinely land on different pods (same root
+# cause fixed for Lab 5 in 0697ca0). Switching to `-l app=opa` exposes
+# kubectl's per-pod default of --tail=10, which silently drops the
+# decision_id lines among OPA's status-update chatter, so we also pass
+# --tail=10000 to read the full pod log. Window bumped to 15 min: the
+# close-loop step does two `rollout status --timeout=180s` calls plus a
+# couple of polling loops, so the deny decision is often >5 min old by
+# the time the umbrella verify runs after the install.
+check "OPA decision log contains both an allow and a deny in last 15 min" \
+  bash -c "logs=\$(kubectl --context $CTX -n zta-policy logs -l app=opa -c opa --since=15m --tail=10000) && \
            [ \"\$(echo \"\$logs\" | jq -c 'select(.decision_id and .result.allowed==true)' | wc -l)\" -ge 1 ] && \
            [ \"\$(echo \"\$logs\" | jq -c 'select(.decision_id and .result.allowed==false)' | wc -l)\" -ge 1 ]"
 
