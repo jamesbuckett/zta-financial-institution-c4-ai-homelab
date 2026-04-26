@@ -16,14 +16,28 @@ kubectl --context docker-desktop -n bookstore-api get authorizationpolicy ext-au
   -o jsonpath='{.spec.action}/{.spec.provider.name}{"\n"}'
 # Expected: CUSTOM/opa-ext-authz
 
-# Filter for Running pods only — `kubectl rollout status` returns when the
-# new ReplicaSet is available, but old replicas may linger in Succeeded or
-# Terminating for a few seconds while the istio-proxy drains. Picking the
-# first matching pod without filtering can grab one of those, then exec
-# fails with "pod not found" or "completed pod".
+# Pick a live, fully-Ready api pod. `kubectl rollout status` returns as soon
+# as the new ReplicaSet is Available, but old pods from the previous RS are
+# still being terminated in the background. Those old pods stay in
+# status.phase=Running for the whole terminationGracePeriodSeconds window
+# (phase only flips when containers actually exit), so a phase-only filter
+# can return a terminating pod. On that pod the istio-proxy native sidecar
+# (init container with restartPolicy=Always) has already been gc'd by the
+# kubelet, so `kubectl exec -c istio-proxy` fails with `container not found`
+# and `istioctl proxy-config` gets EOF on the admin port-forward (then jq
+# parse-errors on the empty body).
+#
+# Exclude pods with a deletionTimestamp set (i.e. terminating) and require
+# all main containers to be Ready, then take the first match.
 api_running_pod() {
-  kubectl --context docker-desktop -n bookstore-api get pod -l app=api \
-    --field-selector=status.phase=Running -o name | head -1
+  kubectl --context docker-desktop -n bookstore-api get pod -l app=api -o json \
+    | jq -r '
+        .items[]
+        | select(.metadata.deletionTimestamp == null)
+        | select((.status.containerStatuses // []) | length > 0)
+        | select([.status.containerStatuses[].ready] | all)
+        | "pod/" + .metadata.name
+      ' | head -1
 }
 
 # 4. The api sidecar's listener actually contains the ext_authz filter.
