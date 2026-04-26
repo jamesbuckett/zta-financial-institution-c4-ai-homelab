@@ -11,18 +11,37 @@ spec:
           restartPolicy: OnFailure
           containers:
           - name: reconcile
-            image: bitnami/kubectl:1.30
+            # bitnami/kubectl:1.30 was unpublished in late 2025 when Bitnami
+            # restructured its public Docker Hub catalog (the tag now resolves
+            # to "not found"). alpine/k8s ships kubectl + a busybox shell as
+            # multi-arch images (amd64 + arm64), which the inline `sh -c …`
+            # needs.
+            image: alpine/k8s:1.30.5
             command:
             - sh
             - -c
             - |
+              # Drift = the pod has a posture annotation that doesn't match the
+              # ZTA_POD_POSTURE env var the container booted with. Trigger a
+              # `kubectl rollout restart` on the owning Deployment instead of
+              # `kubectl delete pod` so the reconciler keeps the CDM SA's
+              # patch-only privilege (the umbrella verify asserts the SA
+              # cannot delete pods — see 02-cdm.yaml ClusterRole).
+              # rollout restart de-dups itself: even if multiple drifted pods
+              # report the same Deployment, we only restart it once per pass.
+              touched_deployments=""
               for p in $(kubectl get pods -A -l app=api \
                     -o jsonpath='{range .items[?(@.metadata.annotations.zta\.posture)]}{.metadata.namespace}/{.metadata.name}{"\n"}{end}'); do
                 NS=${p%/*}; POD=${p#*/}
                 ENV_NOW=$(kubectl get pod -n $NS $POD -o jsonpath='{.spec.containers[?(@.name=="httpbin")].env[?(@.name=="ZTA_POD_POSTURE")].value}' || true)
                 ANN_NOW=$(kubectl get pod -n $NS $POD -o jsonpath='{.metadata.annotations.zta\.posture}')
                 if [ "$ENV_NOW" != "$ANN_NOW" ]; then
-                  echo "bouncing $NS/$POD: env=$ENV_NOW ann=$ANN_NOW"
-                  kubectl delete pod -n $NS $POD --wait=false
+                  DEPLOY=$(kubectl get pod -n $NS $POD -o jsonpath='{.metadata.ownerReferences[?(@.kind=="ReplicaSet")].name}' \
+                    | xargs -I{} kubectl get rs -n $NS {} -o jsonpath='{.metadata.ownerReferences[?(@.kind=="Deployment")].name}')
+                  if [ -n "$DEPLOY" ] && ! echo "$touched_deployments" | grep -qw "$NS/$DEPLOY"; then
+                    echo "bouncing deploy $NS/$DEPLOY (pod $POD: env=$ENV_NOW ann=$ANN_NOW)"
+                    kubectl rollout restart -n $NS deploy/$DEPLOY
+                    touched_deployments="$touched_deployments $NS/$DEPLOY"
+                  fi
                 fi
               done

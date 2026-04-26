@@ -5,6 +5,12 @@
 set -euo pipefail
 CTX=${CTX:-docker-desktop}
 
+# Resolve to the script's own directory so the Step 04 check that invokes
+# ./inventory.sh works regardless of the caller's cwd (e.g. master install.sh
+# runs this as `bash labs/01-resources/verify.sh` from the repo root).
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
 pass=0; fail=0
 check() {
   local label=$1; shift
@@ -64,7 +70,7 @@ for tuple in 'bookstore-frontend deployment  frontend public      retail-web' \
 done
 
 check "field manager 'zta-lab01' owns labels on api Deployment" \
-  bash -c "kubectl --context $CTX -n bookstore-api get deploy api -o json \
+  bash -c "kubectl --context $CTX -n bookstore-api get deploy api --show-managed-fields=true -o json \
             | jq -e '.metadata.managedFields[] | select(.manager==\"zta-lab01\")' >/dev/null"
 
 check "db StatefulSet carries per-framework regulatory labels" \
@@ -114,10 +120,15 @@ check "inventory lists at least 6 bookstore rows" \
   bash -c '[ "$(tail -n +2 "$1" | grep -cE "bookstore-(frontend|api|data)")" -ge 6 ]' \
   _ "$INV_OUT"
 
-check "every inventory row has a recognised data-class" \
+check "every bookstore inventory row has a recognised data-class" \
   bash -c '
+    # Only assert on the bookstore rows. Later labs add non-bookstore rows
+    # (svid-watcher, pa, cdm in zta-policy / zta-runtime-security) with
+    # valid data-classes too, so the previous unfiltered count over the
+    # whole file produced ok > rows and the assertion broke after lab 5+.
     rows=$(tail -n +2 "$1" | grep -cE "bookstore-(frontend|api|data)")
-    ok=$(tail -n +2 "$1" | awk "{print \$4}" \
+    ok=$(tail -n +2 "$1" | grep -E "bookstore-(frontend|api|data)" \
+           | awk "{print \$4}" \
            | grep -cE "^(public|internal|confidential|restricted|secret)$")
     [ "$rows" -gt 0 ] && [ "$ok" -eq "$rows" ]
   ' _ "$INV_OUT"

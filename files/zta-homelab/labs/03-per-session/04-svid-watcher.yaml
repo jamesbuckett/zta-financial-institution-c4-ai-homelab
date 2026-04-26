@@ -19,7 +19,11 @@ spec:
         - { name: spire-agent-socket, mountPath: /run/spire/sockets }
       - name: observer
         image: alpine:3.20
-        command: ["sh","-c","apk add --no-cache openssl >/dev/null; while true; do if [ -f /svid/svid.pem ]; then openssl x509 -in /svid/svid.pem -noout -serial -enddate -subject; fi; sleep 15; done"]
+        # -ext subjectAltName is added so the observer log emits the
+        # `URI:spiffe://...` line that 05-verify.sh greps for to confirm SPIRE
+        # (not some bystander CA) issued the SVID. Without it, the cert is
+        # still valid but the URI SAN never appears in stdout.
+        command: ["sh","-c","apk add --no-cache openssl >/dev/null; while true; do if [ -f /svid/svid.pem ]; then openssl x509 -in /svid/svid.pem -noout -serial -enddate -subject -ext subjectAltName; fi; sleep 15; done"]
         volumeMounts:
         - { name: svid-out, mountPath: /svid, readOnly: true }
       volumes:

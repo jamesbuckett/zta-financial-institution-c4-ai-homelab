@@ -46,20 +46,31 @@ allow if {
   posture == "suspect"
 }
 
-# Hard deny if device is tampered, regardless of token
+# Decision rules — Rego v1 complete-rule semantics require that for any given
+# input AT MOST ONE non-default rule produces a value. Each branch below
+# guards itself against the others (e.g. the tampered branch carries
+# `not allow`) so they're mutually exclusive. The previous version had a
+# `decision := no-matching-allow if not allow` catch-all that always fired
+# alongside the more specific deny rules and crashed OPA with
+#   eval_conflict_error: complete rules must not produce multiple outputs
+# which Envoy then surfaces as a bare 403 (no headers, no body).
+#
+# The default `decision := default-deny` handles the residual "no rule
+# matched" case (e.g. an empty probe input, or a suspect POST that doesn't
+# fit any specific deny class).
+decision := {"allow": true, "reason": "ok"} if allow
+
 decision := {"allow": false, "reason": "device-tampered"} if {
   posture == "tampered"
+  not allow
 }
 
-# Deny if unknown posture AND write method
 decision := {"allow": false, "reason": "posture-unknown-on-write"} if {
   posture == "unknown"
   method != "GET"
+  not allow
+  posture != "tampered"
 }
-
-# If a narrow deny rule didn't fire, project `allow` to decision
-decision := {"allow": true,  "reason": "ok"}                    if allow
-decision := {"allow": false, "reason": "no-matching-allow"}     if not allow
 
 # Final response Envoy expects
 result := {

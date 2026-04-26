@@ -1,10 +1,20 @@
-# 1. tls-check reports SERVER=STRICT, CLIENT=ISTIO_MUTUAL, STATUS=OK.
-printf '\n== 1. istioctl authn tls-check reports OK STRICT ISTIO_MUTUAL ==\n'
-istioctl --context docker-desktop authn tls-check \
-  $(kubectl --context docker-desktop -n bookstore-frontend get pod -l app=frontend -o name | head -1 | cut -d/ -f2).bookstore-frontend \
-  api.bookstore-api.svc.cluster.local \
-  | awk 'NR>1 {print $2,$3,$4}' | head -1
-# Expected: OK STRICT ISTIO_MUTUAL
+# 1. The old `istioctl authn tls-check` SERVER/CLIENT/STATUS triple was
+#    removed after Istio 1.20. The modern split — proxy-config cluster on
+#    the source + experimental describe on the destination — proves the
+#    same posture: client uses TLS transport, server enforces STRICT.
+
+printf '\n== 1. Source outbound cluster uses Envoy TLS transport socket ==\n'
+FRONTEND_POD=$(kubectl --context docker-desktop -n bookstore-frontend get pod -l app=frontend -o name | head -1 | cut -d/ -f2)
+istioctl --context docker-desktop proxy-config cluster -n bookstore-frontend "$FRONTEND_POD" \
+  --fqdn api.bookstore-api.svc.cluster.local -o json \
+  | jq -r '.[0].transportSocketMatches[0].transportSocket.name // "(none)"'
+# Expected: envoy.transport_sockets.tls
+
+printf '\n== 1b. Destination workload effective PeerAuthentication mode ==\n'
+API_POD=$(kubectl --context docker-desktop -n bookstore-api get pod -l app=api -o name | head -1 | cut -d/ -f2)
+istioctl --context docker-desktop experimental describe pod -n bookstore-api "$API_POD" \
+  | awk '/Workload mTLS mode:/ {print $NF}'
+# Expected: STRICT
 
 # 2. Sidecar reports a SECRET resource carrying a SPIFFE SVID for the api workload.
 printf '\n== 2. api sidecar has SVID secrets (ROOTCA + default) ==\n'

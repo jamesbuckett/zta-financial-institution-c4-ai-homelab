@@ -14,18 +14,28 @@ kubectl --context docker-desktop -n zta-policy get deploy opa \
 #   --set=plugins.envoy_ext_authz_grpc.path=zta/authz/result
 #   --set=decision_logs.console=true
 
-# 3. OPA's REST API reports the policy is loaded — query it directly.
+# OPA ships in a distroless image (no wget/curl/shell) so we can't `kubectl
+# exec` HTTP tools inside the OPA pod. Bridge the cluster API to the local
+# host with kubectl port-forward and curl from outside instead.
 printf '\n== 3. OPA REST /v1/policies lists the policy ==\n'
-OPA_POD=$(kubectl --context docker-desktop -n zta-policy get pod -l app=opa -o name | head -1)
-kubectl --context docker-desktop -n zta-policy exec $OPA_POD -- \
-  wget -qO- http://localhost:8181/v1/policies | jq -r '.result[].id'
+kubectl --context docker-desktop -n zta-policy port-forward svc/opa 18181:8181 >/dev/null 2>&1 &
+PF=$!
+trap "kill $PF 2>/dev/null || true" EXIT
+# Wait for the local socket to accept; bail after ~10 s.
+for _ in $(seq 1 20); do
+  if curl -s --max-time 1 http://localhost:18181/health >/dev/null 2>&1; then break; fi
+  sleep 0.5
+done
+curl -s http://localhost:18181/v1/policies | jq -r '.result[].id'
 # Expected: a path containing 'zta.authz.rego'
 
 # 4. The package compiles inside OPA — query it and get a structured response.
 printf '\n== 4. /v1/data/zta/authz/decision returns default-deny ==\n'
-kubectl --context docker-desktop -n zta-policy exec $OPA_POD -- \
-  wget -qO- --post-data='{"input":{}}' --header='Content-Type: application/json' \
-  http://localhost:8181/v1/data/zta/authz/decision | jq '.result.allow, .result.reason'
+curl -s --data '{"input":{}}' --header 'Content-Type: application/json' \
+  http://localhost:18181/v1/data/zta/authz/decision | jq '.result.allow, .result.reason'
 # Expected:
 #   false
 #   "default-deny"
+
+kill $PF 2>/dev/null || true
+trap - EXIT

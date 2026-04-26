@@ -16,17 +16,30 @@ kubectl --context docker-desktop -n bookstore-api get authorizationpolicy ext-au
   -o jsonpath='{.spec.action}/{.spec.provider.name}{"\n"}'
 # Expected: CUSTOM/opa-ext-authz
 
+# Filter for Running pods only — `kubectl rollout status` returns when the
+# new ReplicaSet is available, but old replicas may linger in Succeeded or
+# Terminating for a few seconds while the istio-proxy drains. Picking the
+# first matching pod without filtering can grab one of those, then exec
+# fails with "pod not found" or "completed pod".
+api_running_pod() {
+  kubectl --context docker-desktop -n bookstore-api get pod -l app=api \
+    --field-selector=status.phase=Running -o name | head -1
+}
+
 # 4. The api sidecar's listener actually contains the ext_authz filter.
 printf '\n== 4. api sidecar inbound listener contains ext_authz filter ==\n'
 istioctl --context docker-desktop proxy-config listener \
-  $(kubectl --context docker-desktop -n bookstore-api get pod -l app=api -o name | head -1 | cut -d/ -f2).bookstore-api \
+  $(api_running_pod | cut -d/ -f2).bookstore-api \
   --port 15006 -o json \
   | jq -r '..|.name? // empty' | grep -c 'envoy\.filters\.http\.ext_authz'
 # Expected: >= 1
 
 # 5. The OPA gRPC port is reachable from the api sidecar.
+# /bin/sh in the istio-proxy container is dash (no /dev/tcp builtin); use nc
+# from the same container, which is shipped in proxyv2 and works portably.
 printf '\n== 5. OPA gRPC port (9191) reachable from api sidecar ==\n'
 kubectl --context docker-desktop -n bookstore-api exec \
-  $(kubectl --context docker-desktop -n bookstore-api get pod -l app=api -o name | head -1) \
-  -c istio-proxy -- /bin/sh -c 'echo > /dev/tcp/opa.zta-policy.svc.cluster.local/9191 && echo OK'
+  $(api_running_pod) \
+  -c istio-proxy -- nc -z -w 3 opa.zta-policy.svc.cluster.local 9191 \
+  && echo OK
 # Expected: OK

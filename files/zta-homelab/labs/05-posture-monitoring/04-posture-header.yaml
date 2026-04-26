@@ -16,20 +16,49 @@ spec:
         typed_config:
           "@type": type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
           inlineCode: |
+            -- Read the pod's current zta.posture annotation from a Downward
+            -- API file mounted into the istio-proxy by the sidecar-injection
+            -- userVolume annotations on the api Deployment template. The
+            -- earlier draft used `os.getenv("ZTA_POD_POSTURE")`, which only
+            -- saw the httpbin container's env — Lua here runs inside the
+            -- istio-proxy sidecar, which has its own env, so the lookup
+            -- always missed and posture silently defaulted to "trusted".
+            -- Reading the Downward-API file works because it lives on the
+            -- istio-proxy's own filesystem (kubelet refreshes it whenever
+            -- the annotation changes — no pod restart required).
+            function read_posture()
+              local f = io.open("/etc/zta/posture", "r")
+              if not f then return "trusted" end
+              local p = f:read("*a")
+              f:close()
+              -- strip trailing whitespace/newline
+              p = (p or ""):gsub("%s+$", "")
+              if p == "" then return "trusted" end
+              return p
+            end
             function envoy_on_request(request_handle)
-              local p = os.getenv("ZTA_POD_POSTURE") or "trusted"
               if request_handle:headers():get("x-device-posture") == nil then
-                request_handle:headers():add("x-device-posture", p)
+                request_handle:headers():add("x-device-posture", read_posture())
               end
             end
 ---
-# Mount the pod annotation as an env var via the downward API.
-# Requires a small patch to the api Deployment:
+# Mount the pod annotation TWO ways on the api Deployment template:
+#   1. as a file inside the istio-proxy sidecar via Istio's userVolume /
+#      userVolumeMount annotations + a Downward API volume — that's what the
+#      Lua filter above actually reads,
+#   2. as an env var on the httpbin container — kept for the umbrella verify
+#      check that asserts ZTA_POD_POSTURE is wired through the Downward API
+#      (and as belt-and-suspenders for any future helper that runs inside
+#      the app container).
 apiVersion: apps/v1
 kind: Deployment
 metadata: { name: api, namespace: bookstore-api }
 spec:
   template:
+    metadata:
+      annotations:
+        sidecar.istio.io/userVolume: '[{"name":"posture","downwardAPI":{"items":[{"path":"posture","fieldRef":{"fieldPath":"metadata.annotations[''zta.posture'']"}}]}}]'
+        sidecar.istio.io/userVolumeMount: '[{"name":"posture","mountPath":"/etc/zta"}]'
     spec:
       containers:
       - name: httpbin

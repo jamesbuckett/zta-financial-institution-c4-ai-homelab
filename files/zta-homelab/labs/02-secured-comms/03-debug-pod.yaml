@@ -8,6 +8,14 @@ apiVersion: v1
 kind: Pod
 metadata: { name: debug, namespace: zta-lab-debug }
 spec:
+  # hostNetwork puts the pod in the node's network namespace so tcpdump on
+  # `-i any` can see veth/cni traffic between OTHER pods (e.g. frontend↔api).
+  # Without this, tcpdump only sees the debug pod's own eth0+lo and the
+  # capture in step 5 is empty.
+  # ClusterFirstWithHostNet keeps in-cluster DNS working for step 4's curl
+  # to api.bookstore-api.svc.cluster.local.
+  hostNetwork: true
+  dnsPolicy: ClusterFirstWithHostNet
   containers:
   - name: tools
     image: nicolaka/netshoot:v0.13

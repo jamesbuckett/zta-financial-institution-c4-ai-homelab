@@ -1,4 +1,7 @@
 # Server-side apply patches — re-applicable and idempotent.
+# Services are included so the K8sRequiredZtaLabels constraint (which matches
+# Service in addition to Deployment/StatefulSet) finds zta.owner on every
+# in-scope object and audit reports zero violations.
 apiVersion: v1
 kind: List
 items:
@@ -13,6 +16,15 @@ items:
       zta.owner: "retail-web"
       zta.exposure: "internet-facing"
       zta.regulatory.gdpr: "true"
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: frontend
+    namespace: bookstore-frontend
+    labels:
+      zta.resource: "true"
+      zta.data-class: "public"
+      zta.owner: "retail-web"
 - apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -25,6 +37,15 @@ items:
       zta.exposure: "internal-only"
       zta.regulatory.gdpr: "true"
       zta.regulatory.pci:  "true"
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: api
+    namespace: bookstore-api
+    labels:
+      zta.resource: "true"
+      zta.data-class: "confidential"
+      zta.owner: "retail-api"
 - apiVersion: apps/v1
   kind: StatefulSet
   metadata:
@@ -38,3 +59,12 @@ items:
       zta.regulatory.gdpr: "true"
       zta.regulatory.pci:  "true"
       zta.regulatory.sox:  "true"
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: db
+    namespace: bookstore-data
+    labels:
+      zta.resource: "true"
+      zta.data-class: "restricted"
+      zta.owner: "retail-data"

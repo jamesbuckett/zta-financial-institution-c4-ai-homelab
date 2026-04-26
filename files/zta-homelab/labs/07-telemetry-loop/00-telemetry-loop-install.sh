@@ -65,7 +65,11 @@ step_02_grafana_agent() {
 }
 
 step_03_istio_tracing() {
-    kubectl --context "$KCTX" apply "${SSA[@]}" -f 03-istio-tracing.yaml
+    # 03-istio-tracing.yaml mutates the istio-system/istio ConfigMap to wire
+    # the tracing extensionProviders entry. Lab 4 already took ownership of
+    # that field via --force-conflicts; this lab needs to layer its own
+    # changes, hence --force-conflicts here as well.
+    kubectl --context "$KCTX" apply "${SSA[@]}" --force-conflicts -f 03-istio-tracing.yaml
     kubectl --context "$KCTX" -n istio-system rollout restart deploy/istiod
     kubectl --context "$KCTX" -n istio-system rollout status  deploy/istiod --timeout=120s
     echo
@@ -92,9 +96,12 @@ step_05_load_mix() {
 step_06_refine_policy() {
     # Rebuild Lab 6's pa-policies ConfigMap from the refined Rego (this lab),
     # NOT from Lab 4's source. Then bounce the PA so it republishes the bundle.
+    # Lab 6 owns .data.zta.authz.rego under field-manager zta-lab06; this
+    # step deliberately replaces that field with the refined policy, hence
+    # --force-conflicts to transfer ownership to zta-lab07.
     kubectl --context "$KCTX" -n zta-policy create configmap pa-policies \
         --from-file=zta.authz.rego=06-zta.authz.rego --dry-run=client -o yaml \
-        | kubectl --context "$KCTX" apply "${SSA[@]}" -f -
+        | kubectl --context "$KCTX" apply "${SSA[@]}" --force-conflicts -f -
     kubectl --context "$KCTX" -n zta-policy rollout restart deploy/pa
     kubectl --context "$KCTX" -n zta-policy rollout status  deploy/pa --timeout=180s
     echo "Waiting 15 s for OPA to fetch and verify the new bundle..."

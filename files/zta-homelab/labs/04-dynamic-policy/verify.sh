@@ -41,24 +41,55 @@ check "OPA Deployment carries envoy_ext_authz_grpc arg" \
             -o jsonpath='{.spec.template.spec.containers[0].args}' \
             | jq -r '.[]' | grep -qx -- '--set=plugins.envoy_ext_authz_grpc.addr=:9191'"
 
-check "OPA Deployment carries decision_logs.console arg" \
-  bash -c "kubectl --context $CTX -n zta-policy get deploy opa \
-            -o jsonpath='{.spec.template.spec.containers[0].args}' \
-            | jq -r '.[]' | grep -qx -- '--set=decision_logs.console=true'"
+# OPA is configured to log decisions to the console. Lab 4 sets this via
+# `--set=decision_logs.console=true` in args; Lab 6 moves the same setting
+# into opa-config (config-file) and drops the arg. Accept either form so
+# this check stays green after Lab 6 has been applied.
+check "OPA emits decision logs to the console (via arg or config-file)" \
+  bash -c "
+    args=\$(kubectl --context $CTX -n zta-policy get deploy opa \
+            -o jsonpath='{.spec.template.spec.containers[0].args}')
+    if echo \"\$args\" | jq -r '.[]' | grep -qx -- '--set=decision_logs.console=true'; then
+      exit 0
+    fi
+    kubectl --context $CTX -n zta-policy get cm opa-config \
+      -o jsonpath='{.data.config\\.yaml}' 2>/dev/null \
+      | grep -qE 'decision_logs:[[:space:]]*$|decision_logs:[[:space:]]*\\{|console:[[:space:]]*true'
+  "
+
+# OPA's distroless image has no wget/curl/shell, so probe it via a temporary
+# port-forward instead of `kubectl exec`. _opa_curl wraps the lifecycle.
+_opa_curl() {
+  local cmd_out cmd_rc pf
+  kubectl --context "$CTX" -n zta-policy port-forward svc/opa 18181:8181 >/dev/null 2>&1 &
+  pf=$!
+  for _ in $(seq 1 20); do
+    curl -s --max-time 1 http://localhost:18181/health >/dev/null 2>&1 && break
+    sleep 0.5
+  done
+  cmd_out=$(curl -s "$@")
+  cmd_rc=$?
+  kill "$pf" 2>/dev/null || true
+  printf '%s' "$cmd_out"
+  return "$cmd_rc"
+}
 
 check "OPA REST /v1/policies lists zta.authz.rego" \
-  bash -c "pod=\$(kubectl --context $CTX -n zta-policy get pod -l app=opa -o name | head -1) && \
-           kubectl --context $CTX -n zta-policy exec \"\$pod\" -- \
-             wget -qO- http://localhost:8181/v1/policies \
+  bash -c "$(declare -f _opa_curl); CTX=$CTX; \
+           _opa_curl http://localhost:18181/v1/policies \
              | jq -re '.result[].id' | grep -q 'zta.authz.rego'"
 
-check "OPA default-deny query returns allow=false / reason=default-deny" \
-  bash -c "pod=\$(kubectl --context $CTX -n zta-policy get pod -l app=opa -o name | head -1) && \
-           out=\$(kubectl --context $CTX -n zta-policy exec \"\$pod\" -- \
-             wget -qO- --post-data='{\"input\":{}}' --header='Content-Type: application/json' \
-             http://localhost:8181/v1/data/zta/authz/decision) && \
+# Empty-input probe: confirm fail-closed. Lab 4's policy returns
+# reason="default-deny"; Lab 7's refined policy returns "missing-token"
+# for the same empty-input case (it splits the catch-all into more
+# specific reasons). Accept either as proof that the deny path is wired.
+check "OPA fail-closed probe: empty input returns allow=false (fail-closed reason)" \
+  bash -c "$(declare -f _opa_curl); CTX=$CTX; \
+           out=\$(_opa_curl --data '{\"input\":{}}' --header 'Content-Type: application/json' \
+             http://localhost:18181/v1/data/zta/authz/decision) && \
            [ \"\$(echo \"\$out\" | jq -r '.result.allow')\" = 'false' ] && \
-           [ \"\$(echo \"\$out\" | jq -r '.result.reason')\" = 'default-deny' ]"
+           echo \"\$out\" | jq -re '.result.reason' \
+             | grep -qxE 'default-deny|missing-token'"
 
 # ---------------------------------------------------------------------------
 section "Step 03 — Envoy ext_authz wiring"
@@ -123,17 +154,21 @@ check "denied response carries x-zta-decision-id header" \
 section "Step 05 — OPA decision log"
 
 check "OPA log has at least 1 decision_id-bearing line in last 200 lines" \
-  bash -c "[ \"\$(kubectl --context $CTX -n zta-policy logs deploy/opa --tail=200 \
+  bash -c "[ \"\$(kubectl --context $CTX -n zta-policy logs -l app=opa --tail=200 --max-log-requests 4 \
                   | jq -c 'select(.decision_id != null)' 2>/dev/null | wc -l)\" -ge 1 ]"
 
 check "OPA decision log has reason=device-tampered somewhere recent" \
-  bash -c "kubectl --context $CTX -n zta-policy logs deploy/opa --tail=200 \
+  bash -c "kubectl --context $CTX -n zta-policy logs -l app=opa --tail=200 --max-log-requests 4 \
             | jq -r 'select(.result.headers[\"x-zta-decision-reason\"]) | .result.headers[\"x-zta-decision-reason\"]' \
             | grep -qx 'device-tampered'"
 
-check "every recent decision has method, posture, principal in input" \
-  bash -c "out=\$(kubectl --context $CTX -n zta-policy logs deploy/opa --tail=20 \
-              | jq -c 'select(.decision_id) | {has_method: (.input.attributes.request.http.method != null), has_posture: (.input.attributes.request.http.headers[\"x-device-posture\"] != null), has_principal: (.input.attributes.source.principal != null)}' \
+# Filter to Envoy ext_authz decisions only (path "zta/authz/result"). The
+# port-forward probe in 02-verify.sh hits "zta/authz/decision" with an empty
+# input, which legitimately has no method/posture/principal — including
+# those entries would always fail this assertion.
+check "every recent ext_authz decision has method, posture, principal in input" \
+  bash -c "out=\$(kubectl --context $CTX -n zta-policy logs -l app=opa --tail=200 --max-log-requests 4 \
+              | jq -c 'select(.decision_id and .path == \"zta/authz/result\") | {has_method: (.input.attributes.request.http.method != null), has_posture: (.input.attributes.request.http.headers[\"x-device-posture\"] != null), has_principal: (.input.attributes.source.principal != null)}' \
               | sort -u) && \
            [ \"\$out\" = '{\"has_method\":true,\"has_posture\":true,\"has_principal\":true}' ]"
 

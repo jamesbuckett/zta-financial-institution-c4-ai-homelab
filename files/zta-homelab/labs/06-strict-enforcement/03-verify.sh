@@ -22,7 +22,11 @@ echo "$yq_keys" | grep -qx "$yq_keyid" && echo OK || echo MISMATCH
 # Expected: OK
 
 # 4. The public key block is the actual PEM, not the placeholder text.
+# `grep -c` returns exit 1 when the count is 0 — but "0 placeholders" is the
+# expected pass condition. The trailing `|| echo 0` keeps the exit status 0
+# regardless, so the orchestrator's `set -e` doesn't trip on the success case.
 printf '\n== 4. Placeholder text not present (real key inlined) ==\n'
 kubectl --context docker-desktop -n zta-policy get cm opa-config \
-  -o jsonpath='{.data.config\.yaml}' | grep -c '__BUNDLE_SIGNER_PUB__\|paste contents of keys'
+  -o jsonpath='{.data.config\.yaml}' | grep -c '__BUNDLE_SIGNER_PUB__\|paste contents of keys' \
+  || echo 0
 # Expected: 0   (must NOT contain the placeholder; orchestrator inlined the real key)

@@ -28,23 +28,25 @@ check "Keycloak realm zta-bookstore reachable via OIDC discovery" \
             http://localhost/realms/zta-bookstore/.well-known/openid-configuration \
             | jq -re '.issuer' | grep -qx 'http://keycloak.local/realms/zta-bookstore'"
 
+# kcadm.sh persists an admin session per pod under /opt/keycloak/.keycloak.
+# After idle time it expires and subsequent `get` calls fail with "Session
+# has expired. Login again ...". Re-authenticate before each check so the
+# verify works whether or not Keycloak's admin session is still warm.
+KC_LOGIN="/opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user admin --password admin"
+
 check "accessTokenLifespan equals 300" \
   bash -c "kc_pod=\$(kubectl --context $CTX -n zta-identity get pod -l app=keycloak -o name | head -1) && \
-           kubectl --context $CTX -n zta-identity exec -i \"\$kc_pod\" -- \
-             /opt/keycloak/bin/kcadm.sh get realms/zta-bookstore --fields accessTokenLifespan \
+           kubectl --context $CTX -n zta-identity exec -i \"\$kc_pod\" -- sh -c \"$KC_LOGIN >/dev/null 2>&1 && /opt/keycloak/bin/kcadm.sh get realms/zta-bookstore --fields accessTokenLifespan\" \
              | grep -q '\"accessTokenLifespan\" : 300'"
 
 check "client bookstore-api is confidential and supports password grant" \
   bash -c "kc_pod=\$(kubectl --context $CTX -n zta-identity get pod -l app=keycloak -o name | head -1) && \
-           kubectl --context $CTX -n zta-identity exec -i \"\$kc_pod\" -- \
-             /opt/keycloak/bin/kcadm.sh get clients -r zta-bookstore -q clientId=bookstore-api \
-             --fields clientId,publicClient,directAccessGrantsEnabled \
+           kubectl --context $CTX -n zta-identity exec -i \"\$kc_pod\" -- sh -c \"$KC_LOGIN >/dev/null 2>&1 && /opt/keycloak/bin/kcadm.sh get clients -r zta-bookstore -q clientId=bookstore-api --fields clientId,publicClient,directAccessGrantsEnabled\" \
              | grep -q '\"publicClient\" : false'"
 
 check "user alice exists and is enabled" \
   bash -c "kc_pod=\$(kubectl --context $CTX -n zta-identity get pod -l app=keycloak -o name | head -1) && \
-           kubectl --context $CTX -n zta-identity exec -i \"\$kc_pod\" -- \
-             /opt/keycloak/bin/kcadm.sh get users -r zta-bookstore -q username=alice --fields username,enabled \
+           kubectl --context $CTX -n zta-identity exec -i \"\$kc_pod\" -- sh -c \"$KC_LOGIN >/dev/null 2>&1 && /opt/keycloak/bin/kcadm.sh get users -r zta-bookstore -q username=alice --fields username,enabled\" \
              | grep -q '\"enabled\" : true'"
 
 # ---------------------------------------------------------------------------

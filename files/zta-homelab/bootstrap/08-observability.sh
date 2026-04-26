@@ -27,7 +27,13 @@ helm --kube-context $CTX upgrade --install loki grafana/loki \
   --set 'loki.schemaConfig.configs[0].index.period=24h' \
   --set chunksCache.enabled=false --set resultsCache.enabled=false \
   --set minio.enabled=false \
+  --set loki.commonConfig.replication_factor=1 \
   --wait
+# loki.commonConfig.replication_factor=1 is critical for SingleBinary mode.
+# The chart's default is 3 (sized for the SimpleScalable / Distributed
+# deployment), which leaves the ring permanently in "too many unhealthy
+# instances" with only one running pod and breaks /loki/api/v1/labels
+# (HTTP 500). Lab 7's umbrella verify queries that endpoint.
 
 helm --kube-context $CTX upgrade --install tempo grafana/tempo \
   --namespace zta-observability --version 1.10.1 --wait

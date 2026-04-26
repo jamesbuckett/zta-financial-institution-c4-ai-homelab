@@ -15,20 +15,42 @@ spec:
     metadata: { labels: { app: pa, zta.resource: "true", zta.data-class: "restricted", zta.owner: "policy-coe", zta.tier-role: "control-plane" } }
     spec:
       initContainers:
+      # The openpolicyagent/opa:0.68.0 image is distroless and ships only
+      # the opa binary — no `sh`, no `mkdir`. The earlier draft tried
+      # `sh -c '...'` and the kubelet rejected the container with
+      # "sh: executable file not found in $PATH". 0.68.0 also has no -debug
+      # / -rootless-debug variant on Docker Hub. Split the work into two
+      # init containers: a tiny busybox to create the bundle directory,
+      # then the distroless opa image to run `opa build` directly with
+      # args (no shell wrapper). Init containers run sequentially and
+      # share the emptyDir, so the bundle dir survives into the build step.
+      - name: prep
+        image: busybox:1.36
+        # The opa-static image runs as 1000:1000; the busybox prep here runs
+        # as root and would leave /out/bundles owned by 0:0. We chown so the
+        # subsequent `opa build` init container can write its bundle.
+        command: ["sh","-c","mkdir -p /out/bundles && chown -R 1000:1000 /out"]
+        volumeMounts:
+        - { name: out, mountPath: /out }
       - name: build
-        image: openpolicyagent/opa:0.68.0
-        command:
-        - sh
-        - -c
-        - |
-          set -e
-          mkdir -p /out/bundles
-          opa build -b /policies \
-            --signing-alg RS256 \
-            --signing-key /keys/bundle-signer.pem \
-            --bundle \
-            -o /out/bundles/zta.tar.gz
-          echo 'built signed bundle:'; ls -lah /out/bundles
+        # Use the -static tag on arm64. The default 0.68.0 image triggers a
+        # Go runtime panic ("lfstack.push invalid packing") on aarch64 hosts
+        # that allocate 48-bit virtual addresses (WSL2's kernel on Apple
+        # Silicon / certain Docker Desktop builds): the dynamic build wasn't
+        # rebuilt against a Go that handles those high VA bits. The -static
+        # binary is built differently and runs cleanly. amd64 hosts can also
+        # use -static — it's a portable multi-arch tag.
+        image: openpolicyagent/opa:0.68.0-static
+        command: ["/opa"]
+        args:
+          - "build"
+          - "-b"
+          - "/policies"
+          - "--signing-alg=RS256"
+          - "--signing-key=/keys/bundle-signer.pem"
+          - "--bundle"
+          - "-o"
+          - "/out/bundles/zta.tar.gz"
         volumeMounts:
         - { name: policies, mountPath: /policies, readOnly: true }
         - { name: keys,     mountPath: /keys,     readOnly: true }

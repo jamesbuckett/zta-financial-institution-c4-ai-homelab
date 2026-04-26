@@ -30,6 +30,43 @@ roleRef:
   name: spire-server-configmap
   apiGroup: rbac.authorization.k8s.io
 ---
+# k8s_psat NodeAttestor on the server validates each agent's projected SA
+# token via TokenReview, then reads the corresponding pod (and the node it
+# runs on) to enforce the cluster's service_account_allow_list. All three
+# permissions are required; missing any one crashes the agent during its
+# first attestation handshake.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata: { name: spire-server-tokenreview }
+subjects:
+  - kind: ServiceAccount
+    name: spire-server
+    namespace: spire
+roleRef:
+  kind: ClusterRole
+  name: system:auth-delegator
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata: { name: spire-server-psat-reader }
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "nodes"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata: { name: spire-server-psat-reader }
+subjects:
+  - kind: ServiceAccount
+    name: spire-server
+    namespace: spire
+roleRef:
+  kind: ClusterRole
+  name: spire-server-psat-reader
+  apiGroup: rbac.authorization.k8s.io
+---
 apiVersion: v1
 kind: ConfigMap
 metadata: { name: spire-server, namespace: spire }
@@ -94,4 +131,112 @@ metadata: { name: spire-server, namespace: spire }
 spec:
   selector: { app: spire-server }
   ports: [{ name: grpc, port: 8081, targetPort: 8081 }]
+---
+# ---------------------------------------------------------------------------
+# SPIRE agent — one per node, exposes the Workload API on a hostPath socket so
+# workloads (and the spiffe-helper sidecar in lab 3) can fetch SVIDs.
+# Without this DaemonSet the helper retries forever on
+#   dial unix /run/spire/sockets/agent.sock: no such file or directory
+# and no SVID is ever issued.
+apiVersion: v1
+kind: ServiceAccount
+metadata: { name: spire-agent, namespace: spire }
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata: { name: spire-agent }
+rules:
+  # Workload Attestor (k8s) reads pods/nodes to map a UID to a SPIFFE ID.
+  - apiGroups: [""]
+    resources: ["pods", "nodes", "nodes/proxy"]
+    verbs: ["get", "list"]
+  # Node Attestor (k8s_psat) submits the pod's projected SA token for review.
+  - apiGroups: ["authentication.k8s.io"]
+    resources: ["tokenreviews"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata: { name: spire-agent }
+subjects:
+  - kind: ServiceAccount
+    name: spire-agent
+    namespace: spire
+roleRef:
+  kind: ClusterRole
+  name: spire-agent
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: spire-agent, namespace: spire }
+data:
+  agent.conf: |
+    agent {
+      data_dir = "/run/spire"
+      log_level = "INFO"
+      server_address = "spire-server"
+      server_port = "8081"
+      socket_path = "/run/spire/sockets/agent.sock"
+      trust_bundle_path = "/run/spire/bundle/bundle.crt"
+      trust_domain = "zta.homelab"
+    }
+    plugins {
+      KeyManager "memory" { plugin_data {} }
+      NodeAttestor "k8s_psat" {
+        plugin_data {
+          cluster = "docker-desktop"
+        }
+      }
+      WorkloadAttestor "k8s" {
+        plugin_data {
+          # docker-desktop's kubelet uses a self-signed serving cert that the
+          # agent's default verification rejects. Skipping is safe in a single-
+          # node homelab; production should provide kubelet_ca_path instead.
+          skip_kubelet_verification = true
+        }
+      }
+    }
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata: { name: spire-agent, namespace: spire, labels: { app: spire-agent } }
+spec:
+  selector: { matchLabels: { app: spire-agent } }
+  template:
+    metadata: { labels: { app: spire-agent } }
+    spec:
+      serviceAccountName: spire-agent
+      hostPID: true
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+      - name: spire-agent
+        image: ghcr.io/spiffe/spire-agent:1.10.1
+        args: ["-config", "/run/spire/config/agent.conf"]
+        volumeMounts:
+        - { name: config,        mountPath: /run/spire/config, readOnly: true }
+        - { name: bundle,        mountPath: /run/spire/bundle, readOnly: true }
+        - { name: agent-socket,  mountPath: /run/spire/sockets }
+        - { name: token,         mountPath: /var/run/secrets/tokens }
+        livenessProbe:
+          exec:
+            command:
+              - /opt/spire/bin/spire-agent
+              - healthcheck
+              - -socketPath
+              - /run/spire/sockets/agent.sock
+          initialDelaySeconds: 15
+          periodSeconds: 60
+      volumes:
+      - { name: config,       configMap: { name: spire-agent } }
+      - { name: bundle,       configMap: { name: spire-bundle } }
+      - { name: agent-socket, hostPath: { path: /run/spire/sockets, type: DirectoryOrCreate } }
+      - name: token
+        projected:
+          sources:
+          - serviceAccountToken:
+              audience: spire-server
+              expirationSeconds: 7200
+              path: spire-agent
 

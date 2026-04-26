@@ -7,10 +7,12 @@ KC_POD=$(kubectl --context $CTX -n zta-identity get pod -l app=keycloak -o name 
 
 kc() { kubectl --context $CTX -n zta-identity exec -i $KC_POD -- /opt/keycloak/bin/kcadm.sh "$@"; }
 
-# Tolerate "already exists" on re-run.
+# Tolerate the various "this resource already exists" wordings kcadm.sh emits
+# on re-run: realm/client say "already exists", users say "User exists with
+# same username/email", and 409 may surface as a raw HTTP code on some paths.
 kc_create_ok() {
   if ! out=$(kc "$@" 2>&1); then
-    if echo "$out" | grep -qiE 'already exists|conflict|409'; then
+    if echo "$out" | grep -qiE 'already exists|exists with same|conflict|409'; then
       echo "(exists, continuing) $*"
       return 0
     fi
@@ -37,7 +39,25 @@ CID=$(kc get clients -r zta-bookstore -q clientId=bookstore-api --fields id --fo
 kc update clients/$CID -r zta-bookstore -s 'attributes."access.token.lifespan"=300'
 SECRET=$(kc get clients/$CID/client-secret -r zta-bookstore --fields value --format csv --noquotes | tail -1)
 
-kc_create_ok create users -r zta-bookstore -s username=alice -s enabled=true -s email=alice@zta.homelab
+# firstName + lastName are required by Keycloak's User Profile feature (default
+# in 25+). Without them, password grant fails with
+#   "error":"invalid_grant","error_description":"Account is not fully set up"
+# because the profile attributes get evaluated as missing-required when the
+# token's profile scope is built.
+# emailVerified=true is set explicitly so the realm can later be flipped to
+# verifyEmail=true without re-breaking direct grant.
+kc_create_ok create users -r zta-bookstore \
+  -s username=alice -s enabled=true \
+  -s email=alice@zta.homelab -s emailVerified=true \
+  -s firstName=Alice -s lastName=Bookworm
+
+# Re-run guard: a user created by an earlier (broken) version of this script
+# may exist without firstName/lastName. Patch in the required profile fields
+# unconditionally so the orchestrator is idempotent across the fix boundary.
+ALICE_ID=$(kc get users -r zta-bookstore -q username=alice --fields id --format csv --noquotes | tail -1)
+kc update users/$ALICE_ID -r zta-bookstore \
+  -s emailVerified=true -s firstName=Alice -s lastName=Bookworm
+
 kc set-password -r zta-bookstore --username alice --new-password alice
 
 echo "BOOKSTORE_CLIENT_SECRET=$SECRET" > "$SCRIPT_DIR/.env"

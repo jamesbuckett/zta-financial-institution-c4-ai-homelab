@@ -23,10 +23,13 @@ kubectl --context docker-desktop auth can-i delete pods \
 # Expected: no   (CDM must NOT be able to delete — over-permissioning would break T5)
 
 # 3. The CDM listens — POST a synthetic Falco event and confirm 204.
+# Use 127.0.0.1 (not 'localhost') so we don't end up routing via ::1 — the
+# python HTTPServer in the CDM image only binds IPv4 (0.0.0.0:8080), and
+# busybox-wget's localhost resolves IPv6 first inside this image.
 printf '\n== 3. CDM responds 204 to a synthetic Falco event ==\n'
 CDM_POD=$(kubectl --context docker-desktop -n zta-runtime-security get pod -l app=cdm -o name | head -1)
 kubectl --context docker-desktop -n zta-runtime-security exec $CDM_POD -- \
   wget -qO- --post-data='{"rule":"smoke","output_fields":{}}' \
   --header='Content-Type: application/json' \
-  --server-response http://localhost:8080/ 2>&1 | grep -E 'HTTP/1\.[01] 204'
+  --server-response http://127.0.0.1:8080/ 2>&1 | grep -E 'HTTP/1\.[01] 204'
 # Expected: a 'HTTP/1.x 204' line

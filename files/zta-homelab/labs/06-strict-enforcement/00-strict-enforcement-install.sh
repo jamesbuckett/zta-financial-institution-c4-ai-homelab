@@ -83,7 +83,12 @@ step_03_opa_config() {
       { print }
     ' 03-opa-config.yaml.tmpl > 03-opa-config.yaml
 
-    kubectl --context "$KCTX" apply "${SSA[@]}" -f 03-opa-config.yaml
+    # The opa-config ConfigMap was originally created by the bootstrap with
+    # field-manager zta-bootstrap; the OPA Deployment's container args were
+    # taken over by zta-lab04. This step deliberately rewrites both — the
+    # whole point is to swap OPA from inline-policy mode to signed-bundle
+    # mode. --force-conflicts transfers ownership cleanly.
+    kubectl --context "$KCTX" apply "${SSA[@]}" --force-conflicts -f 03-opa-config.yaml
     echo
     echo "--- 03-verify.sh ---"
     bash 03-verify.sh

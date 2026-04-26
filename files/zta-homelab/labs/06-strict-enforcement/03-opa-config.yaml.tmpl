@@ -22,6 +22,12 @@ data:
           __BUNDLE_SIGNER_PUB__
     decision_logs:
       console: true
+    # The status plugin exposes bundle activation/staleness/etag at
+    # /v1/status. Without it OPA returns "status plugin not enabled" — the
+    # umbrella verify reads that endpoint to confirm the signed bundle
+    # really activated, not just that the file was downloaded.
+    status:
+      console: true
 ---
 # Set OPA to load ONLY the bundle (not the local file used in Lab 4).
 # NOTE: Lab 4 left this Deployment with `/policies` mount + `policy` volume.

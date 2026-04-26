@@ -31,6 +31,14 @@ path   := p if { p := input.attributes.request.http.path }
 
 workload_peer := s if { s := input.attributes.source.principal }
 
+# Helper: the "unknown posture + write method" combination, used as a
+# negative guard in the residual deny rules below. Rego v1 doesn't accept
+# `and` in expressions, so the combo is factored into a partial rule.
+unknown_write_combo if {
+  posture == "unknown"
+  method != "GET"
+}
+
 # --- rules ----------------------------------------------------------
 # Allow: authenticated user + trusted posture + known workload peer
 allow if {
@@ -46,24 +54,50 @@ allow if {
   posture == "suspect"
 }
 
-# Hard deny if device is tampered, regardless of token
+# Decision rules — Rego v1 complete-rule semantics require AT MOST one
+# non-default decision per input. Each branch carries explicit guards
+# (`not allow`, `not token`, `not claims.sub`) so they're mutually
+# exclusive — without these guards, e.g. a tampered request with a valid
+# token matches both `device-tampered` and `no-matching-allow` and OPA
+# crashes with eval_conflict_error: "complete rules must not produce
+# multiple outputs". The default `decision := default-deny` handles the
+# residual "no rule matched" case (e.g. the empty-input probe in 02-verify).
+decision := {"allow": true, "reason": "ok"} if allow
+
 decision := {"allow": false, "reason": "device-tampered"} if {
   posture == "tampered"
+  not allow
 }
 
-# Deny if unknown posture AND write method
 decision := {"allow": false, "reason": "posture-unknown-on-write"} if {
   posture == "unknown"
   method != "GET"
+  not allow
+  posture != "tampered"
 }
 
-# If a narrow deny rule didn't fire, project `allow` to decision.
-# Refinement (Lab 7): split the previous catch-all 'no-matching-allow'
-# into three more-specific reasons so operators see a faster fix path.
-decision := {"allow": true,  "reason": "ok"}                    if allow
-decision := {"allow": false, "reason": "missing-token"}         if not token
-decision := {"allow": false, "reason": "invalid-subject"}       if { token; not claims.sub }
-decision := {"allow": false, "reason": "no-matching-allow"}     if { token; claims.sub; not allow }
+# Refinement (Lab 7): split the catch-all 'no-matching-allow' into three
+# more-specific reasons so operators see a faster fix path.
+decision := {"allow": false, "reason": "missing-token"}     if {
+  not token
+  not allow
+  posture != "tampered"
+  not unknown_write_combo
+}
+decision := {"allow": false, "reason": "invalid-subject"}   if {
+  token
+  not claims.sub
+  not allow
+  posture != "tampered"
+  not unknown_write_combo
+}
+decision := {"allow": false, "reason": "no-matching-allow"} if {
+  token
+  claims.sub
+  not allow
+  posture != "tampered"
+  not unknown_write_combo
+}
 
 # Final response Envoy expects
 result := {

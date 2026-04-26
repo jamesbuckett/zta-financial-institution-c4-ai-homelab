@@ -58,7 +58,19 @@ step_02_load_policy() {
     kubectl --context "$KCTX" -n zta-policy create configmap opa-policy \
         --from-file=zta.authz.rego=01-zta.authz.rego --dry-run=client -o yaml \
         | kubectl --context "$KCTX" apply "${SSA[@]}" -f -
-    kubectl --context "$KCTX" apply "${SSA[@]}" -f 02-opa-deployment.yaml
+    # The bootstrap layered a minimal OPA Deployment with field-manager
+    # zta-bootstrap. Lab 4 deliberately replaces .spec.template.spec.containers
+    # args (to wire the lab's policy and ext_authz path), which collides with
+    # bootstrap's ownership of those fields. --force-conflicts transfers
+    # ownership to zta-lab04 — the intentional, documented hand-off described
+    # in the lab spec.
+    kubectl --context "$KCTX" apply "${SSA[@]}" --force-conflicts -f 02-opa-deployment.yaml
+    # OPA loads the Rego file once at startup and does NOT watch the mounted
+    # ConfigMap. On a re-run the Deployment spec hasn't changed, so a normal
+    # `apply` produces no rollout — the running pods keep serving the OLD
+    # policy from their cached files. Force a rollout so the new Rego from
+    # the freshly-applied ConfigMap is actually loaded.
+    kubectl --context "$KCTX" -n zta-policy rollout restart deploy/opa
     kubectl --context "$KCTX" -n zta-policy rollout status deploy/opa --timeout=120s
     echo
     echo "--- 02-verify.sh ---"
@@ -67,8 +79,12 @@ step_02_load_policy() {
 
 step_03_wire_envoy() {
     # CAVEAT: 03-ext-authz-provider.yaml is a full ConfigMap that overwrites
-    # istio-system/istio. See the spec for the bootstrap assumption.
-    kubectl --context "$KCTX" apply "${SSA[@]}" -f 03-ext-authz-provider.yaml
+    # istio-system/istio. The bootstrap installs Istio via istioctl, which
+    # creates that ConfigMap with field-manager istio-operator. Adding the
+    # extensionProviders entry from this lab requires taking ownership of
+    # .data.mesh, hence --force-conflicts. The ConfigMap content here is a
+    # superset of the istioctl default plus the lab's ext_authz provider.
+    kubectl --context "$KCTX" apply "${SSA[@]}" --force-conflicts -f 03-ext-authz-provider.yaml
     kubectl --context "$KCTX" apply "${SSA[@]}" -f 03-ext-authz-envoyfilter.yaml
     kubectl --context "$KCTX" -n istio-system rollout restart deploy/istiod
     kubectl --context "$KCTX" -n istio-system rollout status  deploy/istiod --timeout=120s

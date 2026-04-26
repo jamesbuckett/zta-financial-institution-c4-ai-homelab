@@ -60,6 +60,11 @@ step_02_default_deny() {
 }
 
 step_03_debug_pod() {
+    # The pod's hostNetwork field is immutable, so a re-run that's migrating
+    # from a non-hostNetwork pod to a hostNetwork pod (or vice-versa) cannot
+    # be done via `kubectl apply` alone. Recreate to keep the step idempotent.
+    kubectl --context "$KCTX" -n zta-lab-debug delete pod debug \
+        --ignore-not-found --grace-period=0 --force >/dev/null 2>&1 || true
     kubectl --context "$KCTX" apply "${SSA[@]}" -f 03-debug-pod.yaml
     kubectl --context "$KCTX" -n zta-lab-debug wait --for=condition=Ready pod/debug --timeout=60s
     echo
@@ -94,8 +99,18 @@ step_05_packet_capture() {
     rm -f /tmp/capture.txt
 
     # tcpdump auto-terminates after 30 packets.
+    # Filter on tcp port 8080: that's the api Deployment's targetPort and the
+    # destination port that appears on the wire (cni0 / veth) for traffic
+    # leaving the frontend sidecar towards the api pod. The Service port (80)
+    # never appears on the wire — it's resolved to an endpoint by kube-proxy
+    # before egress. The Istio inbound listener (15006) isn't on the wire
+    # either; it lives behind the api pod's iptables REDIRECT and is only
+    # observable from inside the api pod's netns.
+    # -X (hex + ASCII) is required so 05-verify.sh can grep for TLS record
+    # bytes (1703 03... / 1603 03...) in the packet payload dump; -A would
+    # only print printable ASCII.
     kubectl --context "$KCTX" -n zta-lab-debug exec debug -- \
-        tcpdump -i any -nn -s 0 -c 30 -A 'tcp port 80 or tcp port 15006' \
+        tcpdump -i any -nn -s 0 -c 30 -X 'tcp port 8080' \
         > /tmp/capture.txt 2>&1 &
     local TCPDUMP_PID=$!
 
@@ -132,9 +147,27 @@ step_05_packet_capture() {
 }
 
 step_06_istio_cross_check() {
-    istioctl --context "$KCTX" authn tls-check \
-        $(kubectl --context "$KCTX" -n bookstore-frontend get pod -l app=frontend -o name | head -1 | cut -d/ -f2).bookstore-frontend \
-        api.bookstore-api.svc.cluster.local
+    # `istioctl authn tls-check` was removed after 1.20. The modern equivalent
+    # is two narrower probes that, taken together, prove the same end-to-end
+    # mTLS posture:
+    #   (a) the source pod's outbound cluster to api uses the Envoy TLS
+    #       transport socket (replaces the old CLIENT=ISTIO_MUTUAL column),
+    #   (b) the destination workload's effective PeerAuthentication mode is
+    #       STRICT (replaces the old SERVER=STRICT column).
+    local FRONTEND_POD API_POD
+    FRONTEND_POD=$(kubectl --context "$KCTX" -n bookstore-frontend get pod -l app=frontend -o name | head -1 | cut -d/ -f2)
+    API_POD=$(kubectl --context "$KCTX" -n bookstore-api get pod -l app=api -o name | head -1 | cut -d/ -f2)
+
+    echo "Source outbound transport socket (frontend → api):"
+    istioctl --context "$KCTX" proxy-config cluster -n bookstore-frontend "$FRONTEND_POD" \
+        --fqdn api.bookstore-api.svc.cluster.local -o json \
+        | jq -r '.[0].transportSocketMatches[0].transportSocket.name // "(none)"'
+
+    echo
+    echo "Destination effective PeerAuthentication mode (api):"
+    istioctl --context "$KCTX" experimental describe pod -n bookstore-api "$API_POD" \
+        | awk '/Workload mTLS mode:/ {print $NF}'
+
     echo
     echo "--- 06-verify.sh ---"
     bash 06-verify.sh

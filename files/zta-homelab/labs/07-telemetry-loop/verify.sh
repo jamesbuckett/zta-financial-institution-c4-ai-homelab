@@ -31,10 +31,24 @@ check "ServiceMonitor opa has release=kube-prom label" \
   bash -c "[ \"\$(kubectl --context $CTX -n zta-observability get servicemonitor opa \
                   -o jsonpath='{.metadata.labels.release}')\" = 'kube-prom' ]"
 
-check "OPA /metrics returns at least one opa_ counter" \
-  bash -c "pod=\$(kubectl --context $CTX -n zta-policy get pod -l app=opa -o name | head -1) && \
-           [ \"\$(kubectl --context $CTX -n zta-policy exec \"\$pod\" -- \
-                  wget -qO- http://localhost:8282/metrics | grep -c '^opa_')\" -ge 1 ]"
+# OPA's distroless image has no wget/curl. Bridge via a port-forward and
+# probe /metrics from the host. OPA 0.68's diagnostic /metrics endpoint
+# does not emit any opa_-prefixed Prometheus series — process and request
+# metrics are go_* and http_*. Use http_request_duration_seconds as the
+# proof-of-life (same series the lab 7 ServiceMonitor tells Prometheus to
+# scrape).
+check "OPA /metrics returns at least one http_request_duration_seconds counter" \
+  bash -c "
+    kubectl --context $CTX -n zta-policy port-forward deploy/opa 18282:8282 >/dev/null 2>&1 &
+    pf=\$!
+    for _ in \$(seq 1 20); do
+      curl -s --max-time 1 http://localhost:18282/health >/dev/null 2>&1 && break
+      sleep 0.5
+    done
+    n=\$(curl -s http://localhost:18282/metrics | grep -c '^http_request_duration_seconds' || true)
+    kill \$pf 2>/dev/null || true
+    [ \"\$n\" -ge 1 ]
+  "
 
 # ---------------------------------------------------------------------------
 section "Step 02 — Grafana Agent"
@@ -107,13 +121,24 @@ check "pa-policies ConfigMap contains 'invalid-subject' reason" \
   bash -c "kubectl --context $CTX -n zta-policy get cm pa-policies \
             -o jsonpath='{.data.zta\\.authz\\.rego}' | grep -q '\"invalid-subject\"'"
 
-check "OPA /status: bundle activated within last 10 minutes" \
-  bash -c "out=\$(kubectl --context $CTX -n zta-policy exec deploy/opa -- \
-                  wget -qO- http://localhost:8282/status 2>/dev/null) && \
-           act=\$(echo \"\$out\" | jq -r '.bundles.zta.last_successful_activation') && \
-           ts=\$(date -u -d \"\$act\" +%s 2>/dev/null) && \
-           now=\$(date -u +%s) && \
-           [ \$((now - ts)) -lt 600 ]"
+# /v1/status (REST 8181) requires opa-config to declare `status: console: true`
+# (Lab 6's template does). The diagnostic-port /status (8282) is 404. Bridge
+# via port-forward because OPA's image has no shell.
+check "OPA /v1/status: bundle activated within last 10 minutes" \
+  bash -c "
+    kubectl --context $CTX -n zta-policy port-forward svc/opa 18181:8181 >/dev/null 2>&1 &
+    pf=\$!
+    for _ in \$(seq 1 20); do
+      curl -s --max-time 1 http://localhost:18181/health >/dev/null 2>&1 && break
+      sleep 0.5
+    done
+    out=\$(curl -s http://localhost:18181/v1/status)
+    kill \$pf 2>/dev/null || true
+    act=\$(echo \"\$out\" | jq -r '.result.bundles.zta.last_successful_activation')
+    ts=\$(date -u -d \"\$act\" +%s 2>/dev/null)
+    now=\$(date -u +%s)
+    [ \$((now - ts)) -lt 600 ]
+  "
 
 # ---------------------------------------------------------------------------
 printf '\n----------------------------------------\n'

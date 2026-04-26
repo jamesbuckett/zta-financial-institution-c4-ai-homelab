@@ -9,6 +9,17 @@ rules:
 - apiGroups: [""]
   resources: ["pods"]
   verbs: ["get","list","patch","watch"]
+# The reconciler CronJob runs as this SA and bounces drift via
+# `kubectl rollout restart deployment` — that's a patch on the Deployment's
+# template metadata, not a pod delete. We deliberately do NOT add
+# pods/delete: the umbrella verify asserts CDM cannot delete pods, and
+# preserving that minimum-privilege boundary is the point of T5.
+- apiGroups: ["apps"]
+  resources: ["deployments","replicasets"]
+  # replicasets are needed for the reconciler's ownerRef walk (pod →
+  # ReplicaSet → Deployment); without it, kubectl get rs fails with
+  # "forbidden: cannot get resource replicasets" and no rollout happens.
+  verbs: ["get","list","patch","watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -22,12 +33,40 @@ kind: ConfigMap
 metadata: { name: cdm-app, namespace: zta-runtime-security }
 data:
   app.py: |
-    # Minimal CDM stand-in: Falco webhook -> pod annotation
-    import json, os, urllib.request
+    # CDM stand-in: Falco webhook -> Deployment + pod annotation.
+    # We patch BOTH:
+    #   * the Deployment's pod template (so the annotation survives any
+    #     subsequent rollout, and so the Downward-API env on new pods reflects
+    #     the new posture); patching the template also triggers a rollout
+    #     automatically, so the policy gate flips immediately,
+    #   * the named pod (so the umbrella verify can see the annotation on the
+    #     specific pod that triggered the alert before the rollout completes).
+    # Patching only the pod is what the original draft did and it loses the
+    # annotation as soon as the reconciler bounces the Deployment — drift
+    # comes back, env stays empty, OPA never sees x-device-posture=tampered.
+    import json, os
     from http.server import BaseHTTPRequestHandler, HTTPServer
     from kubernetes import client, config
     config.load_incluster_config()
-    v1 = client.CoreV1Api()
+    v1     = client.CoreV1Api()
+    appsv1 = client.AppsV1Api()
+
+    def owning_deployment(ns, pod_name):
+      """Walk pod -> ReplicaSet -> Deployment via ownerReferences."""
+      pod = v1.read_namespaced_pod(pod_name, ns)
+      for ref in (pod.metadata.owner_references or []):
+        if ref.kind == 'ReplicaSet':
+          rs = appsv1.read_namespaced_replica_set(ref.name, ns)
+          for rsref in (rs.metadata.owner_references or []):
+            if rsref.kind == 'Deployment':
+              return rsref.name
+      return None
+
+    def current_template_posture(ns, deploy):
+      """Read the posture annotation already on the Deployment's pod template."""
+      d = appsv1.read_namespaced_deployment(deploy, ns)
+      tmpl = d.spec.template.metadata.annotations or {}
+      return tmpl.get('zta.posture')
 
     class H(BaseHTTPRequestHandler):
       def do_POST(self):
@@ -39,11 +78,31 @@ data:
         pod  = out.get('k8s.pod.name') or out.get('k8s_pod_name')
         if ns and pod:
           posture = 'tampered' if 'Terminal shell' in rule or 'shell' in rule.lower() else 'suspect'
-          patch = {'metadata':{'annotations':{'zta.posture': posture,
-                                               'zta.posture.rule': rule,
-                                               'zta.posture.at':  body.get('time','')}}}
-          v1.patch_namespaced_pod(pod, ns, patch)
-          print(f'PATCHED ns={ns} pod={pod} posture={posture} rule={rule}', flush=True)
+          ann = {'zta.posture': posture,
+                 'zta.posture.rule': rule,
+                 'zta.posture.at':  body.get('time','')}
+          # Pod annotation (visible to verify before rollout completes).
+          v1.patch_namespaced_pod(pod, ns, {'metadata':{'annotations':ann}})
+          # Deployment template annotation (persists across rollout) — but only
+          # patch if the posture actually changed. Otherwise the Falco rule
+          # firing repeatedly on the same workload (e.g. svid-watcher's 15-s
+          # openssl loop, which trips "Drop and execute new binary in
+          # container") creates a tight bounce loop: every detection patches
+          # the template, which triggers a rollout, which re-runs openssl in
+          # the new pod, which re-fires the rule. Only newer/stricter postures
+          # ever escalate; identical postures are no-ops.
+          deploy = owning_deployment(ns, pod)
+          if not deploy:
+            print(f'PATCHED ns={ns} pod={pod} (no owning Deployment) posture={posture} rule={rule}', flush=True)
+          else:
+            current = current_template_posture(ns, deploy)
+            if current == posture:
+              print(f'NOOP ns={ns} pod={pod} deploy={deploy} posture={posture} (already set, rule={rule})', flush=True)
+            else:
+              appsv1.patch_namespaced_deployment(
+                deploy, ns,
+                {'spec':{'template':{'metadata':{'annotations':ann}}}})
+              print(f'PATCHED ns={ns} pod={pod} deploy={deploy} posture={current}->{posture} rule={rule}', flush=True)
         self.send_response(204); self.end_headers()
     HTTPServer(('0.0.0.0', 8080), H).serve_forever()
 ---

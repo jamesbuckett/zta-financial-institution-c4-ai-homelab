@@ -22,13 +22,18 @@ data:
             target_label: pod
           pipeline_stages:
           - json:
+              # Promtail's `json` stage uses JMESPath, where keys with hyphens
+              # are addressed with quoted-identifier syntax (`"x-foo-bar"`),
+              # not bracket-string syntax (`["x-foo-bar"]`). The original
+              # `result.headers["x-zta-decision-reason"]` failed agent boot
+              # with: SyntaxError: Expected tStar, received: tQuotedIdentifier.
               expressions:
                 decision_id: decision_id
                 allow: result.allowed
-                reason: 'result.headers["x-zta-decision-reason"]'
+                reason: 'result.headers."x-zta-decision-reason"'
                 path:   input.attributes.request.http.path
                 method: input.attributes.request.http.method
-                posture: 'input.attributes.request.http.headers["x-device-posture"]'
+                posture: 'input.attributes.request.http.headers."x-device-posture"'
           - labels:
               decision_id:
               allow:

@@ -84,16 +84,35 @@ check "opa-config does NOT contain placeholder text" \
 # ---------------------------------------------------------------------------
 section "Step 04 — bundle activated"
 
-check "OPA /status reports bundle name=zta with errors=null" \
-  bash -c "out=\$(kubectl --context $CTX -n zta-policy exec deploy/opa -- \
-                  wget -qO- http://localhost:8282/status 2>/dev/null) && \
-           [ \"\$(echo \"\$out\" | jq -r '.bundles.zta.name')\" = 'zta' ] && \
-           [ \"\$(echo \"\$out\" | jq -r '.bundles.zta.errors')\" = 'null' ]"
+# Helper: OPA's distroless image has no shell or wget. Bridge to localhost
+# via a port-forward and curl from the host. Manages start + cleanup itself.
+_opa_lab6_curl() {
+  local rest_pf diag_pf out rc
+  kubectl --context "$CTX" -n zta-policy port-forward svc/opa 18181:8181 >/dev/null 2>&1 &
+  rest_pf=$!
+  kubectl --context "$CTX" -n zta-policy port-forward deploy/opa 18282:8282 >/dev/null 2>&1 &
+  diag_pf=$!
+  for _ in $(seq 1 20); do
+    curl -s --max-time 1 http://localhost:18181/health >/dev/null 2>&1 && break
+    sleep 0.5
+  done
+  out=$(curl -s "$@")
+  rc=$?
+  kill "$rest_pf" "$diag_pf" 2>/dev/null || true
+  printf '%s' "$out"
+  return "$rc"
+}
 
-check "/v1/policies lists at least one bundles/zta/ path" \
-  bash -c "kubectl --context $CTX -n zta-policy exec deploy/opa -- \
-            wget -qO- http://localhost:8181/v1/policies \
-            | jq -r '.result[].id' | grep -q '^/?bundles/zta/\\|^bundles/zta/'"
+check "OPA /v1/status reports bundle name=zta with errors=null" \
+  bash -c "$(declare -f _opa_lab6_curl); CTX=$CTX; \
+           out=\$(_opa_lab6_curl http://localhost:18181/v1/status) && \
+           [ \"\$(echo \"\$out\" | jq -r '.result.bundles.zta.name')\" = 'zta' ] && \
+           [ \"\$(echo \"\$out\" | jq -r '.result.bundles.zta.errors')\" = 'null' ]"
+
+check "/v1/policies lists at least one zta/ bundle path" \
+  bash -c "$(declare -f _opa_lab6_curl); CTX=$CTX; \
+           _opa_lab6_curl http://localhost:18181/v1/policies \
+            | jq -r '.result[].id' | grep -q '^zta/'"
 
 # ---------------------------------------------------------------------------
 section "Step 05 — close-the-loop pattern"
