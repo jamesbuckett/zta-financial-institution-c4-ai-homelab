@@ -18,6 +18,8 @@ kubectl --context docker-desktop -n istio-system get cm istio \
 
 # 3. Make a request and confirm the api sidecar emits an OTel trace export.
 printf '\n== 3. Tempo records traces from istio-ingressgateway ==\n'
+# Refresh .env from Keycloak first (see refresh-env.sh for the why).
+bash "$SCRIPT_DIR/../03-per-session/refresh-env.sh" || true
 # shellcheck disable=SC1091
 source "$SCRIPT_DIR/../03-per-session/.env"
 TOKEN=$(curl -s -H 'Host: keycloak.local' \

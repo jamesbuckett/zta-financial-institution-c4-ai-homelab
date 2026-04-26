@@ -130,7 +130,9 @@ check "OPA decision log shows x-device-posture=tampered injected by Lua filter" 
 section "Lab-5 validation — Lab 4 policy denies on tampered posture"
 
 # Acquire a token from Lab 3's .env, hit the api, assert 403.
+# Refresh .env from Keycloak first (see refresh-env.sh for the why).
 ENV_FILE="$SCRIPT_DIR/../03-per-session/.env"
+KCTX=$CTX bash "$SCRIPT_DIR/../03-per-session/refresh-env.sh" || true
 TOKEN=""
 if [ -s "$ENV_FILE" ]; then
   # shellcheck disable=SC1090

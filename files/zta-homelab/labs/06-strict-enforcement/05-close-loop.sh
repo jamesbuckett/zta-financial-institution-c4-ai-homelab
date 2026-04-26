@@ -6,6 +6,8 @@
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Refresh .env from Keycloak first (see refresh-env.sh for the why).
+bash "$SCRIPT_DIR/../03-per-session/refresh-env.sh" || true
 # shellcheck disable=SC1091
 source "$SCRIPT_DIR/../03-per-session/.env"
 TOKEN=$(curl -s -H 'Host: keycloak.local' \

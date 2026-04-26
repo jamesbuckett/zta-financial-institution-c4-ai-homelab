@@ -34,6 +34,8 @@ echo "act_age_s=$((NOW - ACT_TS))"
 # 3. Make a request and confirm OPA still answers — proves the bundle ALSO
 #    contains a working policy, not just a verifiable signature.
 printf '\n== 3. trusted-posture request returns 200 ==\n'
+# Refresh .env from Keycloak first (see refresh-env.sh for the why).
+bash "$SCRIPT_DIR/../03-per-session/refresh-env.sh" || true
 # shellcheck disable=SC1091
 source "$SCRIPT_DIR/../03-per-session/.env"
 TOKEN=$(curl -s -H 'Host: keycloak.local' \
