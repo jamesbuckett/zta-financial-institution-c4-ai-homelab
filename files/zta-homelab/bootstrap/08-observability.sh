@@ -11,6 +11,7 @@ helm --kube-context $CTX upgrade --install kube-prom prometheus-community/kube-p
   --namespace zta-observability --version 62.3.0 \
   --set grafana.adminPassword=admin \
   --set prometheus-node-exporter.hostRootFsMount.enabled=false \
+  --set-string prometheusOperator.admissionWebhooks.patch.podAnnotations."sidecar\.istio\.io/inject"=false \
   --wait
 
 helm --kube-context $CTX upgrade --install loki grafana/loki \
