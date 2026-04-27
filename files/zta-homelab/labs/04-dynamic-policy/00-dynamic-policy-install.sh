@@ -88,8 +88,17 @@ step_03_wire_envoy() {
     # superset of the istioctl default plus the lab's ext_authz provider.
     kubectl --context "$KCTX" apply "${SSA[@]}" --force-conflicts -f 03-ext-authz-provider.yaml
     kubectl --context "$KCTX" apply "${SSA[@]}" -f 03-ext-authz-envoyfilter.yaml
+
+    # Docker Desktop's single node is memory-constrained (~85% requested). istiod
+    # itself requests 2Gi, and the chart default rollingUpdate.maxSurge=100% needs
+    # a second 2Gi pod scheduled before the old one terminates — which won't fit.
+    # Patch to recreate-style so the old pod terminates first, freeing memory for
+    # the new one. Brief (~5-10s) istiod gap; existing sidecars keep their config.
+    kubectl --context "$KCTX" -n istio-system patch deploy istiod --type='strategic' -p \
+        '{"spec":{"strategy":{"rollingUpdate":{"maxSurge":0,"maxUnavailable":1}}}}'
+
     kubectl --context "$KCTX" -n istio-system rollout restart deploy/istiod
-    kubectl --context "$KCTX" -n istio-system rollout status  deploy/istiod --timeout=120s
+    kubectl --context "$KCTX" -n istio-system rollout status  deploy/istiod --timeout=180s
     kubectl --context "$KCTX" -n bookstore-api rollout restart deploy/api
     kubectl --context "$KCTX" -n bookstore-api rollout status  deploy/api --timeout=120s
     echo
