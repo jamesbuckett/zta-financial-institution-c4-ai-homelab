@@ -1,49 +1,78 @@
-# CLAUDE.md — Single-File HTML Website Rules
+# CLAUDE.md — `zta-financial-institution-c4-ai-homelab`
 
-## Always Do First
-* **Invoke the `frontend-design` skill** before writing any frontend code, every session, no exceptions.
-* **Output exactly ONE self-contained `.html` file.** All HTML, CSS, and JavaScript must live in that single file. No external stylesheets, no build step, no framework bundles.
+> **Scope:** Project-level memory for the ZTA homelab tutorial-generation repo.
+> **Audience for this file:** Claude Code, when run inside this repository.
 
-# Frontend Design Standards & Best Practices
+## What this repo is
 
-You are an expert Frontend Designer/Developer. When creating UI, follow these rules:
+This repo is a **meta-prompt for LLMs**. Given a C4-style ZTA reference architecture markdown as input, it generates a progressive, hands-on Kubernetes home lab tutorial across **seven modules**, each mapped to a tenet of **NIST SP 800-207**.
 
-## 1. Core Philosophy
-* **Sleek & Minimalist:** Aim for a premium, clean, modern feel.
-* **Light Theme Only:** The design must use a light color scheme — soft off-white or near-white backgrounds, dark neutral text, and restrained use of color. Do not produce a dark-mode variant unless explicitly asked.
-* **No AI Defaulting:** Avoid standard purple gradients, heavy drop shadows, and generic rounded-card layouts. Prefer crisp borders, hairline dividers, and subtle elevation over bloom effects.
-* **Precision Spacing:** Use a disciplined spacing scale (e.g., 4 / 8 / 12 / 16 / 24 / 32 / 48 / 64 px). No cramped layouts, no wasted white space.
+It is **not** the tutorial itself — it is the prompt that produces the tutorial. Treat the prompt source files as the primary artefact; the rendered tutorials are downstream output.
 
-## 2. Styling & Layout
-* **CSS:** Use a single `<style>` block in the `<head>`. Leverage modern CSS — custom properties (CSS variables) for the color palette and spacing scale, `clamp()` for fluid typography, logical properties where appropriate.
-* **No CSS frameworks or CDNs** (no Tailwind, Bootstrap, etc.). Write clean, semantic CSS by hand.
-* **Components:** Structure markup with reusable, semantic HTML patterns (e.g., a consistent `.card`, `.button`, `.nav-item` class system). Keep class naming predictable.
-* **Layout:** Use CSS Grid and Flexbox for responsive, intentional layouts rather than absolute positioning or margin hacks.
-* **Responsiveness:** Mobile-first. Use fluid units and a small number of well-chosen breakpoints.
+## Companion repos (cross-reference, do not modify)
 
-## 3. Visuals & Icons
-* **Icons:** Use [Lucide](https://lucide.dev/) icons, loaded inline as SVG (copy the SVG markup directly into the HTML — do not rely on a CDN script unless necessary, and if a CDN is used, use the official Lucide CDN via a single `<script>` tag). Replace all emojis with appropriate Lucide icons.
-* **Colors (light palette):**
-  * Background: near-white (e.g., `#FAFAFA` or `#F7F7F5`)
-  * Surface: pure white (`#FFFFFF`) for cards and elevated elements
-  * Text primary: near-black (e.g., `#0A0A0A` or `#111111`)
-  * Text secondary: mid-gray (e.g., `#6B7280`)
-  * Borders/dividers: light gray (e.g., `#E5E7EB`)
-  * **Exactly ONE accent color** (e.g., a restrained blue, emerald, or warm orange) used sparingly for CTAs and highlights
-* **Typography:** Modern sans-serif system stack — `-apple-system, BlinkMacSystemFont, "Inter", "Geist", "Segoe UI", Roboto, sans-serif`. Use tight letter-spacing on headings, generous line-height (1.5–1.7) on body copy.
+- `zta-financial-institution-c4-ai` — the C4+NIST 800-207 reference architecture this homelab implements.
+- `zta-financial-institution-visual-glossary` — 73-term searchable visual glossary; reuse term names verbatim for consistency.
+- `apac-regulations` — APAC regulatory constraints; reference when adding region-specific notes.
 
-## 4. Interaction & Motion
-* **Subtle:** Transitions should be short (150–250ms) and purposeful — smooth hover states, gentle focus rings, fade-ins for revealed content.
-* **Feedback:** Provide instant visual feedback for user actions (hover, active, focus states on every interactive element).
-* **Accessibility:** Visible focus outlines, sufficient contrast against the light background, and `prefers-reduced-motion` respected for any animation.
+## Lab Environment Assumptions
 
-## 5. Coding Standards
-* **Valid HTML5:** Include `<!DOCTYPE html>`, `<meta charset>`, `<meta viewport>`, and a meaningful `<title>`.
-* **Vanilla JavaScript:** If scripting is needed, use modern vanilla JS inside a single `<script>` tag at the end of `<body>`. No jQuery, no frameworks.
-* **Semantic Markup:** Use `<header>`, `<nav>`, `<main>`, `<section>`, `<article>`, `<footer>` appropriately.
-* **Self-contained:** The file must open and render correctly by double-clicking it — no server, no build, no external dependencies beyond (optionally) the Lucide CDN and system fonts.
+- **Cluster:** Docker Desktop with Kubernetes enabled, namespace `zt-lab`, context `docker-desktop`.
+- **Architecture:** Mixed `linux/amd64` and `linux/arm64` — every binary download or container image MUST be multi-arch or have explicit per-arch instructions. The OPA-Envoy `exec format error` on ARM64 is a recurring pain point; default download examples to `_arm64_static`.
+- **Resource budget:** Full stack ~8–10 GB RAM. Provide a "lite" (<6 GB) toggle that drops Falco UI, Loki, and one mesh component.
+- **Sample workload:** `orders-api` in namespace `zt-lab`, user `alice`. Keep these names consistent across modules.
 
-**Before finalizing any code, verify that:**
-1. The output is a single `.html` file.
-2. The theme is light (no dark backgrounds).
-3. All constraints above are met.
+## Toolchain (in order of introduction across the 7 modules)
+
+| Module | Concept | Primary Tooling |
+|---|---|---|
+| 1 | Identity & RBAC | Keycloak / Dex (OIDC), Kubernetes RBAC |
+| 2 | Workload Identity | SPIFFE / SPIRE |
+| 3 | mTLS & Service Mesh | Istio (preferred) or Linkerd; cert-manager |
+| 4 | Admission Policy | OPA / Gatekeeper, Kyverno |
+| 5 | Network Policy | Cilium (eBPF), CNI NetworkPolicy |
+| 6 | Runtime Detection | Falco (modern_ebpf driver), Falcosidekick |
+| 7 | Observability | Prometheus, Grafana, Loki |
+
+## Critical Known Issues to Bake Into the Tutorial
+
+- **Falco on Docker Desktop:** the default `kmod` driver fails — `scap_init` errors. **Always set `driver.kind=modern_ebpf`** in Helm values. Document the eBPF / BTF requirements.
+- **OPA-Envoy on ARM64:** the `_amd64` binary throws `exec format error`. Use `opa_envoy_linux_arm64_static`.
+- **Pod Security Admission:** Falco needs `hostPID`, `hostNetwork`, host mounts. Restrictive PSA labels in the namespace will block it.
+- **Helm chart drift:** Falcosidekick is now a subchart, not a separate install — pin chart versions and call out the upgrade path.
+
+## Tutorial Module Structure (enforce this)
+
+Every module MUST contain, in order:
+
+1. **Concept** (≤200 words, plain English).
+2. **NIST 800-207 mapping** — which tenet(s) this satisfies.
+3. **Architecture diagram** — Mermaid or ASCII, with PDP/PEP labels.
+4. **Prerequisites** — what previous modules must be working.
+5. **Step-by-step commands** — copy-pasteable, with `--context $CTX` on every `kubectl`.
+6. **Complete YAML manifests** — no `# ... rest omitted` placeholders.
+7. **Verification checklist** — `kubectl get`/`logs` commands to prove it works.
+8. **"Break it" exercises** — deliberately misconfigure and observe the failure mode.
+9. **Troubleshooting** — top 3 known failure modes with fixes.
+10. **Teardown** — how to remove cleanly before next module.
+
+## Module Naming & File Conventions
+
+- Bootstrap scripts: `bootstrap/0N-<component>.sh` or `bootstrap/0N-<component>.yaml`.
+- Per-module directories: `modules/0N-<concept>/` with `README.md`, `manifests/`, `break-it/`.
+- Always include a top-level `bootstrap.sh` that runs modules in order.
+
+## What NOT to Do
+
+- Don't introduce vendor-specific managed services (EKS, AKS, GKE) — this is a Docker Desktop home lab.
+- Don't use `latest` image tags. Pin every version.
+- Don't reproduce NIST 800-207 spec text verbatim — paraphrase and cite section numbers.
+- Don't add cloud-specific IAM examples to the core flow (keep them in a clearly-marked "production translation" appendix).
+- Don't suggest unsigned community plugins — official Anthropic marketplace + Context7 only.
+
+## Verification Workflow When Editing the Prompt
+
+1. Run the prompt against `zta-financial-institution-c4-ai/README.md` as input.
+2. Confirm 7 modules emit, each meeting the structure above.
+3. Spot-check the "break it" exercises actually break the right thing.
+4. Confirm Falco and OPA-Envoy ARM64 caveats appear where expected.
