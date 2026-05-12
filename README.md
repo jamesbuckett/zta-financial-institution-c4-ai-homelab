@@ -1,23 +1,80 @@
-# Implementing Zero Trust Architecture on Kubernetes inside Docker Desktop.
+# Zero Trust Architecture on a Kubernetes Home Lab
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![NIST SP 800-207](https://img.shields.io/badge/NIST-SP%20800--207-004A87)](https://doi.org/10.6028/NIST.SP.800-207)
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-1.29%2B-326CE5?logo=kubernetes&logoColor=white)](https://kubernetes.io/)
-[![Docker Desktop](https://img.shields.io/badge/Docker%20Desktop-4.x-2496ED?logo=docker&logoColor=white)](https://www.docker.com/products/docker-desktop/)
-[![Helm](https://img.shields.io/badge/Helm-3.x-0F1689?logo=helm&logoColor=white)](https://helm.sh/)
+[![Docker Desktop](https://img.shields.io/badge/Docker%20Desktop-4.30%2B-2496ED?logo=docker&logoColor=white)](https://www.docker.com/products/docker-desktop/)
+[![Helm](https://img.shields.io/badge/Helm-3.14%2B-0F1689?logo=helm&logoColor=white)](https://helm.sh/)
 [![Architecture](https://img.shields.io/badge/Architecture-C4%20%2B%20CALM-6E40C9)](https://c4model.com/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![Last commit](https://img.shields.io/github/last-commit/jamesbuckett/zta-financial-institution-c4-ai-homelab)](https://github.com/jamesbuckett/zta-financial-institution-c4-ai-homelab/commits/main)
 [![Stars](https://img.shields.io/github/stars/jamesbuckett/zta-financial-institution-c4-ai-homelab?style=social)](https://github.com/jamesbuckett/zta-financial-institution-c4-ai-homelab/stargazers)
 
+> **A meta-prompt for LLMs.** Paste in a C4-style Zero Trust reference architecture and the prompt returns a progressive, hands-on Kubernetes home lab — seven modules, one per [NIST SP 800-207](https://doi.org/10.6028/NIST.SP.800-207) tenet, runnable on a single-node Docker Desktop cluster.
+
+This repository is **not** the tutorial itself. [The prompt](#the-prompt) is the primary artefact. A reference render of what the prompt produces is committed at [`index.html`](index.html) (~440 KB, single file, no build) so you can preview the output without running the prompt.
+
+![Hero of the rendered tutorial — title, lede, outcomes box, and doc-meta row at desktop width](screenshots/desktop.png)
+
+> _Captured from `index.html` at 1440×900. Mid- and end-of-page slices, plus mobile and tablet captures, live in [`screenshots/`](screenshots/)._
+
+## Repository contents
+
+| Path | Purpose |
+|---|---|
+| [`README.md`](README.md) | This file. The meta-prompt is the bottom section, [§ The Prompt](#the-prompt). |
+| [`index.html`](index.html) | Reference render of the tutorial output (~8 000 lines, single-file, embedded SVG, no JS framework). |
+| [`zta-architecture.md`](zta-architecture.md) | Sample input — a C4-style ZTA reference architecture (ARB submission `ZTA-2026-001`). |
+| [`screenshot.mjs`](screenshot.mjs) | Playwright script that renders `index.html` at mobile / tablet / desktop. |
+| [`screenshots/`](screenshots/) | Generated PNG captures (top / mid / end slices per breakpoint). |
+| [`files/zta-homelab/`](files/zta-homelab/) | Scaffolded repo layout the generated tutorial expects (`bootstrap/`, `labs/`, `install.sh`, `teardown.sh`). |
+| [`CLAUDE.md`](CLAUDE.md) | Project memory — lab environment assumptions, ARM64 caveats, Falco driver, module structure rules. |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | How to propose prompt-clarity, mapping, or lab-content changes. |
+| [`LICENSE`](LICENSE) | MIT. |
+
+## Using the prompt
+
+1. **Pick an input.** Either use [`zta-architecture.md`](zta-architecture.md) as-is or supply your own C4-style ZTA markdown.
+2. **Open [§ The Prompt](#the-prompt)** below, paste it into Claude, GPT-4, or Gemini, and attach the markdown (or paste it into the `<ZTA_MARKDOWN>` block at the end).
+3. **Run.** The LLM emits a single markdown tutorial: Executive Overview → Lab Environment Setup → seven NIST-tenet labs → Capstone → Mapping Appendix → Cleanup.
+
+Every lab module is required to keep a 10-section structure (Concept → Teardown). Constraints, ARM64 caveats, and version pins live in [`CLAUDE.md`](CLAUDE.md).
+
+## Regenerating screenshots
+
+```bash
+npm install        # one-time: pulls Playwright
+node screenshot.mjs
+```
+
+Captures **mobile (375)**, **tablet (768)**, and **desktop (1440)**. The rendered page is ~120 000 CSS pixels tall, so each viewport produces three slices — `*.png` (top), `*-mid.png`, `*-end.png` — instead of one fullPage capture (Chrome's `Page.captureScreenshot` allocation cannot raster that height at `deviceScaleFactor: 2`).
+
+To screenshot a different page: `node screenshot.mjs <path-or-url>`. See `node screenshot.mjs --help` for details.
+
+## Companion repos
+
+| Repo | Relation |
+|---|---|
+| [`zta-financial-institution-c4-ai`](https://github.com/jamesbuckett/zta-financial-institution-c4-ai) | C4 + NIST 800-207 reference architecture — the canonical input the prompt is tuned for. |
+| [`zta-financial-institution-visual-glossary`](https://github.com/jamesbuckett/zta-financial-institution-visual-glossary) | 73-term searchable visual glossary; rendered-tutorial term names match this verbatim. |
+| [`apac-regulations`](https://github.com/jamesbuckett/apac-regulations) | APAC regulatory constraints referenced in the production-translation appendix. |
+
+## License
+
+[MIT](LICENSE) © 2026 James Buckett.
+
+---
+
+## The Prompt
+
 You are a Zero Trust Architecture (ZTA) instructor and Kubernetes practitioner. Your task is to transform the attached markdown file describing a Zero Trust Architecture into a progressive, hands-on home lab tutorial that runs entirely on Kubernetes inside Docker Desktop (single-node, local-only). Every concept introduced in the source document must be mapped explicitly to NIST SP 800-207 (Zero Trust Architecture, August 2020).
 
-## Inputs
+### Inputs
 - `<ZTA_MARKDOWN>` — a markdown file describing a Zero Trust Architecture (pasted below or attached).
 - Target audience: intermediate practitioners comfortable with Docker, kubectl, and YAML, but new to Zero Trust.
 - Environment constraint: Docker Desktop with built-in Kubernetes enabled on macOS, Windows, or Linux. No cloud resources, no paid tooling. Prefer open-source projects (e.g., SPIRE/SPIFFE, OPA/Gatekeeper, Istio or Linkerd, cert-manager, Keycloak, Falco, Vault dev-mode, Cilium if feasible on Docker Desktop).
 
-## Required Output Structure
+### Required Output Structure
 
 **1. Executive Overview**
 - One-paragraph summary of the source ZTA document.
@@ -59,7 +116,7 @@ For **each module**, provide:
 - Teardown commands.
 - Suggested extensions (e.g., swap Keycloak for Dex, add Cilium network policies, introduce a second cluster to simulate enclave-based deployment from 800-207 §3.2.2).
 
-## Style and Quality Rules
+### Style and Quality Rules
 - Use the source markdown's own terminology wherever it aligns with NIST; where it diverges, footnote the divergence and state the NIST-preferred term.
 - Every command must be tested-looking: specify the namespace, the context, and the expected result. No hand-waving.
 - Prefer declarative YAML over imperative kubectl where practical; commit manifests to a suggested repo layout (`/labs/0X-tenet-name/`).
@@ -67,10 +124,12 @@ For **each module**, provide:
 - Keep each lab completable in 45–90 minutes.
 - Cite NIST SP 800-207 by section number inline (e.g., "per 800-207 §2.1"), not as a bibliography-only reference.
 
-## Deliverable Format
+### Deliverable Format
 Return the full tutorial as a single markdown document, ready to be rendered or committed to a repo. Use H1 for the tutorial title, H2 for top-level sections, H3 for each lab module, and fenced code blocks with language tags for every command and manifest.
 
-## Source Document
+### Source Document
+```
 <ZTA_MARKDOWN>
 [PASTE YOUR MARKDOWN HERE]
 </ZTA_MARKDOWN>
+```
