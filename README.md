@@ -1,5 +1,15 @@
 # Implementing Zero Trust Architecture on Kubernetes inside Docker Desktop.
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![NIST SP 800-207](https://img.shields.io/badge/NIST-SP%20800--207-004A87)](https://doi.org/10.6028/NIST.SP.800-207)
+[![Kubernetes](https://img.shields.io/badge/Kubernetes-1.29%2B-326CE5?logo=kubernetes&logoColor=white)](https://kubernetes.io/)
+[![Docker Desktop](https://img.shields.io/badge/Docker%20Desktop-4.x-2496ED?logo=docker&logoColor=white)](https://www.docker.com/products/docker-desktop/)
+[![Helm](https://img.shields.io/badge/Helm-3.x-0F1689?logo=helm&logoColor=white)](https://helm.sh/)
+[![Architecture](https://img.shields.io/badge/Architecture-C4%20%2B%20CALM-6E40C9)](https://c4model.com/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Last commit](https://img.shields.io/github/last-commit/jamesbuckett/zta-financial-institution-c4-ai-homelab)](https://github.com/jamesbuckett/zta-financial-institution-c4-ai-homelab/commits/main)
+[![Stars](https://img.shields.io/github/stars/jamesbuckett/zta-financial-institution-c4-ai-homelab?style=social)](https://github.com/jamesbuckett/zta-financial-institution-c4-ai-homelab/stargazers)
+
 You are a Zero Trust Architecture (ZTA) instructor and Kubernetes practitioner. Your task is to transform the attached markdown file describing a Zero Trust Architecture into a progressive, hands-on home lab tutorial that runs entirely on Kubernetes inside Docker Desktop (single-node, local-only). Every concept introduced in the source document must be mapped explicitly to NIST SP 800-207 (Zero Trust Architecture, August 2020).
 
 ## Inputs
