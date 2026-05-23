@@ -37,7 +37,7 @@
 <meta name="twitter:description" content="Seven hands-on labs that deploy a NIST 800-207 Zero Trust Architecture on Docker Desktop Kubernetes.">
 
 <!-- Inline SVG favicon (avoids external fetch, keeps single-file constraint) -->
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23FAFAFA'/%3E%3Crect x='6' y='6' width='52' height='52' fill='none' stroke='%230A0A0A' stroke-width='3'/%3E%3Ctext x='32' y='42' text-anchor='middle' font-family='Ubuntu,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif' font-size='28' font-weight='700' fill='%23B45309'%3EZ%3C/text%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23FAFAFA'/%3E%3Crect x='6' y='6' width='52' height='52' fill='none' stroke='%230A0A0A' stroke-width='3'/%3E%3Ctext x='32' y='42' text-anchor='middle' font-family='Ubuntu,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif' font-size='28' font-weight='700' fill='%23EA580C'%3EZ%3C/text%3E%3C/svg%3E">
 
 <!-- Noto Sans + Noto Sans Mono via Google Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -124,15 +124,15 @@
     --muted-2: #9CA3AF;
     --border: #E5E7EB;
     --border-2: #EFEEEA;
-    --accent: #B45309;
-    --accent-ink: #78350F;
-    --accent-tint: #FEF3C7;
-    --accent-wash: #FFFBEB;
+    --accent: #EA580C;
+    --accent-ink: #9A3412;
+    --accent-tint: #FFEDD5;
+    --accent-wash: #FFF7ED;
     --code-bg: #F7F7F5;
     --code-border: #E7E5E0;
     --code-ink: #111111;
     --ok: #047857;
-    --warn: #B45309;
+    --warn: #EA580C;
     --bad: #B91C1C;
     --sans: "Noto Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     --mono: "Noto Sans Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
@@ -709,7 +709,7 @@
     --t1: #0F766E; --t1-tint: #CCFBF1; --t1-wash: #F0FDFA;
     --t2: #0369A1; --t2-tint: #DBEAFE; --t2-wash: #EFF6FF;
     --t3: #4338CA; --t3-tint: #E0E7FF; --t3-wash: #EEF2FF;
-    --t4: #B45309; --t4-tint: #FEF3C7; --t4-wash: #FFFBEB;
+    --t4: #EA580C; --t4-tint: #FFEDD5; --t4-wash: #FFF7ED;
     --t5: #7C3AED; --t5-tint: #EDE9FE; --t5-wash: #F5F3FF;
     --t6: #BE123C; --t6-tint: #FFE4E6; --t6-wash: #FFF1F2;
     --t7: #047857; --t7-tint: #D1FAE5; --t7-wash: #ECFDF5;
@@ -1221,7 +1221,7 @@
     border: 4px solid transparent;
     border-top-color: var(--ink);
   }
-  .hero-tip strong { color: #FFFBEB; }
+  .hero-tip strong { color: #FFF7ED; }
   .hero-tip .tip-tag { display: block; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent-tint); font-weight: 600; margin-bottom: 2px; }
 
   /* Animated badges */
@@ -1360,22 +1360,22 @@
     --muted-2: #71717A;
     --border: #2A2A2F;
     --border-2: #222227;
-    --accent: #FBBF24;
-    --accent-ink: #FCD34D;
-    --accent-tint: #2F2107;
-    --accent-wash: #1C1304;
+    --accent: #FB923C;
+    --accent-ink: #FDBA74;
+    --accent-tint: #2A1408;
+    --accent-wash: #1A0C04;
     --code-bg: #121216;
     --code-border: #2A2A2F;
     --code-ink: #E4E4E7;
     --ok: #34D399;
-    --warn: #FBBF24;
+    --warn: #FB923C;
     --bad: #F87171;
     --shadow-sm: 0 1px 0 rgba(0, 0, 0, 0.5);
     /* Tenet tints and washes flip to dark panels */
     --t1: #2DD4BF; --t1-tint: #0C2E2C; --t1-wash: #0A1E1D;
     --t2: #60A5FA; --t2-tint: #0F2742; --t2-wash: #0B1B2E;
     --t3: #A5B4FC; --t3-tint: #1D1B4D; --t3-wash: #161536;
-    --t4: #FBBF24; --t4-tint: #2F2107; --t4-wash: #1C1304;
+    --t4: #FB923C; --t4-tint: #2A1408; --t4-wash: #1A0C04;
     --t5: #C4B5FD; --t5-tint: #251457; --t5-wash: #1B0F42;
     --t6: #FDA4AF; --t6-tint: #3A0E22; --t6-wash: #280A18;
     --t7: #6EE7B7; --t7-tint: #0A3124; --t7-wash: #082518;
@@ -1399,15 +1399,15 @@
   [data-theme="dark"] .kbd { background: #1E1E22; }
   [data-theme="dark"] .hero-tip { background: #F4F4F5; color: #0A0A0A; }
   [data-theme="dark"] .hero-tip::after { border-top-color: #F4F4F5; }
-  [data-theme="dark"] .hero-tip strong { color: #78350F; }
-  [data-theme="dark"] .hero-tip .tip-tag { color: #B45309; }
+  [data-theme="dark"] .hero-tip strong { color: #9A3412; }
+  [data-theme="dark"] .hero-tip .tip-tag { color: #EA580C; }
 
   /* Diagrams + hero-arch: keep a light panel in dark mode so the
      inline SVGs (which use hardcoded light palette) stay legible. */
   [data-theme="dark"] figure.diagram,
   [data-theme="dark"] .hero-arch {
     background:
-      radial-gradient(ellipse at top right, #FFFBEB 0%, transparent 55%),
+      radial-gradient(ellipse at top right, #FFF7ED 0%, transparent 55%),
       radial-gradient(ellipse at bottom left, #F0FDFA 0%, transparent 50%),
       #FAFAFA;
     border-color: #2A2A2F;
@@ -1595,7 +1595,7 @@
         <path d="M0,0 L10,5 L0,10 z" fill="#0A0A0A"/>
       </marker>
       <marker id="arr-sig" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-        <path d="M0,0 L10,5 L0,10 z" fill="#B45309"/>
+        <path d="M0,0 L10,5 L0,10 z" fill="#EA580C"/>
       </marker>
       <marker id="arr-allow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
         <path d="M0,0 L10,5 L0,10 z" fill="#047857"/>
@@ -1603,8 +1603,8 @@
     </defs>
 
     <!-- Control-plane zone -->
-    <rect x="240" y="26" width="500" height="180" fill="#FFFBEB" stroke="#F3E3B8" stroke-width="1" rx="6"/>
-    <text x="260" y="50" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="11.5" font-weight="700" fill="#B45309" letter-spacing="1.4">CONTROL PLANE · §3.1</text>
+    <rect x="240" y="26" width="500" height="180" fill="#FFF7ED" stroke="#FED7AA" stroke-width="1" rx="6"/>
+    <text x="260" y="50" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="11.5" font-weight="700" fill="#EA580C" letter-spacing="1.4">CONTROL PLANE · §3.1</text>
 
     <!-- Data Plane band -->
     <rect x="40" y="250" width="820" height="160" fill="#F7F7F5" stroke="#E7E5E0" stroke-width="1" rx="6"/>
@@ -1613,27 +1613,27 @@
     <!-- ===== Control Plane nodes ===== -->
     <!-- Policy Engine (PE) -->
     <g class="node" data-tip-id="pe">
-      <rect class="node-hover-ring" x="306" y="92" width="176" height="82" rx="6" fill="none" stroke="#B45309" stroke-width="2"/>
-      <rect class="node-bg" x="312" y="98" width="164" height="70" rx="4" fill="#FEF3C7" stroke="#B45309" stroke-width="1.2"/>
-      <text class="node-title" x="394" y="122" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="14" font-weight="700" fill="#78350F">Policy Engine</text>
-      <text x="394" y="140" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="11.5" fill="#92400E">PE · §3.1.1</text>
-      <text x="394" y="157" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="10.5" fill="#B45309" letter-spacing="0.5">OPA / Cedar</text>
+      <rect class="node-hover-ring" x="306" y="92" width="176" height="82" rx="6" fill="none" stroke="#EA580C" stroke-width="2"/>
+      <rect class="node-bg" x="312" y="98" width="164" height="70" rx="4" fill="#FFEDD5" stroke="#EA580C" stroke-width="1.2"/>
+      <text class="node-title" x="394" y="122" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="14" font-weight="700" fill="#9A3412">Policy Engine</text>
+      <text x="394" y="140" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="11.5" fill="#7C2D12">PE · §3.1.1</text>
+      <text x="394" y="157" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="10.5" fill="#EA580C" letter-spacing="0.5">OPA / Cedar</text>
     </g>
 
     <!-- Policy Administrator (PA) -->
     <g class="node" data-tip-id="pa">
-      <rect class="node-hover-ring" x="504" y="92" width="148" height="82" rx="6" fill="none" stroke="#B45309" stroke-width="2"/>
-      <rect class="node-bg" x="510" y="98" width="136" height="70" rx="4" fill="#FFFBEB" stroke="#B45309" stroke-width="1.2"/>
-      <text class="node-title" x="578" y="122" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="14" font-weight="700" fill="#78350F">Policy Admin</text>
-      <text x="578" y="140" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="11.5" fill="#92400E">PA · §3.1.1</text>
-      <text x="578" y="157" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="10.5" fill="#B45309" letter-spacing="0.5">Styra DAS · GitOps</text>
+      <rect class="node-hover-ring" x="504" y="92" width="148" height="82" rx="6" fill="none" stroke="#EA580C" stroke-width="2"/>
+      <rect class="node-bg" x="510" y="98" width="136" height="70" rx="4" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.2"/>
+      <text class="node-title" x="578" y="122" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="14" font-weight="700" fill="#9A3412">Policy Admin</text>
+      <text x="578" y="140" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="11.5" fill="#7C2D12">PA · §3.1.1</text>
+      <text x="578" y="157" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="10.5" fill="#EA580C" letter-spacing="0.5">Styra DAS · GitOps</text>
     </g>
 
     <!-- Trust Algorithm (inside control plane, below PE/PA) -->
     <g class="node" data-tip-id="ta">
-      <rect class="node-hover-ring" x="258" y="176" width="460" height="24" rx="4" fill="none" stroke="#B45309" stroke-width="2" stroke-dasharray="3 3"/>
-      <rect class="node-bg" x="264" y="182" width="448" height="16" rx="3" fill="#FCE8B6" stroke="#B45309" stroke-width="0.8"/>
-      <text x="488" y="194" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="11" font-weight="700" fill="#78350F" letter-spacing="0.3">Trust Algorithm · §3.3 (criteria- or score-based)</text>
+      <rect class="node-hover-ring" x="258" y="176" width="460" height="24" rx="4" fill="none" stroke="#EA580C" stroke-width="2" stroke-dasharray="3 3"/>
+      <rect class="node-bg" x="264" y="182" width="448" height="16" rx="3" fill="#FED7AA" stroke="#EA580C" stroke-width="0.8"/>
+      <text x="488" y="194" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="11" font-weight="700" fill="#9A3412" letter-spacing="0.3">Trust Algorithm · §3.3 (criteria- or score-based)</text>
     </g>
 
     <!-- Data-source cluster — attached to control plane, left band -->
@@ -1721,12 +1721,12 @@
     <text x="510" y="252" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="11" fill="#047857" font-weight="600">③  allow / deny / step-up</text>
 
     <!-- DS → PE (signals) -->
-    <path d="M 204 150 Q 250 150 312 134" stroke="#B45309" stroke-width="1.3" fill="none" stroke-dasharray="4 3" marker-end="url(#arr-sig)"/>
-    <text x="222" y="132" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="11" fill="#B45309" font-weight="600">signals</text>
+    <path d="M 204 150 Q 250 150 312 134" stroke="#EA580C" stroke-width="1.3" fill="none" stroke-dasharray="4 3" marker-end="url(#arr-sig)"/>
+    <text x="222" y="132" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="11" fill="#EA580C" font-weight="600">signals</text>
 
     <!-- PA → PE (signed bundle) -->
-    <path d="M 510 134 Q 500 126 476 126" stroke="#B45309" stroke-width="1.3" fill="none" stroke-dasharray="4 3" marker-end="url(#arr-sig)"/>
-    <text x="492" y="92" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="11" fill="#B45309" font-weight="600">signed bundle</text>
+    <path d="M 510 134 Q 500 126 476 126" stroke="#EA580C" stroke-width="1.3" fill="none" stroke-dasharray="4 3" marker-end="url(#arr-sig)"/>
+    <text x="492" y="92" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="11" fill="#EA580C" font-weight="600">signed bundle</text>
 
     <!-- Policy Source → PA -->
     <line x1="760" y1="134" x2="652" y2="134" stroke="#4338CA" stroke-width="1.3" stroke-dasharray="4 3" fill="none" marker-end="url(#arr-sig)"/>
@@ -1991,7 +1991,7 @@ istioctl version --remote=$false ; jq --version ; yq --version ; openssl version
   <ul>
     <li><strong>Two yq's exist.</strong> Ubuntu's <code>apt install yq</code> pulls the <em>Python</em> implementation, which uses a different syntax. Always install the Go version from <code>mikefarah/yq</code> — the scaffold and teardown scripts assume it.</li>
     <li><strong>kubectl skew.</strong> A client more than one minor version ahead of the server works for most operations but fails on newer resources (e.g. <code>ValidatingAdmissionPolicy</code>). Match the Docker Desktop Kubernetes minor where you can.</li>
-    <li><strong>istioctl version ↔ control plane version.</strong> Lab 2 pins <code>ISTIO_VERSION=1.29.2</code> (current upstream-supported minor; 1.26 and earlier are EOL). Your <code>istioctl</code> binary must be the same major/minor; upgrading the control plane with a mismatched CLI silently installs the CLI's version.</li>
+    <li><strong>istioctl version &lt;-&gt; control plane version.</strong> Lab 2 pins <code>ISTIO_VERSION=1.29.2</code> (current upstream-supported minor; 1.26 and earlier are EOL). Your <code>istioctl</code> binary must be the same major/minor; upgrading the control plane with a mismatched CLI silently installs the CLI's version.</li>
     <li><strong>LibreSSL on macOS.</strong> The <code>openssl</code> shipped with macOS is LibreSSL and misses flags we use in Lab 2 (<code>-verify_return_error</code>, newer <code>-subj</code> parsing). Homebrew's <code>openssl@3</code> fixes this — make sure <code>$(brew --prefix openssl@3)/bin</code> is earlier in <code>PATH</code> than <code>/usr/bin</code>.</li>
   </ul>
 </div>
@@ -2251,10 +2251,10 @@ echo "Istio ${ISTIO_VERSION} installed; sidecar injection enabled on zta-* and b
 <pre><code>./02-istio.sh
 
 # Expected (tail):
-# ✔ Istio core installed
-# ✔ Istiod installed
-# ✔ Ingress gateways installed
-# ✔ Installation complete
+# [OK] Istio core installed
+# [OK] Istiod installed
+# [OK] Ingress gateways installed
+# [OK] Installation complete
 # deployment.apps/istiod condition met
 # deployment.apps/istio-ingressgateway condition met
 # Istio 1.29.2 installed; sidecar injection enabled on zta-* and bookstore-* namespaces.
@@ -3921,8 +3921,8 @@ kubectl --context docker-desktop -n bookstore-api delete peerauthentication down
           <text x="358" y="139">sub:  alice</text>
           <text x="358" y="153">iat:  T0</text>
         </g>
-        <rect x="356" y="158" width="118" height="14" rx="2" fill="#FEF3C7"/>
-        <text x="415" y="168" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="10" fill="#B45309">exp: T0 + 5m ⏱</text>
+        <rect x="356" y="158" width="118" height="14" rx="2" fill="#FFEDD5"/>
+        <text x="415" y="168" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="10" fill="#EA580C">exp: T0 + 5m</text>
       </g>
       <!-- Istio RequestAuthentication -->
       <g>
@@ -3933,9 +3933,9 @@ kubectl --context docker-desktop -n bookstore-api delete peerauthentication down
         <line x1="536" y1="88" x2="686" y2="88" stroke="#C7D2FE" stroke-width="1"/>
         <text x="605" y="106" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="11" fill="#312E81">every request →</text>
         <g font-family="Ubuntu Mono, ui-monospace, monospace" font-size="10.5" fill="#4338CA">
-          <rect x="540" y="116" width="130" height="16" rx="2" fill="#E0E7FF"/><text x="547" y="127">✓ signature (JWKS)</text>
-          <rect x="540" y="136" width="130" height="16" rx="2" fill="#E0E7FF"/><text x="547" y="147">✓ audience bookstore</text>
-          <rect x="540" y="156" width="130" height="16" rx="2" fill="#E0E7FF"/><text x="547" y="167">✓ exp still future</text>
+          <rect x="540" y="116" width="130" height="16" rx="2" fill="#E0E7FF"/><text x="547" y="127">[OK] signature (JWKS)</text>
+          <rect x="540" y="136" width="130" height="16" rx="2" fill="#E0E7FF"/><text x="547" y="147">[OK] audience bookstore</text>
+          <rect x="540" y="156" width="130" height="16" rx="2" fill="#E0E7FF"/><text x="547" y="167">[OK] exp still future</text>
         </g>
       </g>
       <!-- API -->
@@ -4407,58 +4407,58 @@ curl -s -o /dev/null -w '%{http_code}\n' \
       <title id="ld4-t">Lab 4 architecture — Envoy ext_authz calls OPA, which combines three signal rails into a score and returns Allow / Step-up / Deny</title>
       <desc id="ld4-d">Every request passes through Envoy's ext_authz hook to OPA. OPA's Rego policy evaluates identity, device posture, and behaviour, aggregates them into a trust score, and returns one of three outcomes.</desc>
       <defs>
-        <marker id="ld4-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#B45309"/></marker>
+        <marker id="ld4-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#EA580C"/></marker>
         <marker id="ld4-pass" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#047857"/></marker>
-        <marker id="ld4-step" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#B45309"/></marker>
+        <marker id="ld4-step" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#EA580C"/></marker>
         <marker id="ld4-no" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#BE123C"/></marker>
       </defs>
       <!-- Request -->
       <g>
-        <rect x="18" y="108" width="100" height="52" rx="4" fill="#FFFFFF" stroke="#B45309" stroke-width="1.1"/>
-        <text x="68" y="128" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="13" font-weight="700" fill="#B45309">Request</text>
-        <text x="68" y="145" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="10" fill="#78350F">GET /api/books</text>
+        <rect x="18" y="108" width="100" height="52" rx="4" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.1"/>
+        <text x="68" y="128" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="13" font-weight="700" fill="#EA580C">Request</text>
+        <text x="68" y="145" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="10" fill="#9A3412">GET /api/books</text>
       </g>
       <!-- Envoy ext_authz -->
       <g>
-        <rect x="146" y="92" width="120" height="82" rx="4" fill="#FFFBEB" stroke="#B45309" stroke-width="1.3"/>
-        <text x="206" y="112" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="13" font-weight="700" fill="#B45309">Envoy</text>
-        <text x="206" y="127" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="11" fill="#78350F">sidecar PEP · §3.1.2</text>
-        <rect x="156" y="135" width="100" height="14" rx="2" fill="#FEF3C7"/>
-        <text x="206" y="145" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="10" fill="#B45309">ext_authz · gRPC</text>
-        <rect x="156" y="153" width="100" height="14" rx="2" fill="#FEF3C7"/>
-        <text x="206" y="163" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="10" fill="#B45309">:9191 check()</text>
+        <rect x="146" y="92" width="120" height="82" rx="4" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.3"/>
+        <text x="206" y="112" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="13" font-weight="700" fill="#EA580C">Envoy</text>
+        <text x="206" y="127" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="11" fill="#9A3412">sidecar PEP · §3.1.2</text>
+        <rect x="156" y="135" width="100" height="14" rx="2" fill="#FFEDD5"/>
+        <text x="206" y="145" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="10" fill="#EA580C">ext_authz · gRPC</text>
+        <rect x="156" y="153" width="100" height="14" rx="2" fill="#FFEDD5"/>
+        <text x="206" y="163" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="10" fill="#EA580C">:9191 check()</text>
       </g>
       <!-- OPA Trust Algorithm (central) -->
       <g>
-        <rect x="296" y="22" width="300" height="208" rx="6" fill="#FFFBEB" stroke="#B45309" stroke-width="1.6"/>
-        <rect x="296" y="22" width="5" height="208" fill="#B45309"/>
-        <text x="446" y="44" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="15" font-weight="700" fill="#B45309">OPA · Trust Algorithm</text>
-        <text x="446" y="60" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="11.5" fill="#78350F">Rego policy · §3.3 criteria + score</text>
+        <rect x="296" y="22" width="300" height="208" rx="6" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.6"/>
+        <rect x="296" y="22" width="5" height="208" fill="#EA580C"/>
+        <text x="446" y="44" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="15" font-weight="700" fill="#EA580C">OPA · Trust Algorithm</text>
+        <text x="446" y="60" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="11.5" fill="#9A3412">Rego policy · §3.3 criteria + score</text>
         <line x1="312" y1="70" x2="588" y2="70" stroke="#FDE68A" stroke-width="1"/>
         <!-- Signal rails -->
-        <g font-family="Ubuntu Mono, ui-monospace, monospace" font-size="10.5" fill="#78350F">
-          <rect x="312" y="80" width="82" height="20" rx="3" fill="#FEF3C7" stroke="#B45309" stroke-width="0.8"/>
-          <text x="353" y="93" text-anchor="middle" font-weight="700" fill="#B45309">Identity</text>
+        <g font-family="Ubuntu Mono, ui-monospace, monospace" font-size="10.5" fill="#9A3412">
+          <rect x="312" y="80" width="82" height="20" rx="3" fill="#FFEDD5" stroke="#EA580C" stroke-width="0.8"/>
+          <text x="353" y="93" text-anchor="middle" font-weight="700" fill="#EA580C">Identity</text>
           <rect x="400" y="80" width="188" height="20" rx="3" fill="#FFFFFF" stroke="#FDE68A" stroke-width="0.8"/>
           <text x="410" y="93">sub=alice · role=user · iss=keycloak</text>
 
-          <rect x="312" y="108" width="82" height="20" rx="3" fill="#FEF3C7" stroke="#B45309" stroke-width="0.8"/>
-          <text x="353" y="121" text-anchor="middle" font-weight="700" fill="#B45309">Posture</text>
+          <rect x="312" y="108" width="82" height="20" rx="3" fill="#FFEDD5" stroke="#EA580C" stroke-width="0.8"/>
+          <text x="353" y="121" text-anchor="middle" font-weight="700" fill="#EA580C">Posture</text>
           <rect x="400" y="108" width="188" height="20" rx="3" fill="#FFFFFF" stroke="#FDE68A" stroke-width="0.8"/>
           <text x="410" y="121">x-device-posture: clean · patched</text>
 
-          <rect x="312" y="136" width="82" height="20" rx="3" fill="#FEF3C7" stroke="#B45309" stroke-width="0.8"/>
-          <text x="353" y="149" text-anchor="middle" font-weight="700" fill="#B45309">Behaviour</text>
+          <rect x="312" y="136" width="82" height="20" rx="3" fill="#FFEDD5" stroke="#EA580C" stroke-width="0.8"/>
+          <text x="353" y="149" text-anchor="middle" font-weight="700" fill="#EA580C">Behaviour</text>
           <rect x="400" y="136" width="188" height="20" rx="3" fill="#FFFFFF" stroke="#FDE68A" stroke-width="0.8"/>
           <text x="410" y="149">method=GET · rate 10/min · path /books</text>
         </g>
         <!-- Score bar -->
-        <text x="312" y="182" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="11.5" font-weight="700" fill="#78350F">trust score</text>
+        <text x="312" y="182" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="11.5" font-weight="700" fill="#9A3412">trust score</text>
         <rect x="312" y="190" width="276" height="14" rx="2" fill="#FFFFFF" stroke="#FDE68A" stroke-width="1"/>
-        <rect x="312" y="190" width="210" height="14" rx="2" fill="#FEF3C7"/>
-        <line x1="522" y1="186" x2="522" y2="208" stroke="#B45309" stroke-width="1.4"/>
-        <text x="596" y="201" text-anchor="end" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="11" fill="#B45309" font-weight="700">0.76</text>
-        <text x="312" y="222" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="10" fill="#78350F">threshold · allow &gt; 0.7 · step-up 0.4–0.7 · deny &lt; 0.4</text>
+        <rect x="312" y="190" width="210" height="14" rx="2" fill="#FFEDD5"/>
+        <line x1="522" y1="186" x2="522" y2="208" stroke="#EA580C" stroke-width="1.4"/>
+        <text x="596" y="201" text-anchor="end" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="11" fill="#EA580C" font-weight="700">0.76</text>
+        <text x="312" y="222" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="10" fill="#9A3412">threshold · allow &gt; 0.7 · step-up 0.4–0.7 · deny &lt; 0.4</text>
       </g>
       <!-- Outcomes -->
       <g>
@@ -4466,26 +4466,26 @@ curl -s -o /dev/null -w '%{http_code}\n' \
         <text x="714" y="56" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="13" font-weight="700" fill="#047857">Allow</text>
         <text x="714" y="74" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="10.5" fill="#065F46">200 · decision logged</text>
 
-        <rect x="628" y="100" width="172" height="52" rx="4" fill="#FFFBEB" stroke="#B45309" stroke-width="1.2"/>
-        <text x="714" y="120" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="13" font-weight="700" fill="#B45309">Step-up</text>
-        <text x="714" y="138" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="10.5" fill="#78350F">MFA · re-auth · 401 w/ hint</text>
+        <rect x="628" y="100" width="172" height="52" rx="4" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.2"/>
+        <text x="714" y="120" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="13" font-weight="700" fill="#EA580C">Step-up</text>
+        <text x="714" y="138" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="10.5" fill="#9A3412">MFA · re-auth · 401 w/ hint</text>
 
         <rect x="628" y="164" width="172" height="52" rx="4" fill="#FFF1F2" stroke="#BE123C" stroke-width="1.2"/>
         <text x="714" y="184" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="13" font-weight="700" fill="#BE123C">Deny</text>
         <text x="714" y="202" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="10.5" fill="#9F1239">403 · trust-score too low</text>
       </g>
       <!-- Arrows -->
-      <path d="M 118 134 L 146 133" fill="none" stroke="#B45309" stroke-width="1.4" marker-end="url(#ld4-ok)"/>
-      <path d="M 266 133 L 296 130" fill="none" stroke="#B45309" stroke-width="1.4" marker-end="url(#ld4-ok)"/>
-      <text x="282" y="124" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#B45309">check</text>
+      <path d="M 118 134 L 146 133" fill="none" stroke="#EA580C" stroke-width="1.4" marker-end="url(#ld4-ok)"/>
+      <path d="M 266 133 L 296 130" fill="none" stroke="#EA580C" stroke-width="1.4" marker-end="url(#ld4-ok)"/>
+      <text x="282" y="124" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="9" fill="#EA580C">check</text>
       <path d="M 596 105 L 628 62" fill="none" stroke="#047857" stroke-width="1.4" marker-end="url(#ld4-pass)"/>
-      <path d="M 596 126 L 628 126" fill="none" stroke="#B45309" stroke-width="1.4" marker-end="url(#ld4-step)"/>
+      <path d="M 596 126 L 628 126" fill="none" stroke="#EA580C" stroke-width="1.4" marker-end="url(#ld4-step)"/>
       <path d="M 596 160 L 628 190" fill="none" stroke="#BE123C" stroke-width="1.4" marker-end="url(#ld4-no)"/>
     </svg>
     <div class="ld-legend" aria-hidden="true">
-      <span><i style="color:#B45309"></i> request + policy call</span>
+      <span><i style="color:#EA580C"></i> request + policy call</span>
       <span><i style="color:#047857"></i> allow</span>
-      <span><i style="color:#B45309"></i> step-up challenge</span>
+      <span><i style="color:#EA580C"></i> step-up challenge</span>
       <span><i class="deny"></i> deny</span>
       <span style="margin-left:auto">score combines 3 rails · threshold editable in Rego</span>
     </div>
@@ -5055,7 +5055,7 @@ curl -s -o /dev/null -w '%{http_code}\n' -X POST \
           <text x="166" y="101" text-anchor="end" fill="#9CA3AF" font-size="9.5">syscalls…</text>
           <rect x="34" y="116" width="142" height="24" rx="2" fill="#F5F3FF" stroke="#7C3AED" stroke-width="1.1"/>
           <text x="44" y="131" fill="#7C3AED" font-weight="700">api</text>
-          <text x="166" y="131" text-anchor="end" fill="#BE123C" font-size="9.5">open /etc/shadow ⚠</text>
+          <text x="166" y="131" text-anchor="end" fill="#BE123C" font-size="9.5">open /etc/shadow [!]</text>
           <rect x="34" y="146" width="142" height="24" rx="2" fill="#F5F3FF" stroke="#C4B5FD" stroke-width="0.8"/>
           <text x="44" y="161" fill="#5B21B6">db</text>
           <text x="166" y="161" text-anchor="end" fill="#9CA3AF" font-size="9.5">syscalls…</text>
@@ -5091,12 +5091,12 @@ curl -s -o /dev/null -w '%{http_code}\n' -X POST \
       </g>
       <!-- OPA data doc -->
       <g>
-        <rect x="630" y="30" width="170" height="84" rx="4" fill="#FFFBEB" stroke="#B45309" stroke-width="1.3"/>
-        <text x="715" y="50" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="13" font-weight="700" fill="#B45309">OPA data</text>
-        <text x="715" y="66" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="10" fill="#78350F">Trust-Algorithm input</text>
+        <rect x="630" y="30" width="170" height="84" rx="4" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.3"/>
+        <text x="715" y="50" text-anchor="middle" font-family="Ubuntu, ui-sans-serif, sans-serif" font-size="13" font-weight="700" fill="#EA580C">OPA data</text>
+        <text x="715" y="66" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="10" fill="#9A3412">Trust-Algorithm input</text>
         <rect x="640" y="74" width="150" height="32" rx="2" fill="#FFFFFF" stroke="#FDE68A"/>
-        <text x="715" y="87" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="10" fill="#B45309">data.posture.api</text>
-        <text x="715" y="99" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="10" fill="#B45309" font-weight="700">= "suspect"</text>
+        <text x="715" y="87" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="10" fill="#EA580C">data.posture.api</text>
+        <text x="715" y="99" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="10" fill="#EA580C" font-weight="700">= "suspect"</text>
       </g>
       <!-- Deny consequence -->
       <g>
@@ -5750,7 +5750,7 @@ helm --kube-context docker-desktop upgrade falco falcosecurity/falco -n zta-runt
   <dl class="nist-map">
     <dt>Tenet</dt><dd><span class="badge tenet">T6</span> Strict enforcement (2.1)</dd>
     <dt>Components</dt><dd>Policy Engine (3.1.1), Policy Administrator (3.1.1 — signed bundle publisher), PEP (3.1.2)</dd>
-    <dt>Variant</dt><dd>All four 3.2 variants collapse onto the same PE↔PA↔PEP loop; this lab is the <em>canonical</em> NIST picture</dd>
+    <dt>Variant</dt><dd>All four 3.2 variants collapse onto the same PE &lt;-&gt; PA &lt;-&gt; PEP loop; this lab is the <em>canonical</em> NIST picture</dd>
     <dt>Source </dt><dd>4 (control-plane placement), 5 Flow A end-to-end, 7.5–7.6, 8.10 (policy-plane threat model)</dd>
   </dl>
 
@@ -5779,9 +5779,9 @@ helm --kube-context docker-desktop upgrade falco falcosecurity/falco -n zta-runt
     .head-txt { font: 600 12px var(--sans, sans-serif); fill: #0A0A0A; text-anchor: middle; }
     .msg { stroke: #0A0A0A; stroke-width: 1.2; fill: none; }
     .msg-txt { font: 11px var(--sans, sans-serif); fill: #1F2937; }
-    .step-lbl { font: 600 10px var(--sans, sans-serif); fill: #B45309; }
-    .note { fill: #FFFBEB; stroke: #B45309; stroke-width: 0.5; }
-    .note-txt { font: 10px var(--sans, sans-serif); fill: #78350F; }
+    .step-lbl { font: 600 10px var(--sans, sans-serif); fill: #EA580C; }
+    .note { fill: #FFF7ED; stroke: #EA580C; stroke-width: 0.5; }
+    .note-txt { font: 10px var(--sans, sans-serif); fill: #9A3412; }
   </style>
   <!-- Lanes -->
   <g>
@@ -6284,7 +6284,7 @@ curl -s http://$(kubectl --context docker-desktop -n zta-policy get svc opa -o j
       <desc id="ld7-d">Envoy and OPA emit metrics, logs, and traces per decision. An OTel collector routes them to Prometheus, Loki, and Tempo. Grafana renders SLO panels, and insights feed back into the next policy revision.</desc>
       <defs>
         <marker id="ld7-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#047857"/></marker>
-        <marker id="ld7-fb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#B45309"/></marker>
+        <marker id="ld7-fb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#EA580C"/></marker>
       </defs>
       <!-- Decision source -->
       <g>
@@ -6296,8 +6296,8 @@ curl -s http://$(kubectl --context docker-desktop -n zta-policy get svc opa -o j
         <g font-family="Ubuntu Mono, ui-monospace, monospace" font-size="10.5">
           <rect x="34" y="112" width="122" height="18" rx="2" fill="#D1FAE5"/>
           <text x="95" y="124" text-anchor="middle" fill="#047857">allow · 200</text>
-          <rect x="34" y="134" width="122" height="18" rx="2" fill="#FFFBEB"/>
-          <text x="95" y="146" text-anchor="middle" fill="#B45309">step-up · 401</text>
+          <rect x="34" y="134" width="122" height="18" rx="2" fill="#FFF7ED"/>
+          <text x="95" y="146" text-anchor="middle" fill="#EA580C">step-up · 401</text>
           <rect x="34" y="156" width="122" height="18" rx="2" fill="#FFE4E6"/>
           <text x="95" y="168" text-anchor="middle" fill="#BE123C">deny · 403</text>
         </g>
@@ -6357,7 +6357,7 @@ curl -s http://$(kubectl --context docker-desktop -n zta-policy get svc opa -o j
           <text x="780" y="162" text-anchor="end" fill="#047857" font-weight="700">ok</text>
           <rect x="574" y="172" width="212" height="18" rx="2" fill="#ECFDF5"/>
           <text x="582" y="184">SLO · auth p99 &lt; 120ms</text>
-          <text x="780" y="184" text-anchor="end" fill="#B45309" font-weight="700">warn</text>
+          <text x="780" y="184" text-anchor="end" fill="#EA580C" font-weight="700">warn</text>
           <rect x="574" y="194" width="212" height="18" rx="2" fill="#ECFDF5"/>
           <text x="582" y="206">SLO · bundle freshness &lt; 5m</text>
           <text x="780" y="206" text-anchor="end" fill="#047857" font-weight="700">ok</text>
@@ -6372,13 +6372,13 @@ curl -s http://$(kubectl --context docker-desktop -n zta-policy get svc opa -o j
       <path d="M 520 124 L 560 124" fill="none" stroke="#047857" stroke-width="1.3" marker-end="url(#ld7-ok)"/>
       <path d="M 520 192 L 560 168" fill="none" stroke="#047857" stroke-width="1.3" marker-end="url(#ld7-ok)"/>
       <!-- Feedback loop to PA -->
-      <path d="M 680 218 C 680 244 380 248 95 218" fill="none" stroke="#B45309" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#ld7-fb)"/>
-      <rect x="330" y="232" width="188" height="18" rx="2" fill="#FFFBEB" stroke="#B45309" stroke-width="0.8"/>
-      <text x="424" y="245" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="10" fill="#B45309">telemetry → tomorrow's policy (PA)</text>
+      <path d="M 680 218 C 680 244 380 248 95 218" fill="none" stroke="#EA580C" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#ld7-fb)"/>
+      <rect x="330" y="232" width="188" height="18" rx="2" fill="#FFF7ED" stroke="#EA580C" stroke-width="0.8"/>
+      <text x="424" y="245" text-anchor="middle" font-family="Ubuntu Mono, ui-monospace, monospace" font-size="10" fill="#EA580C">telemetry → tomorrow's policy (PA)</text>
     </svg>
     <div class="ld-legend" aria-hidden="true">
       <span><i style="color:#047857"></i> signal path · PEP → OTel → backends → SLO</span>
-      <span><i class="dashed" style="color:#B45309"></i> feedback · dashboard informs PA</span>
+      <span><i class="dashed" style="color:#EA580C"></i> feedback · dashboard informs PA</span>
       <span style="margin-left:auto">closes the loop every prior lab opened</span>
     </div>
   </figure>
@@ -6938,21 +6938,21 @@ kubectl --context docker-desktop -n zta-policy rollout restart deploy/opa
     .zone { fill: #FFFFFF; stroke: #E5E7EB; stroke-width: 1; }
     .zone-title { font: 600 11px var(--sans, sans-serif); fill: #6B7280; letter-spacing: 0.08em; text-transform: uppercase; }
     .box { fill: #FFFFFF; stroke: #0A0A0A; stroke-width: 1; }
-    .box-ctrl { fill: #FFFBEB; stroke: #B45309; stroke-width: 1; }
+    .box-ctrl { fill: #FFF7ED; stroke: #EA580C; stroke-width: 1; }
     .box-pep { fill: #F7F7F5; stroke: #0A0A0A; stroke-width: 1; stroke-dasharray: 3 2; }
     .box-title { font: 600 11px var(--sans, sans-serif); fill: #0A0A0A; text-anchor: middle; }
     .box-sub { font: 10px var(--sans, sans-serif); fill: #6B7280; text-anchor: middle; }
-    .comp-tag { font: 600 9px var(--sans, sans-serif); fill: #B45309; text-anchor: middle; }
+    .comp-tag { font: 600 9px var(--sans, sans-serif); fill: #EA580C; text-anchor: middle; }
     .flow { stroke: #0A0A0A; stroke-width: 1.2; fill: none; }
     .flow-txt { font: 10px var(--sans, sans-serif); fill: #1F2937; }
-    .sig { stroke: #B45309; stroke-width: 1.2; stroke-dasharray: 4 3; fill: none; }
+    .sig { stroke: #EA580C; stroke-width: 1.2; stroke-dasharray: 4 3; fill: none; }
   </style>
   <defs>
     <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
       <path d="M0,0 L10,5 L0,10 z" fill="#0A0A0A"/>
     </marker>
     <marker id="arr3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="#B45309"/>
+      <path d="M0,0 L10,5 L0,10 z" fill="#EA580C"/>
     </marker>
   </defs>
 
@@ -7044,7 +7044,7 @@ kubectl --context docker-desktop -n zta-policy rollout restart deploy/opa
   <line x1="427" y1="130" x2="400" y2="108" class="sig" marker-end="url(#arr3)"/>
   <line x1="460" y1="130" x2="535" y2="108" class="sig" marker-end="url(#arr3)"/>
   <line x1="495" y1="130" x2="640" y2="108" class="sig" marker-end="url(#arr3)"/>
-  <text x="555" y="122" class="flow-txt" style="fill:#B45309">3 signals: identity · workload · posture</text>
+  <text x="555" y="122" class="flow-txt" style="fill:#EA580C">3 signals: identity · workload · posture</text>
 
   <!-- 4 PA -> PE signed bundle -->
   <line x1="580" y1="130" x2="510" y2="145" class="sig" marker-end="url(#arr3)"/>
@@ -7064,7 +7064,7 @@ kubectl --context docker-desktop -n zta-policy rollout restart deploy/opa
 
   <!-- 8 PEPs emit logs/traces -->
   <line x1="235" y1="290" x2="687" y2="180" class="sig" marker-end="url(#arr3)"/>
-  <text x="450" y="260" class="flow-txt" style="fill:#B45309">8 decision_id, trace_id → SIEM/Obs</text>
+  <text x="450" y="260" class="flow-txt" style="fill:#EA580C">8 decision_id, trace_id → SIEM/Obs</text>
 </svg>
 <figcaption>Capstone: every NIST 800-207 3.1 logical component is rendered in the cluster. Solid arrows = request path; dashed amber = signals and bundles.</figcaption>
 </figure>
@@ -7947,7 +7947,7 @@ echo "Hard teardown requested; background namespace finalisation may take a minu
         ring.setAttribute('stroke-dashoffset', offset.toFixed(1));
         var col = '#BE123C';
         if (score >= 70) col = '#047857';
-        else if (score >= 40) col = '#B45309';
+        else if (score >= 40) col = '#EA580C';
         ring.setAttribute('stroke', col);
       }
       if (verdictEl) {
